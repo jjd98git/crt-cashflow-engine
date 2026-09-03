@@ -58,7 +58,7 @@ def main() -> None:
             continue
         out += ["", f"## {title}", "", HEADER]
         out += [row_line(r) for r in by[key]]
-    DST.write_text("\n".join(out) + "\n", encoding="utf-8")
+    DST.write_text("\n".join(out) + "\n", encoding="utf-8", newline="\n")
     print(f"wrote {DST} ({len(rows)} rows, {len(open_rows)} unconfirmed)")
 
 
