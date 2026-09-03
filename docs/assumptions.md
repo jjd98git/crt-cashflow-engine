@@ -1,0 +1,126 @@
+# Assumptions register (rendered)
+
+Generated from `docs/assumptions.csv` (50 rows). Do not edit; edit the CSV and re-run `scripts/render_assumptions.py`.
+
+## >>> UNCONFIRMED OR ASSUMED — Trey has not signed these off <<<
+
+46 of 50 rows.
+
+| id | item | value | unit | source | source_ref | confidence | used_in | confirmed | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| C1 | Loss basis | actual loss (not fixed severity) | text | ASSUMED |  | low |  | N | Starting hypothesis for a STACR DNA structure. PPM analyst must confirm or override. |
+| C2 | Credit event trigger | 180+ days delinquent or short sale / deed-in-lieu / third-party sale / REO disposition / note sale whichever first | text | ASSUMED |  | low |  | N | CONTRADICTED by PPM p192 "Credit Event": short sale settled / seriously delinquent note sold / third-party foreclosure sale / REO disposition / charge-off. No 180-day trigger. ppm-analyst to OVERRIDE in Phase 1. |
+| C3 | Loss components | realized loss on liquidation plus modification losses net of recoveries and reversals | text | ASSUMED |  | low |  | N | Confirm treatment of modification events separately from credit events. |
+| C4 | Class coupon index | 30-day Average SOFR + class margin | text | ASSUMED |  | medium |  | N | PPM front page confirms "SOFR Rate + margin" and a 0% minimum. Confirm the exact SOFR definition and day count. Phase 0 read: Day Count Fraction = actual days in Accrual Period / 360 (PPM p194); Accrual Period = prior Payment Date to day before Payment Date (p187). |
+| C5 | Principal allocation | sequential to reference tranches subject to performance tests | text | ASSUMED |  | low |  | N | Confirm pro-rata conditions and the switch triggers. |
+| C6 | Loss allocation | reverse sequential from most subordinate upward | text | ASSUMED |  | low |  | N |  |
+| C7 | Write-up | subsequent recoveries write balances up in sequential order | text | ASSUMED |  | low |  | N |  |
+| C8 | Performance tests gating subordinate principal | Minimum Credit Enhancement Test / Delinquency Test / Cumulative Net Loss Test | text | ASSUMED |  | low |  | N | Phase 0 read: Minimum Credit Enhancement Test = Subordinate Percentage >= 3.525% (p202); Delinquency Test formula p194; Class A-1 Cumulative Net Loss Test <= 1.00% (p190). Exact transcription is Phase 1. |
+| C9 | Reference pool | 30-year fixed-rate | text | ASSUMED |  | medium |  | N | Field 4 is FRM for all 64434 loans. Original terms observed 252-480 months, so not all 360. Confirm the pool description in the PPM. |
+| C10 | Termination | optional termination plus scheduled mandatory termination | text | ASSUMED |  | low |  | N | Phase 0 read: PPM modeling assumption (m) p137 - early redemption, where a table assumes it, on the earlier of the Feb 2031 Payment Date and the 10% clean-up; Scheduled Termination Date Feb 2046 (p214). Exact provisions are Phase 1. |
+| C11 | Payment date and accrual period | monthly per PPM convention | text | ASSUMED |  | low |  | N |  |
+| C12 | Prepay / default conventions | CPR and CDR on beginning-of-period scheduled balance; SDA not used | text | ASSUMED |  | low |  | N | Phase 0 read: PPM WAL tables use CPR and "CER" (credit event rate) with a 25% Preliminary Principal Loss, plus RM percentages for modifications (p136-137). Confirm the CER convention in Phase 1. |
+| D1 | Deal identifier | 26DNA1 | text | DATASET | field 2 both monthly files | high |  | N | Constant across all 64434 rows. |
+| D2 | Loan count | 64434 | count | DATASET | row count both monthly files | high |  | N | Identical loan ID set in both months. |
+| D3 | Original UPB (sum field 13) | 23552092000.00 | USD | DATASET | 26DNA1_20260701_lld.txt field 13 Original UPB (layout v4.2) | high |  | N | Field name confirmed by file layout v4.2. Equals PPM Appendix A p220 Aggregate Original Principal Balance exactly. |
+| D4 | Current UPB 2026-07 (sum field 40) | 19675126108.17 | USD | DATASET | 26DNA1_20260701_lld.txt field 40 Current Actual UPB (layout v4.2) | high |  | N | Field name confirmed by file layout v4.2. |
+| D5 | Current UPB 2026-08 (sum field 40) | 19443046983.78 | USD | DATASET | 26DNA1_20260801_lld.txt field 40 Current Actual UPB (layout v4.2) | high |  | N | Field name confirmed by file layout v4.2. |
+| P1 | Closing date | 2026-02-17 | date | PPM | front page | high |  | N |  |
+| P2 | Total offered | 627500000 | USD | PPM | front page | high |  | N |  |
+| P3 | Class A-1 original balance | 275900000 | USD | PPM | Table 1 | high |  | N | SOFR + 0.85%; initial coupon 4.50786%; WAL 1.59; window 1-37; initial CE 3.525%. |
+| P4 | Class M-1 original balance | 275900000 | USD | PPM | Table 1 | high |  | N | SOFR + 1.00%; initial coupon 4.65786%; WAL 1.75; window 1-45; initial CE 2.250%. |
+| P5 | Class M-2A original balance | 37850000 | USD | PPM | Table 1 | high |  | N | SOFR + 1.30%; initial coupon 4.95786%; WAL 4.11; window 45-53; initial CE 2.075%. |
+| P6 | Class M-2B original balance | 37850000 | USD | PPM | Table 1 | high |  | N | SOFR + 1.30%; initial coupon 4.95786%; WAL 4.79; window 53-60; initial CE 1.900%. |
+| P7 | Class coupon minimum rate | 0 | percent | PPM | Table 1 | high |  | N | Applies to all classes. |
+| P8 | Scheduled maturity date | 2046-02 | date | PPM | front page and Table 1 | high |  | N |  |
+| D6 | Cut-off pool balance (sum field 14 UPB at Issuance) | 22781151551.84 | USD | DATASET | 26DNA1_20260701_lld.txt field 14 | high |  | N | Equals PPM Cut-off Date Balance (p194) to the cent. Identical in the 2026-08 file. |
+| D8 | Payment History encoding | 24 months x 2-char status; most recent month on the right; XX = not observed | text | DATASET | Reference Pool Glossary v4.2 p24 'Payment History'; verified: last 2 chars == field 37 for all delinquent loans | high | src/crt/io | N |  |
+| D9 | Loans to zero balance 2026-07 to 2026-08 | 567 | count | DATASET | field 40 both files; ZB codes 01 x565, 96 x2 | high |  | N | July UPB of those loans 189330649.65. |
+| D10 | Loans with Current Actual UPB increase 2026-07 to 2026-08 | 31 | count | DATASET | field 40 both files | high | src/crt/io validation | N | 5 carry a Modification or Payment Deferral flag; 26 do not. See Q3. |
+| D11 | Deferred non-interest-bearing UPB 2026-08 | 196810.42 | USD | DATASET | sum(field 40 - field 41) over 15 loans | high |  | N | Payment Deferral (field 88) and one Flex modification (fields 64-69). |
+| D12 | Credit events observed to date | 0 | count | DATASET | field 43: no codes 02/03/09/15/16 in either file | high |  | N | No loss severity experience exists in the dataset. |
+| P9 | Cut-off Date | 2025-12-31 | date | PPM | p194 Glossary of Significant Terms | high |  | N | Read during Phase 0 reconciliation; ppm-analyst to re-cite in Phase 1. |
+| P10 | Cut-off Date Balance | 22781151551.84 | USD | PPM | p194 Glossary of Significant Terms | high |  | N | Matches dataset D6. |
+| P11 | Modeling pool for PPM tables | Appendix C: 31 assumed loan groups | text | PPM | p136 Modeling Assumption (a); Appendix C p255 | high | tie-out | N | The PPM tables were NOT run on the loan-level file. Tie-out input is Appendix C. Transcribe in Phase 1. |
+| P12 | Assumed SOFR for PPM tables | 3.65786 | percent | PPM | p137 Modeling Assumption (r) | high | tie-out | N | Flat for all periods. |
+| P13 | Early redemption assumption for PPM tables | none unless a table states it; then earlier of Feb 2031 Payment Date and 10% clean-up | text | PPM | p137 Modeling Assumption (m) | high | tie-out | N | Which tables assume it must be transcribed per table in Phase 1. |
+| P14 | Preliminary Principal Loss Amount in WAL and Credit Event Sensitivity tables | 25% of Credit Event Amount; no recovery lag | text | PPM | p136 Modeling Assumption (d) | high | tie-out | N | Declining Balances tables assume no credit events. |
+| P15 | Minimum Credit Enhancement Test threshold | 3.525 | percent | PPM | p202 Glossary | high | waterfall | N | Subordinate Percentage >= 3.525%. |
+| P16 | Class A-1 Cumulative Net Loss Test threshold | 1.00 | percent | PPM | p190 Glossary | high | waterfall | N | Cumulative Net Loss Percentage must not exceed 1.00% on this and every prior Payment Date. The general Cumulative Net Loss Test still to be extracted. |
+| P17 | Delinquency Test | 6-month average Distressed Principal Balance < 50% x (Subordinate Percentage x prior-period UPB - Principal Loss Amount) | text | PPM | p194 Glossary | medium | waterfall | N | Paraphrase; exact language to be quoted in Phase 1. |
+| P18 | Distressed Principal Balance components | 60+ days delinquent; in foreclosure, bankruptcy or REO; modified in prior 12 months | text | PPM | p194 Glossary | high | waterfall | N | Dataset field 89 flags these loans directly. |
+| P19 | Payment Date | 25th of each month or next Business Day | text | PPM | p208 Glossary | high | waterfall | N |  |
+| P20 | Day Count Fraction | actual days in Accrual Period / 360 | text | PPM | p194 Glossary | high | waterfall | N |  |
+| P21 | Scheduled Termination Date | 2046-02 Payment Date | date | PPM | p214 Glossary | high | waterfall | N |  |
+| P22 | Current Accrual Rate | lesser of Accounting Net Yield and mortgage rate minus 0.35% | text | PPM | p194 Glossary; Original Accrual Rate p207 | high | pool | N | Accounting Net Yield is NOT in the dataset (gap G5). |
+| P23 | Reference pool selection window | securitized 2025-01-01 to 2025-03-31; originated on/after 2024-01-01; acquired on/after 2025-01-01 | text | PPM | p220 Appendix A | high |  | N | Dataset First Payment Dates 202408-202505 are consistent. |
+
+## Modeling conventions (brief section 6)
+
+| id | item | value | unit | source | source_ref | confidence | used_in | confirmed | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| C1 | Loss basis | actual loss (not fixed severity) | text | ASSUMED |  | low |  | N | Starting hypothesis for a STACR DNA structure. PPM analyst must confirm or override. |
+| C2 | Credit event trigger | 180+ days delinquent or short sale / deed-in-lieu / third-party sale / REO disposition / note sale whichever first | text | ASSUMED |  | low |  | N | CONTRADICTED by PPM p192 "Credit Event": short sale settled / seriously delinquent note sold / third-party foreclosure sale / REO disposition / charge-off. No 180-day trigger. ppm-analyst to OVERRIDE in Phase 1. |
+| C3 | Loss components | realized loss on liquidation plus modification losses net of recoveries and reversals | text | ASSUMED |  | low |  | N | Confirm treatment of modification events separately from credit events. |
+| C4 | Class coupon index | 30-day Average SOFR + class margin | text | ASSUMED |  | medium |  | N | PPM front page confirms "SOFR Rate + margin" and a 0% minimum. Confirm the exact SOFR definition and day count. Phase 0 read: Day Count Fraction = actual days in Accrual Period / 360 (PPM p194); Accrual Period = prior Payment Date to day before Payment Date (p187). |
+| C5 | Principal allocation | sequential to reference tranches subject to performance tests | text | ASSUMED |  | low |  | N | Confirm pro-rata conditions and the switch triggers. |
+| C6 | Loss allocation | reverse sequential from most subordinate upward | text | ASSUMED |  | low |  | N |  |
+| C7 | Write-up | subsequent recoveries write balances up in sequential order | text | ASSUMED |  | low |  | N |  |
+| C8 | Performance tests gating subordinate principal | Minimum Credit Enhancement Test / Delinquency Test / Cumulative Net Loss Test | text | ASSUMED |  | low |  | N | Phase 0 read: Minimum Credit Enhancement Test = Subordinate Percentage >= 3.525% (p202); Delinquency Test formula p194; Class A-1 Cumulative Net Loss Test <= 1.00% (p190). Exact transcription is Phase 1. |
+| C9 | Reference pool | 30-year fixed-rate | text | ASSUMED |  | medium |  | N | Field 4 is FRM for all 64434 loans. Original terms observed 252-480 months, so not all 360. Confirm the pool description in the PPM. |
+| C10 | Termination | optional termination plus scheduled mandatory termination | text | ASSUMED |  | low |  | N | Phase 0 read: PPM modeling assumption (m) p137 - early redemption, where a table assumes it, on the earlier of the Feb 2031 Payment Date and the 10% clean-up; Scheduled Termination Date Feb 2046 (p214). Exact provisions are Phase 1. |
+| C11 | Payment date and accrual period | monthly per PPM convention | text | ASSUMED |  | low |  | N |  |
+| C12 | Prepay / default conventions | CPR and CDR on beginning-of-period scheduled balance; SDA not used | text | ASSUMED |  | low |  | N | Phase 0 read: PPM WAL tables use CPR and "CER" (credit event rate) with a 25% Preliminary Principal Loss, plus RM percentages for modifications (p136-137). Confirm the CER convention in Phase 1. |
+
+## PPM-sourced deal terms and structuring assumptions
+
+| id | item | value | unit | source | source_ref | confidence | used_in | confirmed | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| P1 | Closing date | 2026-02-17 | date | PPM | front page | high |  | N |  |
+| P2 | Total offered | 627500000 | USD | PPM | front page | high |  | N |  |
+| P3 | Class A-1 original balance | 275900000 | USD | PPM | Table 1 | high |  | N | SOFR + 0.85%; initial coupon 4.50786%; WAL 1.59; window 1-37; initial CE 3.525%. |
+| P4 | Class M-1 original balance | 275900000 | USD | PPM | Table 1 | high |  | N | SOFR + 1.00%; initial coupon 4.65786%; WAL 1.75; window 1-45; initial CE 2.250%. |
+| P5 | Class M-2A original balance | 37850000 | USD | PPM | Table 1 | high |  | N | SOFR + 1.30%; initial coupon 4.95786%; WAL 4.11; window 45-53; initial CE 2.075%. |
+| P6 | Class M-2B original balance | 37850000 | USD | PPM | Table 1 | high |  | N | SOFR + 1.30%; initial coupon 4.95786%; WAL 4.79; window 53-60; initial CE 1.900%. |
+| P7 | Class coupon minimum rate | 0 | percent | PPM | Table 1 | high |  | N | Applies to all classes. |
+| P8 | Scheduled maturity date | 2046-02 | date | PPM | front page and Table 1 | high |  | N |  |
+| P9 | Cut-off Date | 2025-12-31 | date | PPM | p194 Glossary of Significant Terms | high |  | N | Read during Phase 0 reconciliation; ppm-analyst to re-cite in Phase 1. |
+| P10 | Cut-off Date Balance | 22781151551.84 | USD | PPM | p194 Glossary of Significant Terms | high |  | N | Matches dataset D6. |
+| P11 | Modeling pool for PPM tables | Appendix C: 31 assumed loan groups | text | PPM | p136 Modeling Assumption (a); Appendix C p255 | high | tie-out | N | The PPM tables were NOT run on the loan-level file. Tie-out input is Appendix C. Transcribe in Phase 1. |
+| P12 | Assumed SOFR for PPM tables | 3.65786 | percent | PPM | p137 Modeling Assumption (r) | high | tie-out | N | Flat for all periods. |
+| P13 | Early redemption assumption for PPM tables | none unless a table states it; then earlier of Feb 2031 Payment Date and 10% clean-up | text | PPM | p137 Modeling Assumption (m) | high | tie-out | N | Which tables assume it must be transcribed per table in Phase 1. |
+| P14 | Preliminary Principal Loss Amount in WAL and Credit Event Sensitivity tables | 25% of Credit Event Amount; no recovery lag | text | PPM | p136 Modeling Assumption (d) | high | tie-out | N | Declining Balances tables assume no credit events. |
+| P15 | Minimum Credit Enhancement Test threshold | 3.525 | percent | PPM | p202 Glossary | high | waterfall | N | Subordinate Percentage >= 3.525%. |
+| P16 | Class A-1 Cumulative Net Loss Test threshold | 1.00 | percent | PPM | p190 Glossary | high | waterfall | N | Cumulative Net Loss Percentage must not exceed 1.00% on this and every prior Payment Date. The general Cumulative Net Loss Test still to be extracted. |
+| P17 | Delinquency Test | 6-month average Distressed Principal Balance < 50% x (Subordinate Percentage x prior-period UPB - Principal Loss Amount) | text | PPM | p194 Glossary | medium | waterfall | N | Paraphrase; exact language to be quoted in Phase 1. |
+| P18 | Distressed Principal Balance components | 60+ days delinquent; in foreclosure, bankruptcy or REO; modified in prior 12 months | text | PPM | p194 Glossary | high | waterfall | N | Dataset field 89 flags these loans directly. |
+| P19 | Payment Date | 25th of each month or next Business Day | text | PPM | p208 Glossary | high | waterfall | N |  |
+| P20 | Day Count Fraction | actual days in Accrual Period / 360 | text | PPM | p194 Glossary | high | waterfall | N |  |
+| P21 | Scheduled Termination Date | 2046-02 Payment Date | date | PPM | p214 Glossary | high | waterfall | N |  |
+| P22 | Current Accrual Rate | lesser of Accounting Net Yield and mortgage rate minus 0.35% | text | PPM | p194 Glossary; Original Accrual Rate p207 | high | pool | N | Accounting Net Yield is NOT in the dataset (gap G5). |
+| P23 | Reference pool selection window | securitized 2025-01-01 to 2025-03-31; originated on/after 2024-01-01; acquired on/after 2025-01-01 | text | PPM | p220 Appendix A | high |  | N | Dataset First Payment Dates 202408-202505 are consistent. |
+
+## Dataset facts
+
+| id | item | value | unit | source | source_ref | confidence | used_in | confirmed | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| D1 | Deal identifier | 26DNA1 | text | DATASET | field 2 both monthly files | high |  | N | Constant across all 64434 rows. |
+| D2 | Loan count | 64434 | count | DATASET | row count both monthly files | high |  | N | Identical loan ID set in both months. |
+| D3 | Original UPB (sum field 13) | 23552092000.00 | USD | DATASET | 26DNA1_20260701_lld.txt field 13 Original UPB (layout v4.2) | high |  | N | Field name confirmed by file layout v4.2. Equals PPM Appendix A p220 Aggregate Original Principal Balance exactly. |
+| D4 | Current UPB 2026-07 (sum field 40) | 19675126108.17 | USD | DATASET | 26DNA1_20260701_lld.txt field 40 Current Actual UPB (layout v4.2) | high |  | N | Field name confirmed by file layout v4.2. |
+| D5 | Current UPB 2026-08 (sum field 40) | 19443046983.78 | USD | DATASET | 26DNA1_20260801_lld.txt field 40 Current Actual UPB (layout v4.2) | high |  | N | Field name confirmed by file layout v4.2. |
+| D6 | Cut-off pool balance (sum field 14 UPB at Issuance) | 22781151551.84 | USD | DATASET | 26DNA1_20260701_lld.txt field 14 | high |  | N | Equals PPM Cut-off Date Balance (p194) to the cent. Identical in the 2026-08 file. |
+| D7 | File layout version | CRT Reference Pool Disclosure File Layouts v4.2 effective July 2026 | text | DATASET | https://capitalmarkets.freddiemac.com/crt/docs/pdfs/crt-reference-pool-disclosure-file-layouts.pdf (sha256 83c42438...230e3e5) | high | src/crt/io | Y | Public document. Trey to confirm it is the authoritative version for 2026-07/08 reporting periods (Q1). 93 positional fields, pipe-delimited, no header. Confirmed by Trey 2026-09-03 (Q1). |
+| D8 | Payment History encoding | 24 months x 2-char status; most recent month on the right; XX = not observed | text | DATASET | Reference Pool Glossary v4.2 p24 'Payment History'; verified: last 2 chars == field 37 for all delinquent loans | high | src/crt/io | N |  |
+| D9 | Loans to zero balance 2026-07 to 2026-08 | 567 | count | DATASET | field 40 both files; ZB codes 01 x565, 96 x2 | high |  | N | July UPB of those loans 189330649.65. |
+| D10 | Loans with Current Actual UPB increase 2026-07 to 2026-08 | 31 | count | DATASET | field 40 both files | high | src/crt/io validation | N | 5 carry a Modification or Payment Deferral flag; 26 do not. See Q3. |
+| D11 | Deferred non-interest-bearing UPB 2026-08 | 196810.42 | USD | DATASET | sum(field 40 - field 41) over 15 loans | high |  | N | Payment Deferral (field 88) and one Flex modification (fields 64-69). |
+| D12 | Credit events observed to date | 0 | count | DATASET | field 43: no codes 02/03/09/15/16 in either file | high |  | N | No loss severity experience exists in the dataset. |
+
+## Decisions by Trey
+
+| id | item | value | unit | source | source_ref | confidence | used_in | confirmed | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| U1 | Pool engine input representation | rep-line groups are the primary interface; tie-out runs on PPM Appendix C; loan-level file feeds the same engine directly or collapsed to rep-lines by a documented method | text | USER | Trey decision 2026-09-03 on Q2 | high | src/crt/pool | Y |  |
+| U2 | Loader validation policy | single-file validation is hard (row/field counts, types, ID uniqueness, stated pool total); cross-month checks are a separate reconcile step producing an exceptions report; fail only on structural breaks; report attached to run manifest | text | USER | Trey decision 2026-09-03 on Q3 | high | src/crt/io | Y | Never correct or drop a reported value. |
+| U3 | Deal-level payment date statements | to be sourced by Trey for Mar-Aug 2026; required before actual-pool scenario runs (Phase 6) | text | USER | Trey decision 2026-09-03 on Q4 | high |  | Y |  |
