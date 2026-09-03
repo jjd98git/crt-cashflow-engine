@@ -2,8 +2,8 @@
 
 | Phase | State | Notes |
 |---|---|---|
-| 0 — Data reconnaissance | **complete, at gate** | `docs/data-inventory.md` + gap list; layout v4.2 retrieved; pool reconciled to PPM to the cent |
-| 1 — PPM extraction | not started | PPM already extracted to text at `data/raw/stacr-2026-dna1-ppm.txt`; Appendix C (31 groups) is the tie-out pool |
+| 0 — Data reconnaissance | **complete, gate passed 2026-09-03** | `docs/data-inventory.md` + gap list; layout v4.2 retrieved; pool reconciled to PPM to the cent |
+| 1 — PPM extraction | in progress | PPM already extracted to text at `data/raw/stacr-2026-dna1-ppm.txt`; Appendix C (31 groups) is the tie-out pool |
 | 2 — Pool engine | blocked by gate 1 | must accept rep-line inputs (Q2) |
 | 3 — Waterfall engine | blocked | |
 | 4 — Tie-out | blocked | |

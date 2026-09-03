@@ -6,7 +6,7 @@ Every entry must carry a recommendation. Do not hand Trey a bare question.
 
 ---
 
-## Q1 | Phase 0 | setup | RESOLVED PENDING CONFIRMATION
+## Q1 | Phase 0 | setup | CLOSED 2026-09-03 — Trey confirmed layout v4.2
 
 **Question.** The Freddie Mac CRT loan-level file layout / data dictionary was not in the
 downloaded zip. The files have no header row and 93 positional fields.
@@ -27,7 +27,7 @@ version applies, drop it in `data/raw/` and Phase 0 will be re-run against it.
 
 ---
 
-## Q2 | Phase 0 | manager | OPEN — tie-out input is Appendix C, not the loan-level file
+## Q2 | Phase 0 | manager | CLOSED 2026-09-03 — option 1 adopted (rep-line engine; tie-out on Appendix C)
 
 **Question.** PPM Modeling Assumption (a) (p136) states the WAL / Declining Balances /
 Credit Event Sensitivity tables were computed on "the assumed mortgage loans having the
@@ -47,7 +47,7 @@ years WAL by construction; the PPM's own numbers came from 31 groups.
 
 ---
 
-## Q3 | Phase 0 | manager | OPEN — balance continuity rule vs 26 unexplained UPB increases
+## Q3 | Phase 0 | manager | CLOSED 2026-09-03 — option 1 adopted (hard single-file validation; reconcile step with exceptions report)
 
 **Question.** Between the July and August files, Current Actual UPB *rose* for 31 loans.
 5 carry a Modification or Payment Deferral flag; 26 do not (increases from $25.00 to
@@ -76,7 +76,7 @@ from the data alone.
 
 ---
 
-## Q4 | Phase 0 | manager | OPEN — deal-level payment date statements are not in the dataset
+## Q4 | Phase 0 | manager | ACCEPTED 2026-09-03 — Trey to source the Mar–Aug 2026 payment date statements; not blocking Phases 1–4
 
 **Question.** Six Payment Dates (March–August 2026) have occurred. The class balances,
 factors, cumulative Credit Event Net Loss and test outcomes after those dates exist only
@@ -95,7 +95,7 @@ Phases 1–4, which use the PPM; needed before Phase 6 scenario runs on the actu
 
 ---
 
-## Q5 | Phase 0 | manager | OPEN — Accounting Net Yield is not disclosed
+## Q5 | Phase 0 | manager | CLOSED 2026-09-03 — recommendation adopted; ppm-analyst checks for an assumed ANY in Phase 1
 
 **Question.** Original and Current Accrual Rate are "the lesser of Accounting Net Yield
 and the mortgage rate minus 0.35%" (PPM p194, p207). They drive Modification Loss/Gain
@@ -109,7 +109,7 @@ escalate immediately: RM>0 WAL tables cannot be tied without it.
 
 ---
 
-## Q6 | Phase 0 | manager | OPEN — which file feeds which Payment Date
+## Q6 | Phase 0 | manager | CLOSED 2026-09-03 — recommendation adopted; Reporting Period transcribed in Phase 1, mapping stated in spec before Phase 2
 
 **Question.** The inventory infers that the `202607` file (paid through June 2026) feeds
 the July 2026 Payment Date. The PPM's "Reporting Period" definition (p212) has a two-part
