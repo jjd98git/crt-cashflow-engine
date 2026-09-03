@@ -39,7 +39,7 @@ docs/                brief, spec, assumptions, validation, open questions, statu
 ```
 
 ## Environment
-Windows 11, Git Bash. Python is NOT yet set up — the venv is yours to create:
+Windows 11, Git Bash. Venv exists at `.venv` (uv, Python 3.13.12). To recreate:
 ```
 uv venv && .venv\Scripts\activate && uv pip install -e ".[dev]"
 ```
