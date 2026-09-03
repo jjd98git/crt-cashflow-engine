@@ -1,0 +1,28 @@
+note_type,class,class_footnote,original_class_principal_balance,balance_footnote,initial_class_coupon,coupon_footnote,class_coupon_formula,class_coupon_minimum_rate,cusip_number,scheduled_maturity_date,expected_ratings_sp_morningstar_dbrs,expected_wal_years,expected_principal_window_months,expected_initial_credit_enhancement
+Original Notes,A-1,,"275,900,000",,4.50786%,,SOFR Rate + 0.85%,0%,(14),February 2046,A+ (sf)/A (low) (sf),1.59,1-37,3.525%
+Original Notes,M-1,,"275,900,000",,4.65786%,,SOFR Rate + 1.00%,0%,(14),February 2046,BBB+ (sf)/BBB (high) (sf),1.75,1-45,2.250%
+Original Notes,M-2A,(4),"37,850,000",,4.95786%,,SOFR Rate + 1.30%,0%,(14),February 2046,BBB+ (sf)/BBB (sf),4.11,45-53,2.075%
+Original Notes,M-2B,(4),"37,850,000",,4.95786%,,SOFR Rate + 1.30%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,53-60,1.900%
+MACR Notes,M-2,(5),"75,700,000",,4.95786%,,SOFR Rate + 1.30%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.45,45-60,1.900%
+MACR Notes,M-2R,(5),"75,700,000",,4.20786%,,SOFR Rate + 0.55%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.45,45-60,1.900%
+MACR Notes,M-2S,(5),"75,700,000",,4.35786%,,SOFR Rate + 0.70%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.45,45-60,1.900%
+MACR Notes,M-2T,(5),"75,700,000",,4.50786%,,SOFR Rate + 0.85%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.45,45-60,1.900%
+MACR Notes,M-2U,(5),"75,700,000",,4.65786%,,SOFR Rate + 1.00%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.45,45-60,1.900%
+MACR Notes,M-2I,(5),"75,700,000",(6),0.75000%,(7),N/A,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.45,N/A,1.900%
+MACR Notes,M-2AR,(5),"37,850,000",,4.20786%,,SOFR Rate + 0.55%,0%,(14),February 2046,BBB+ (sf)/BBB (sf),4.11,45-53,2.075%
+MACR Notes,M-2AS,(5),"37,850,000",,4.35786%,,SOFR Rate + 0.70%,0%,(14),February 2046,BBB+ (sf)/BBB (sf),4.11,45-53,2.075%
+MACR Notes,M-2AT,(5),"37,850,000",,4.50786%,,SOFR Rate + 0.85%,0%,(14),February 2046,BBB+ (sf)/BBB (sf),4.11,45-53,2.075%
+MACR Notes,M-2AU,(5),"37,850,000",,4.65786%,,SOFR Rate + 1.00%,0%,(14),February 2046,BBB+ (sf)/BBB (sf),4.11,45-53,2.075%
+MACR Notes,M-2AI,(5),"37,850,000",(6),0.75000%,(7),N/A,0%,(14),February 2046,BBB+ (sf)/BBB (sf),4.11,N/A,2.075%
+MACR Notes,M-2BR,(5),"37,850,000",,4.20786%,,SOFR Rate + 0.55%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,53-60,1.900%
+MACR Notes,M-2BS,(5),"37,850,000",,4.35786%,,SOFR Rate + 0.70%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,53-60,1.900%
+MACR Notes,M-2BT,(5),"37,850,000",,4.50786%,,SOFR Rate + 0.85%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,53-60,1.900%
+MACR Notes,M-2BU,(5),"37,850,000",,4.65786%,,SOFR Rate + 1.00%,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,53-60,1.900%
+MACR Notes,M-2BI,(5),"37,850,000",(6),0.75000%,(7),N/A,0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,N/A,1.900%
+MACR Notes,M-2RB,(5),"37,850,000",(8),5.70786%,,(9),0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,53-60,1.900%
+MACR Notes,M-2SB,(5),"37,850,000",(8),5.55786%,,(9),0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,53-60,1.900%
+MACR Notes,M-2TB,(5),"37,850,000",(8),5.40786%,,(9),0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,53-60,1.900%
+MACR Notes,M-2UB,(5),"37,850,000",(8),5.25786%,,(9),0%,(14),February 2046,BBB+ (sf)/BBB (low) (sf),4.79,53-60,1.900%
+Reference Tranche,B-1H,(10),,,5.45786%,,SOFR Rate + 1.80%,0%,,,,,,
+Reference Tranche,B-2H,(10),,,8.40786%,,SOFR Rate + 4.75%,0%,,,,,,
+Non-Offered Interest,X-IO,(11),,(12),,,(13),,,,,,N/A,
