@@ -1,0 +1,37 @@
+[project]
+name = "crt-cashflow-engine"
+version = "0.0.1"
+description = "Intex-adjacent cashflow engine for Freddie Mac STACR CRT transactions"
+requires-python = ">=3.11"
+dependencies = [
+    "polars>=1.0",
+    "pyyaml>=6.0",
+    "openpyxl>=3.1",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov", "ruff>=0.6", "mypy>=1.11"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/crt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "fast: quick unit tests, run on every edit via the PostToolUse hook",
+    "tieout: PPM tie-out regression tests",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src/crt"]

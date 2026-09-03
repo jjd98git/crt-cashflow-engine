@@ -1,0 +1,26 @@
+id,phase,item,value,unit,source_type,source_ref,extracted_by,confidence,used_in,confirmed_by_user,notes
+C1,1,Loss basis,actual loss (not fixed severity),text,ASSUMED,,setup,low,,N,Starting hypothesis for a STACR DNA structure. PPM analyst must confirm or override.
+C2,1,Credit event trigger,180+ days delinquent or short sale / deed-in-lieu / third-party sale / REO disposition / note sale whichever first,text,ASSUMED,,setup,low,,N,Confirm exact definition and any reversal provisions.
+C3,1,Loss components,realized loss on liquidation plus modification losses net of recoveries and reversals,text,ASSUMED,,setup,low,,N,Confirm treatment of modification events separately from credit events.
+C4,1,Class coupon index,30-day Average SOFR + class margin,text,ASSUMED,,setup,medium,,N,PPM front page confirms "SOFR Rate + margin" and a 0% minimum. Confirm the exact SOFR definition and day count.
+C5,1,Principal allocation,sequential to reference tranches subject to performance tests,text,ASSUMED,,setup,low,,N,Confirm pro-rata conditions and the switch triggers.
+C6,1,Loss allocation,reverse sequential from most subordinate upward,text,ASSUMED,,setup,low,,N,
+C7,1,Write-up,subsequent recoveries write balances up in sequential order,text,ASSUMED,,setup,low,,N,
+C8,1,Performance tests gating subordinate principal,Minimum Credit Enhancement Test / Delinquency Test / Cumulative Net Loss Test,text,ASSUMED,,setup,low,,N,Exact thresholds and formulas required.
+C9,1,Reference pool,30-year fixed-rate,text,ASSUMED,,setup,medium,,N,"Field 4 is FRM for all 64434 loans. Original terms observed 252-480 months, so not all 360. Confirm the pool description in the PPM."
+C10,1,Termination,optional termination plus scheduled mandatory termination,text,ASSUMED,,setup,low,,N,Materially affects WAL. Get the exact optional termination conditions.
+C11,1,Payment date and accrual period,monthly per PPM convention,text,ASSUMED,,setup,low,,N,
+C12,1,Prepay / default conventions,CPR and CDR on beginning-of-period scheduled balance; SDA not used,text,ASSUMED,,setup,low,,N,
+D1,0,Deal identifier,26DNA1,text,DATASET,field 2 both monthly files,setup,high,,N,Constant across all 64434 rows.
+D2,0,Loan count,64434,count,DATASET,row count both monthly files,setup,high,,N,Identical loan ID set in both months.
+D3,0,Original UPB (sum field 13),23552092000.00,USD,DATASET,field 13 sum,setup,medium,,N,Field position inferred; confirm against PPM reference pool statistics.
+D4,0,Current UPB 2026-07 (sum field 40),19675126108.17,USD,DATASET,field 40 sum,setup,medium,,N,Field position inferred.
+D5,0,Current UPB 2026-08 (sum field 40),19443046983.78,USD,DATASET,field 40 sum,setup,medium,,N,Field position inferred.
+P1,1,Closing date,2026-02-17,date,PPM,front page,setup,high,,N,
+P2,1,Total offered,627500000,USD,PPM,front page,setup,high,,N,
+P3,1,Class A-1 original balance,275900000,USD,PPM,Table 1,setup,high,,N,SOFR + 0.85%; initial coupon 4.50786%; WAL 1.59; window 1-37; initial CE 3.525%.
+P4,1,Class M-1 original balance,275900000,USD,PPM,Table 1,setup,high,,N,SOFR + 1.00%; initial coupon 4.65786%; WAL 1.75; window 1-45; initial CE 2.250%.
+P5,1,Class M-2A original balance,37850000,USD,PPM,Table 1,setup,high,,N,SOFR + 1.30%; initial coupon 4.95786%; WAL 4.11; window 45-53; initial CE 2.075%.
+P6,1,Class M-2B original balance,37850000,USD,PPM,Table 1,setup,high,,N,SOFR + 1.30%; initial coupon 4.95786%; WAL 4.79; window 53-60; initial CE 1.900%.
+P7,1,Class coupon minimum rate,0,percent,PPM,Table 1,setup,high,,N,Applies to all classes.
+P8,1,Scheduled maturity date,2046-02,date,PPM,front page and Table 1,setup,high,,N,

@@ -1,0 +1,34 @@
+# Source data and offering documents — public, but kept out of the repo.
+# See data/README.md for provenance and download links.
+data/raw/
+*.zip
+*.pdf
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# Outputs
+out/
+runs/
+*.xlsx
+!docs/templates/*.xlsx
+
+# Env / secrets
+.env
+.env.*
+
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
