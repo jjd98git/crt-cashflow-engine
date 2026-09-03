@@ -8,7 +8,7 @@ severity scenarios, and exports an auditable Excel workbook.
 Reference deal for v1: **STACR REMIC 2026-DNA1**.
 
 ## Status
-Phase 0 (data reconnaissance) — not started. See `docs/status.md`.
+Phase 0 (data reconnaissance) — complete, awaiting gate sign-off. See `docs/status.md` and `docs/data-inventory.md`.
 
 ## Setup (Windows 11 / Git Bash)
 ```bash
