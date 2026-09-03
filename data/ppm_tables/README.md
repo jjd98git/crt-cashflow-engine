@@ -19,8 +19,9 @@ trailing zeros) so that a tie-out test can compare against the printed precision
 | `declining_balances.csv` | p141-145 (Declining Balances Tables) | 3,168 |
 | `credit_event_sensitivity.csv` | p146 (Credit Event Sensitivity Tables) | 96 |
 | `table1_classes.csv` | p10-11 (Table 1) | 27 |
-| `modeling_assumptions.yaml` | p136-138, p10-11, p147-156 | 19 assumptions + 5 table families |
-| `register_rows.csv` | as cited per row | 40 (ids T1-T40) |
+| `appendix_g_class_a1_reduction_schedule.csv` | p285 (Appendix G) | 36 |
+| `modeling_assumptions.yaml` | p136-138, p10-11, p147-156, p190, p285 | 19 assumptions + 5 table families + Class A-1 Reduction Amount |
+| `register_rows.csv` | as cited per row | 45 (ids T1-T45) |
 
 ### `appendix_c_rep_lines.csv`
 "Assumed Characteristics of the Reference Obligations (as of the Cut-off Date)", 31 groups.
@@ -102,6 +103,43 @@ footnote reference "(14)" — see Appendix F), `scheduled_maturity_date`,
   coupon in Table 1 (footnotes (12), (13)). Those cells are left empty, not filled.
 - Dollar signs are dropped from balances; everything else is verbatim.
 
+### `appendix_g_class_a1_reduction_schedule.csv`
+Appendix G, "Allocation of Class A-1 Reduction Amounts to the Class A-1 and Class A-1H
+Reference Tranches" (p285). 36 rows, one per printed "Payment Period" (1-36); the table is
+indexed by period number, not calendar Payment Date, so there is no date column. Columns
+follow the printed headers: `payment_period`, `class_a1_reference_tranche_portion_usd`,
+`class_a1_reference_tranche_portion_pct`, `class_a1h_reference_tranche_portion_usd`,
+`class_a1h_reference_tranche_portion_pct`, plus one derived column,
+`aggregate_class_a1_reduction_amount_usd_computed` (A-1 portion + A-1H portion, computed
+here and named as such — it is not printed). Footnote `*` on the two percentage columns:
+"Shown for illustrative purposes only, representing the portions of the initial Class
+Notional Amount of the Class A-1 and Class A-1H Reference Tranches, if any, anticipated to be
+allocable to the Class A-1 and Class A-1H Reference Tranches for the Payment Date in each
+specified payment period."
+
+Why it matters — Glossary, p190, verbatim:
+
+> "Class A-1 Reduction Amount" with respect to any Payment Date is an amount equal to:
+> (A) up to and including the thirty-sixth (36th) Payment Date, the aggregate amount
+> specified for such Payment Date on Appendix G to this Memorandum; and (B) thereafter, 100%
+> of the Senior Reduction Amount (excluding any Recovery Principal) for such Payment Date.
+
+Class A-1 therefore amortizes on this fixed schedule for 36 months regardless of
+collections (subject to the Class A-1 Cumulative Net Loss Test, p29 and p107), which is why
+its Declining Balances (p141) are identical in every CPR column.
+
+Verification (`Decimal`):
+- Sum of the Class A-1 Reference Tranche portion = **223479000.00**, which is 81.000% of
+  the Class A-1 original balance 275,900,000 (12 x 3.750% + 24 x 1.500%). It does **not**
+  equal the original balance; the remaining 19.000% (52,421,000.00) is paid under limb (B)
+  after the 36th Payment Date. 3.750% and 1.500% of 275,900,000 are 10,346,250.00 and
+  4,138,500.00 exactly, matching the printed amounts.
+- Cumulative reductions after periods 12 / 24 / 36 are 45% / 63% / 81%, i.e. 55 / 37 / 19
+  outstanding — exactly the Class A-1 Declining Balances at February 25, 2027 / 2028 / 2029.
+- Sum of the Class A-1H portion = 11793342.48; the implied initial Class A-1H Class
+  Notional Amount is 545,988.08 / 3.750% = 14,559,682.13 (computed, not printed; cross-check
+  against Table 3, p23).
+
 ### `modeling_assumptions.yaml`
 Modeling Assumptions (a) through (s) verbatim from p136-137 (line breaks and the page-break
 folio "115" collapsed; (k) spans p136-137), the CPR / CER / RM definitions from p137-138,
@@ -112,7 +150,7 @@ Cumulative Note Write-down Amount Tables (p147-148) and Yield Tables (p149-156, 
 assumed price per class) are recorded as existing but are not transcribed.
 
 ### `register_rows.csv`
-Forty rows (T1-T40) in the exact column order of `docs/assumptions.csv`, covering the
+Forty-five rows (T1-T45) in the exact column order of `docs/assumptions.csv`, covering the
 structuring assumptions above and the Table 1 values not already in P1-P8. For the Manager
 to merge; `docs/assumptions.csv` was not edited.
 

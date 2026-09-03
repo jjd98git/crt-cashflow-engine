@@ -304,3 +304,53 @@ table_1_basis:
   pricing_speed: 10% CPR
   matching_wal_table_cell: CER 0.00%, RM 0.00%, 10% CPR, To Early Redemption Date
   check_result: all Table 1 expected WALs equal that cell
+class_a1_reduction_amount:
+  glossary_definition:
+    page: '190'
+    section: Glossary of Significant Terms
+    text: '“Class A-1 Reduction Amount” with respect to any Payment Date is an amount equal to: (A) up to and including
+      the thirty-sixth (36th) Payment Date, the aggregate amount specified for such Payment Date on Appendix G to
+      this Memorandum; and (B) thereafter, 100% of the Senior Reduction Amount (excluding any Recovery Principal)
+      for such Payment Date.'
+  related_language:
+  - page: '29'
+    section: Summary
+    text: If the Class A-1 Cumulative Net Loss Test is not satisfied with respect to the Class A-1 Notes, the Class
+      A-1 Reduction Amount will be deemed to be zero and principal payments may not be made on such Class A-1 Notes.
+  - page: '107'
+    section: Allocation of Senior Reduction Amount
+    text: first, if and only if the Class A-1 Cumulative Net Loss Test is satisfied for such Payment Date, an amount
+      up to the Class A-1 Reduction Amount to the Class A-1 and Class A-1H Reference Tranches, pro rata based on
+      their Class Notional Amounts immediately prior to such Payment Date; second, to the Class A-H Reference Tranche;
+      third, to the Class A-1 and Class A-1H Reference Tranches, pro rata based on their Class Notional Amounts
+      immediately prior to such Payment Date; fourth, to the Class M-1 and Class M-1H Reference Tranches, pro rata
+      [...]
+  appendix_g:
+    page: '285'
+    title: ALLOCATION OF CLASS A-1 REDUCTION AMOUNTS TO THE CLASS A-1 AND CLASS A-1H REFERENCE TRANCHES
+    transcribed_to: appendix_g_class_a1_reduction_schedule.csv
+    rows: 36
+    index: Payment Period 1-36 (period number, not calendar date)
+    printed_columns:
+    - Payment Period
+    - Class A-1 Reference Tranche Portion ($)
+    - Class A-1 Reference Tranche Portion (%)*
+    - Class A-1H Reference Tranche Portion ($)
+    - Class A-1H Reference Tranche Portion (%)*
+    footnote_star: Shown for illustrative purposes only, representing the portions of the initial Class Notional
+      Amount of the Class A-1 and Class A-1H Reference Tranches, if any, anticipated to be allocable to the Class
+      A-1 and Class A-1H Reference Tranches for the Payment Date in each specified payment period. The Class A-1
+      Reduction Amount for each Payment Date will be allocated to the Reference Tranches as described under “Description
+      of the Notes — Hypothetical Structure and Calculations with Respect to the Reference Tranches — Allocation
+      of Senior Reduction Amount” in this Memorandum.
+    shape: 'periods 1-12: 10,346,250.00 (3.750%) / 545,988.08 (3.750%); periods 13-36: 4,138,500.00 (1.500%) / 218,395.23
+      (1.500%)'
+    sum_class_a1_portion_usd: '223479000.00'
+    sum_class_a1_portion_pct_of_275900000: '81.000'
+    sum_class_a1h_portion_usd: '11793342.48'
+    sum_aggregate_usd_computed: '235272342.48'
+    check_vs_class_a1_original_balance: 223,479,000.00 != 275,900,000; equals 81.000% of it. Remaining 19.000% (52,421,000.00)
+      falls under limb (B) after the 36th Payment Date. Cumulative 45/63/81% after periods 12/24/36 reproduce the
+      p141 Class A-1 Declining Balances 55/37/19 at every CPR.
+    implied_class_a1h_initial_notional_computed: 14,559,682.13 (= 545,988.08 / 3.750%; not printed; verify against
+      Table 3 p23)
