@@ -1,10 +1,10 @@
 # Assumptions register (rendered)
 
-Generated from `docs/assumptions.csv` (168 rows). Do not edit; edit the CSV and re-run `scripts/render_assumptions.py`.
+Generated from `docs/assumptions.csv` (175 rows). Do not edit; edit the CSV and re-run `scripts/render_assumptions.py`.
 
 ## >>> UNCONFIRMED OR ASSUMED — Trey has not signed these off <<<
 
-164 of 168 rows.
+169 of 175 rows.
 
 | id | item | value | unit | source | source_ref | confidence | used_in | confirmed | notes |
 |---|---|---|---|---|---|---|---|---|---|
@@ -172,6 +172,11 @@ Generated from `docs/assumptions.csv` (168 rows). Do not edit; edit the CSV and 
 | T43 | Appendix G sum of Class A-1 Reference Tranche portion | 223479000.00 | USD | PPM | Appendix G p285 (sum of 36 rows) | high | tie-out | N | = 81.000% of the Class A-1 original balance 275,900,000 (12 x 3.750% + 24 x 1.500%); does NOT equal the original balance. The remaining 19.000% (52,421,000.00) is paid under limb (B) of the definition after the 36th Payment Date. Cumulative reductions of 45% / 63% / 81% after periods 12 / 24 / 36 reproduce the Class A-1 Declining Balances of 55 / 37 / 19 at every CPR (p141) exactly. |
 | T44 | Appendix G sum of Class A-1H Reference Tranche portion | 11793342.48 | USD | PPM | Appendix G p285 (sum of 36 rows) | medium | waterfall | N | Implied initial Class A-1H Class Notional Amount = 545,988.08 / 3.750% = 14,559,682.13 (computed, not printed on p285; cross-check against Table 3 p23 before use). Aggregate Class A-1 Reduction Amount (A-1 + A-1H portions) over 36 periods = 235,272,342.48 (computed). |
 | T45 | Allocation of Senior Reduction Amount - priority | first, if and only if the Class A-1 Cumulative Net Loss Test is satisfied, up to the Class A-1 Reduction Amount to the Class A-1 and Class A-1H Reference Tranches pro rata by Class Notional Amount; second, Class A-H; third, Class A-1 and A-1H pro rata; fourth, Class M-1 and M-1H pro rata; ... | text | PPM | p107 Allocation of Senior Reduction Amount | medium | waterfall | N | Only the first four limbs were read for this row; the full ordering and the Subordinate Reduction Amount allocation are for the deal_terms YAML extraction. Appendix G footnote * refers to this section. |
+| A1 | CPR to monthly conversion | SMM = 1 - (1 - CPR)^(1/12) | formula | ASSUMED | Q11 option 1; PPM p137/p192 state only 'converted to an equivalent monthly rate' | medium | src/crt/pool | Y | Standard convention. To be proven by the Declining Balances tie-out; never tuned. |
+| A2 | CER to monthly conversion and basis | monthly CE rate = 1 - (1 - CER)^(1/12) applied to beginning-of-month balance net of scheduled principal; credit events removed before prepayments | formula | ASSUMED | Q11 option 1; PPM p138/p190 | medium | src/crt/pool | Y | To be proven by the WAL-table tie-out at CER > 0. |
+| A3 | Prepayment basis | SMM applied to beginning-of-month balance net of that month's scheduled principal | formula | ASSUMED | Q11 option 1 | medium | src/crt/pool | Y |  |
+| A5 | First Payment Date denominators | Cut-off Date Balance for Senior Percentage and Delinquency Test on the first Payment Date; prior Reporting Period ending UPB thereafter | text | ASSUMED | Q8 option 1; PPM p214, p194, p24 | medium | src/crt/waterfall | Y |  |
+| A6 | Class A-1 Reduction Amount reading | aggregate of both Appendix G columns for the Payment Period; per Payment Date; no carry-forward | text | ASSUMED | Q9 option 1; PPM p190, p285 | medium | src/crt/waterfall | Y |  |
 
 ## Modeling conventions (brief section 6)
 
@@ -365,3 +370,4 @@ Generated from `docs/assumptions.csv` (168 rows). Do not edit; edit the CSV and 
 | U1 | Pool engine input representation | rep-line groups are the primary interface; tie-out runs on PPM Appendix C; loan-level file feeds the same engine directly or collapsed to rep-lines by a documented method | text | USER | Trey decision 2026-09-03 on Q2 | high | src/crt/pool | Y |  |
 | U2 | Loader validation policy | single-file validation is hard (row/field counts, types, ID uniqueness, stated pool total); cross-month checks are a separate reconcile step producing an exceptions report; fail only on structural breaks; report attached to run manifest | text | USER | Trey decision 2026-09-03 on Q3 | high | src/crt/io | Y | Never correct or drop a reported value. |
 | U3 | Deal-level payment date statements | to be sourced by Trey for Mar-Aug 2026; required before actual-pool scenario runs (Phase 6) | text | USER | Trey decision 2026-09-03 on Q4 | high |  | Y |  |
+| U4 | Phase 1 gate | Trey 2026-09-03: proceed to build and run; recommendations on Q7-Q11 adopted; PPM-sourced register rows accepted provisionally pending review of the first tie-out | text | USER | Trey message 2026-09-03 | high |  | Y | Rows still marked N are provisionally accepted, not individually reviewed. |

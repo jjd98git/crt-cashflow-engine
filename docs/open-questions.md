@@ -121,7 +121,7 @@ spec before Phase 2. Trey can short-circuit this if he knows the convention.
 
 ---
 
-## Q7 | Phase 1 | ppm-analyst | OPEN 2026-09-03 — Accounting Net Yield is not in the PPM (closes Q5; needs a decision for actual-pool runs)
+## Q7 | Phase 1 | ppm-analyst | CLOSED 2026-09-03 — option 1 adopted by Trey (ANY: none for tie-out; required servicing-fee input for actual runs) — Accounting Net Yield is not in the PPM (closes Q5; needs a decision for actual-pool runs)
 
 **Question.** Q5 asked whether the PPM states an assumed Accounting Net Yield (ANY). It does
 not. The only definition is p187: "'Accounting Net Yield' with respect to each Payment Date
@@ -160,7 +160,7 @@ Conclusion: the RM>0 WAL tables CAN be tied without an ANY input.
 
 ---
 
-## Q8 | Phase 1 | ppm-analyst | OPEN 2026-09-03 — First-Payment-Date denominators for Senior Percentage and the Delinquency Test
+## Q8 | Phase 1 | ppm-analyst | CLOSED 2026-09-03 — option 1 adopted by Trey (Cut-off Date Balance on first Payment Date, prior Reporting Period UPB thereafter) — First-Payment-Date denominators for Senior Percentage and the Delinquency Test
 
 **Question.** Senior Percentage (p214) divides by "the aggregate UPB of the Reference
 Obligations in the Reference Pool at the end of the previous Reporting Period". The
@@ -191,7 +191,7 @@ subordination (Table 3), which is internally consistent.
 
 ---
 
-## Q9 | Phase 1 | ppm-analyst | OPEN 2026-09-03 — Class A-1 Reduction Amount: "aggregate" reading and shortfall carry-forward
+## Q9 | Phase 1 | ppm-analyst | CLOSED 2026-09-03 — option 1 adopted by Trey (aggregate of both Appendix G columns, per Payment Date, no carry-forward) — Class A-1 Reduction Amount: "aggregate" reading and shortfall carry-forward
 
 **Question.** p190: "'Class A-1 Reduction Amount' with respect to any Payment Date is an
 amount equal to: (A) up to and including the thirty-sixth (36th) Payment Date, the aggregate
@@ -224,7 +224,7 @@ the Senior Reduction Amount allocation text: no carry-forward language.
 
 ---
 
-## Q10 | Phase 1 | ppm-analyst | OPEN 2026-09-03 — When do prepayments start in the PPM tables: January 2026 or the Closing Date?
+## Q10 | Phase 1 | ppm-analyst | CLOSED 2026-09-03 — option 1 adopted by Trey (two month-ends of amortization and prepayment in the March 2026 period) — When do prepayments start in the PPM tables: January 2026 or the Closing Date?
 
 **Question.** Two statements pull in different directions. Table 1 footnote (1) (p11):
 "prepayments occur at the Pricing Speed of 10% CPR, calculated from the Closing Date".
@@ -260,7 +260,7 @@ diagnostic list should test this before the accrual convention.
 
 ---
 
-## Q11 | Phase 1 | ppm-analyst | OPEN 2026-09-03 — CPR and CER monthly conversion and balance basis are not stated
+## Q11 | Phase 1 | ppm-analyst | CLOSED 2026-09-03 — option 1 adopted by Trey (SMM convention on beginning balance net of scheduled principal, credit events before prepayments; ASSUMED until tie-out proves it) — CPR and CER monthly conversion and balance basis are not stated
 
 **Question.** The PPM defines CPR as "a specified constant annual rate" that "is converted to
 an equivalent monthly rate" (p137, p192) and CER as "a constant rate of Reference Obligations
