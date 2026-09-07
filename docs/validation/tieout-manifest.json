@@ -18,7 +18,7 @@
   ],
   "decimal_precision": 28,
   "engine_version": "0.0.1",
-  "git_commit": "57510e4dee3abe0aaecb73e8e6c42a6fcf332b0a",
+  "git_commit": "0dec32f29accafdacbf4a166dbe503d9c3881b62",
   "input_sha256": {
     "data/deal_terms/stacr_2026_dna1.yaml": "62fb79cda6b390da4dfc44d0bb617bbe72ef6ff073026893e07d96475a0fec52",
     "data/ppm_tables/appendix_c_rep_lines.csv": "f48cfaeaaa005258657a94cd34796584cded9f45138391bf20408207ef0e4361",
@@ -27,8 +27,8 @@
     "data/ppm_tables/declining_balances.csv": "860260b1cf02fbae75a89befabdcc509d38be8d788394b468bb3703dc82cfd06",
     "data/ppm_tables/table1_classes.csv": "6b25e9b72e91df44c7dcd7788aec98891ba072edf68dd154e40a81340f456465",
     "data/ppm_tables/wal_tables.csv": "d50ed73d2436700e864f82c6058e41201b2f46d1b0adb8e3dea24d10ca77803a",
-    "docs/assumptions.csv": "d448b46a84ec153f192613d47ddf5475b09dd62e8d126248775381aff9ddc19c"
+    "docs/assumptions.csv": "eadea4366dc25e5374c175f998ea30881d82a7c19dfb6567320020cb75024d34"
   },
   "scenario_grid": "CPR {0, 5, 10, 15, 25, 35} % x CER {0.00, 0.25, 0.50, 1.00, 1.50, 2.50, 3.00, 5.00} % x RM 0 x early redemption {off, on}",
-  "timestamp_utc": "2026-09-07T16:04:09Z"
+  "timestamp_utc": "2026-09-07T17:29:16Z"
 }
