@@ -356,3 +356,165 @@ only then test the 03-tieout.md §5 item-7 alternatives one at a time.
 the initial Senior Percentage is 95.200%. It is 96.47500%: A-1 and A-1H are senior for the
 Senior Percentage (YAML principal.senior_percentage). Table 3's 4.800% is subordination
 below A-H. The adopted option is unchanged.
+
+---
+
+## Q18 | Phase 3 | fintech-dev | OPEN 2026-09-07 — Tranche Write-up split for a Note/H pair whose prior balances are both zero
+
+**Question.** Spec 02 section 5 requires the Tranche Write-up Amount to be split between a
+Note tranche and its H tranche "pro rata by Class Notional Amounts immediately prior" with the
+cap applied per member. A pair that has been fully written down has both prior balances at
+zero, so the ratio is 0/0. The PPM text quoted in the YAML (`credit_events.tranche_write_up_allocation_order`)
+does not say what ratio applies then.
+
+**Why it matters.** Zero in every v1 scenario (no Principal Recovery Amount, Modeling
+Assumptions (n), (o)); it decides which Note is written back up first in an actual-pool run
+with subsequent recoveries after a full write-down of M-2B/M-2BH.
+
+**What was implemented.** `crt.waterfall.allocation.split_pair` raises `AllocationError`
+(marked `# Q18`) when both prior balances are zero, so the engine cannot silently guess.
+
+**Options.**
+1. **(Recommended)** Split by the pair's cumulative unreimbursed write-downs when both prior
+   balances are zero (the only quantity that still distinguishes the members; gives the same
+   Note/H shares as the original notionals when both were written down pro rata).
+2. Split by the initial Class Notional Amounts.
+3. Keep raising (blocks actual-pool runs with write-ups after a full write-down).
+Numeric implication in v1: none. Options 1 and 2 coincide whenever the pair was written down
+pro rata, which is always the case under the PPM's write-down order.
+
+---
+
+## Q19 | Phase 3 | fintech-dev | OPEN 2026-09-07 — Timing of the Stated Principal clause (e) floor excess added to A-H
+
+**Question.** Stated Principal is floored at zero and the excess of clause (e) over (a)–(d)
+is added to A-H (`principal.stated_principal`, P96). Spec 01 section 5 says to implement the
+floor "as written" and assert it is zero in v1, but neither the spec nor the YAML says at
+which point in the Payment Date order (before Step 1, after Step 4) A-H is increased.
+
+**What was implemented.** The engine computes the excess in the pool aggregation
+(`PaymentPeriod.stated_principal_floor_excess_to_a_h`, zero in v1) and adds it to A-H
+together with the Step 1 A-H adjustments, before Steps 2–4 (marked `# Q19`).
+
+**Options.**
+1. **(Recommended)** With Step 1, before the Reduction Amounts (matches the PPM's grouping of
+   the A-H increase on write-down, which is also a "Class Notional Amount ... increased by"
+   clause outside the priority lists).
+2. After Step 4, with the Supplemental Senior Increase Amount.
+Numeric implication in v1: none (the excess is zero). In actual-pool runs the choice moves the
+Senior Percentage of the following Payment Date by the excess / UPB, i.e. by less than one
+hundred-thousandth of a percent for any plausible data correction.
+
+---
+
+## Q20 | Phase 3 | fintech-dev | OPEN 2026-09-07 — A8 pair split drifts from the printed Appendix G columns by one cent on five Payment Dates
+
+**Question.** A8 takes the Note/H ratio from the Class Notional Amounts "immediately prior to
+the Payment Date". Appendix G prints a constant 10,346,250.00 / 545,988.08 split for Payment
+Dates 1–12 (3.750 % of each *initial* notional) and 4,138,500.00 / 218,395.23 for 13–36. The
+engine reproduces both columns on Payment Date 1 (spec 02 section 4 check) but, because the
+H leg was rounded up by 0.0013 cents on Payment Date 1, the prior-balance ratio on later dates
+is fractionally larger for A-1 and the cent rounding flips on Payment Dates 3, 5, 7, 9 and 11:
+A-1 receives 10,346,250.01 and A-1H 545,988.07. Cumulative effect: A-1 is paid $0.05 more than
+Appendix G by Payment Date 12 and its balance after Payment Date 36 is 52,420,999.95, not
+52,421,000.00; the A-1 WAL moves by 4.5e-10 years. Payment Dates 13–36 match Appendix G exactly.
+
+**Why it matters.** No tie-out cell is affected (WAL identical to 9 decimals, Declining
+Balances identical to 8 decimals). It matters for penny-level agreement with Freddie Mac's
+payment date statements (Q4) and for the Excel export "to the penny" criterion, where the
+convention must be the PPM's.
+
+**Options.**
+1. **(Recommended for now)** Keep A8 as specified; verify against the March–August 2026
+   payment date statements when Trey supplies them (Q4): the actual A-1 factor after the
+   third Payment Date decides between the two readings.
+2. For the Class A-1 Reduction Amount only, allocate the printed Appendix G columns directly
+   (the PPM says the percentages are "illustrative", so this is a reading, not a fact).
+3. Take every pair ratio from the initial Class Notional Amounts.
+Numeric implication: ≤ $0.05 on A-1 and ≤ $0.05 on A-1H through Payment Date 36; nothing else.
+
+**Related observation (not a question).** Spec 02 section 8 says the Class A-1 Additional
+Reduction Amount "does bind (at 0 % CPR it retires A-1 on Payment Date 39)". In the engine
+A-1 is retired on Payment Date 39 at 0 % CPR by Step 2 priority 1 under limb (B) (from
+Payment Date 37 the Class A-1 Reduction Amount equals the whole Senior Reduction Amount and
+A-1/A-1H are paid ahead of A-H), so Step 4 finds nothing left and the Additional limb is
+zero. The outcome (Payment Date 39, WAL 1.5971 → 1.60) is as printed; only the narrative
+mechanism differs. `tests/unit/test_waterfall.py::test_zero_cpr_retires_a1_on_payment_date_39`
+asserts the actual mechanism.
+
+---
+
+## Q21 | Phase 4 | fintech-dev | OPEN 2026-09-07 — ESCALATION: 12 of 336 CER > 0 WAL cells outside ±0.02 and 10 of 96 Credit Event Sensitivity cells outside the A13 round-match, with A1–A15 implemented exactly as specified (supersedes Q17 with engine numbers)
+
+**Status of the tie-out (`docs/validation/tieout.md`, engine 0.0.1).** Table 1 windows 4/4
+exact; Declining Balances CER 0: 366/366 round-match (A13); WAL CER 0: 48/48 within ±0.02
+(worst 0.0048); WAL CER > 0: 324/336 within ±0.02, **336/336 within the ±0.10 milestone**
+(worst 0.0836); Credit Event Sensitivity: 86/96 round-match, **96/96 within ±0.25 pp** (worst
+0.11 pp). Every miss is on the "To Scheduled Maturity Date" basis except one CES cell.
+
+**The failing WAL cells (model − PPM, years).**
+
+| Note | basis | CER | CPR | model | PPM | diff |
+|---|---|---|---|---|---|---|
+| A-1 | sched | 5.00 % | 25 | 5.4821 | 5.46 | +0.0221 |
+| M-1 | sched | 1.00 % | 0 | 13.7275 | 13.70 | +0.0275 |
+| M-1 | sched | 1.50 % | 5 | 11.8025 | 11.78 | +0.0225 |
+| M-2A | sched | 0.50 % | 5 | 15.9707 | 16.00 | −0.0293 |
+| M-2A | sched | 1.00 % | 5 | 14.1612 | 14.12 | +0.0412 |
+| M-2A | sched | 1.00 % | 15 | 13.3101 | 13.39 | −0.0799 |
+| M-2A | sched | 1.50 % | 10 | 10.8803 | 10.86 | +0.0203 |
+| M-2A | sched | 3.00 % | 25 | 6.1939 | 6.17 | +0.0239 |
+| M-2B | sched | 0.50 % | 0 | 19.8514 | 19.83 | +0.0214 |
+| M-2B | sched | 0.50 % | 5 | 18.6817 | 18.71 | −0.0283 |
+| M-2B | sched | 1.00 % | 5 | 12.1247 | 12.10 | +0.0247 |
+| M-2B | sched | 1.00 % | 15 | 14.3764 | 14.46 | −0.0836 |
+
+**The failing Credit Event Sensitivity cells (model − PPM, percentage points).**
+
+| basis | CER | CPR | model | PPM | diff |
+|---|---|---|---|---|---|
+| sched | 0.25 % | 15 | 1.349 | 1.4 | −0.051 |
+| sched | 1.00 % | 10 | 7.044 | 7.1 | −0.056 |
+| sched | 2.50 % | 0 | 33.292 | 33.4 | −0.108 |
+| sched | 2.50 % | 5 | 22.643 | 22.7 | −0.057 |
+| sched | 3.00 % | 0 | 38.392 | 38.5 | −0.108 |
+| sched | 3.00 % | 25 | 9.253 | 9.2 | +0.053 |
+| sched | 5.00 % | 0 | 54.905 | 55.0 | −0.095 |
+| sched | 5.00 % | 5 | 38.749 | 38.8 | −0.051 |
+| sched | 5.00 % | 25 | 14.679 | 14.6 | +0.079 |
+| early | 2.50 % | 35 | 4.951 | 4.9 | +0.051 |
+
+**Pattern.** The Credit Event Sensitivity table depends on the pool alone (no waterfall). The
+model is 0.10–0.11 pp *short* of the PPM at 0 % CPR for CER ≥ 2.5 % and *long* at 25 % CPR;
+this CPR-dependent sign is the signature of a different basis or ordering of credit events
+versus prepayments within the month (spec 03 section 5 item 7), not of the annual-to-monthly
+conversion (which moves every cell the same way). The WAL misses cluster on long-dated
+cells (5.5–20 year WALs) where a one-month shift in credit-event timing moves the WAL by
+several hundredths; the largest (M-2A/M-2B at CER 1.00 %, CPR 15 %, −0.08) are on a CPR
+column the spec author's scratch replication (Q17) did not check.
+
+**What was tried (scratch scripts only; engine unchanged; every trial in
+`docs/validation/tieout-diagnostics.md`, section 7 of the report).** No single item-7
+alternative reproduces both tables: "credit events on the beginning-of-month balance before
+scheduled principal" (H7b) brings the WAL to 330/336 (worst 0.038) but leaves the CES at
+39/48 sched cells with the opposite sign pattern; "credit events and prepayments both on the
+beginning balance" (H7e) brings the CES to 44/48 but worsens the worst WAL miss to −0.10;
+CER/12, prepay-before-CE and the other orderings are much worse.
+
+**Options.**
+1. **(Recommended)** Keep A1–A3 as specified (the engine as built). Record the v1 tie-out as:
+   windows exact, Declining Balances 100 %, WAL CER 0 100 % at ±0.02, WAL CER > 0 96.4 % at
+   ±0.02 and 100 % at ±0.10, CES 100 % at ±0.25 pp. Ask the structured-cashflow-expert for an
+   independent first-principles determination of the PPM's within-month credit-event timing
+   (whether Credit Event Reference Obligations pay their scheduled principal in the month, and
+   whether the CE rate applies before or after that month's scheduled principal and
+   prepayments) — the pool-only CES table is the discriminating target and should be tied
+   first, as spec 03 section 3.5 intends. Trey decides whether 324/336 meets the v1 definition
+   of done or the tie-out stays open.
+2. Adopt H7b now. Numeric implication: every CER > 0 cell changes; WAL worst miss 0.084 →
+   0.038 (6 cells still outside ±0.02); CES sched cells 39/48 → 39/48 with different cells
+   failing (0 % CPR cells fixed, CER ≥ 3 % / CPR ≥ 10 % cells overshoot by up to 0.21 pp).
+   Rejected by fintech-dev because it does not tie the pool-only table.
+3. Adopt H7e now. Numeric implication: CES 39/48 → 44/48; WAL 324 → 327/336 but worst miss
+   −0.10. Rejected for the same reason.
+Never a scaling factor (BRIEF section 2).

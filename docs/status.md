@@ -3,16 +3,16 @@
 | Phase | State | Notes |
 |---|---|---|
 | 0 — Data reconnaissance | **complete, gate passed 2026-09-03** | `docs/data-inventory.md` + gap list; layout v4.2 retrieved; pool reconciled to PPM to the cent |
-| 1 — PPM extraction | **complete, at gate** | `data/deal_terms/stacr_2026_dna1.yaml` (258 cited fields); `data/ppm_tables/` (Appendix C, Appendix G, Table 1, WAL, Declining Balances, Credit Event Sensitivity); register 168 rows awaiting Trey |
-| 2 — Pool engine | blocked by gate 1 | must accept rep-line inputs (Q2) |
-| 3 — Waterfall engine | blocked | |
-| 4 — Tie-out | blocked | |
+| 1 — PPM extraction | complete, gate closed 2026-09-03 (provisional register sign-off) | `data/deal_terms/stacr_2026_dna1.yaml` (258 cited fields); `data/ppm_tables/` (Appendix C, Appendix G, Table 1, WAL, Declining Balances, Credit Event Sensitivity); register 168 rows awaiting Trey |
+| 2 — Pool engine | **built** (rep-line, spec 01) | 2026-09-07 |
+| 3 — Waterfall engine | **built** (spec 02) | 2026-09-07 |
+| 4 — Tie-out | **running; partial** | CER 0 families PASS; CER>0 WAL 324/336, CES 86/96 — Q21 |
 | 5 — Excel export | blocked | Excel is installed on this machine; LibreOffice is not |
 | 6 — Scenario input | blocked | actual-pool runs need payment date statements (Q4) |
 | 7 — GUI | blocked | stack not chosen; propose in plan mode |
 | 8 — AI shell | blocked | |
 
-Tie-out status: not yet run.
+Tie-out status (2026-09-07, `python -m crt.tieout`, 11 s): Table 1 windows 4/4 exact; Declining Balances CER 0 366/366; WAL CER 0 48/48 within ±0.02 (worst 0.0048); WAL CER>0 324/336 within ±0.02 (all within ±0.10, worst 0.084); Credit Event Sensitivity 86/96 round-match (all within ±0.25 pp). Overall FAIL pending Q21.
 
 ## Phase 0 summary (2026-09-03)
 
@@ -48,3 +48,14 @@ Cumulative Net Loss Test schedule against p194.
 **Open.** Q7 (Accounting Net Yield for actual-pool runs), Q8 (first-Payment-Date
 denominators), Q9 (Class A-1 Reduction Amount reading), Q10 (prepayment start month in the
 PPM tables), Q11 (CPR/CER monthly conversion). Q4 still awaits the payment date statements.
+
+## Phases 2-4 summary (2026-09-07)
+
+**Shipped.** Spec 00-04; engine packages io, pool, waterfall, scenarios, tieout (32
+modules, mypy strict, ruff clean); 29 fast unit tests from the spec's worked examples; 11
+tie-out regression tests (2 failing honestly: CER>0 WAL and Credit Event Sensitivity);
+`docs/validation/tieout.md` + manifest regenerated on every run.
+
+**Open.** Q12-Q17 (spec conventions A7-A15, need Trey's confirmation), Q18-Q20 (dev
+edge cases, v1-neutral), Q21 (escalation: within-month credit-event timing; no single
+alternative to A2/A3 ties both tables). Q4 still awaits payment date statements.

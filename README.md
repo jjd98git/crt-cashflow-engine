@@ -8,7 +8,7 @@ severity scenarios, and exports an auditable Excel workbook.
 Reference deal for v1: **STACR REMIC 2026-DNA1**.
 
 ## Status
-Phase 0 (data reconnaissance) — complete, awaiting gate sign-off. See `docs/status.md` and `docs/data-inventory.md`.
+Phases 0-3 complete; Phase 4 tie-out running (CER 0 families tie exactly; CER>0 open as Q21). Run `python -m crt.tieout`. See `docs/status.md` and `docs/validation/tieout.md`.
 
 ## Setup (Windows 11 / Git Bash)
 ```bash
