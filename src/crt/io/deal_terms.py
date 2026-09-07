@@ -17,6 +17,7 @@ from typing import Any
 
 import yaml
 
+from crt.io.yaml_decimal import DecimalSafeLoader
 from crt.money import ZERO, percent_to_fraction
 
 # The twelve Reference Tranches of Table 3 in the PPM's order (spec 02 section 1).
@@ -50,21 +51,6 @@ class DealTermsError(ValueError):
     """The deal-terms YAML is missing or inconsistent for a field the engine needs."""
 
 
-class _DecimalSafeLoader(yaml.SafeLoader):
-    """SafeLoader whose YAML floats become ``Decimal`` built from the scalar text."""
-
-
-def _construct_decimal(loader: yaml.SafeLoader, node: yaml.Node) -> Decimal:
-    if not isinstance(node, yaml.ScalarNode):
-        raise DealTermsError(f"float tag on non-scalar node at {node.start_mark}")
-    text = str(node.value).replace("_", "")
-    try:
-        return Decimal(text)
-    except InvalidOperation:
-        raise DealTermsError(f"cannot read {text!r} as Decimal at {node.start_mark}") from None
-
-
-_DecimalSafeLoader.add_constructor("tag:yaml.org,2002:float", _construct_decimal)
 
 
 @dataclass(frozen=True)
@@ -238,7 +224,7 @@ def load_deal_terms(path: Path) -> DealTerms:
     if not path.is_file():
         raise DealTermsError(f"{path}: file not found")
     with path.open(encoding="utf-8") as handle:
-        raw = yaml.load(handle, Loader=_DecimalSafeLoader)
+        raw = yaml.load(handle, Loader=DecimalSafeLoader)
     if not isinstance(raw, dict):
         raise DealTermsError(f"{path}: top level is not a mapping")
 

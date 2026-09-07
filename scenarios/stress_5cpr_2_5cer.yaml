@@ -1,0 +1,12 @@
+# Stress point of the PPM grid (register T25 / T26): 5 % CPR, 2.50 % CER, run to the
+# Scheduled Maturity Date (early redemption off), flat SOFR Rate of Modeling Assumption (r).
+name: stress-5cpr-2.5cer
+description: >
+  Stress: 5 % CPR, 2.50 % CER, early redemption off (to Scheduled Maturity Date),
+  SOFR 3.65786 % flat, Delinquency Test satisfied.
+cpr_pct: 5
+cer_pct: 2.50
+sofr_pct: 3.65786
+early_redemption: false
+delinquency_test_satisfied: true
+rm_pct: 0

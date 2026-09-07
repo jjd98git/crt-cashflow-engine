@@ -42,6 +42,12 @@ DIAGNOSTICS_LOG_PATH = Path("docs/validation/tieout-diagnostics.md")
 # src/crt/tieout/run.py -> parents[3] is the project root (editable install).
 DEFAULT_PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
+# The three engine inputs of every run, relative to the project root (also hashed into
+# the scenario-run manifest by ``crt.api``).
+DEAL_TERMS_PATH = Path("data/deal_terms/stacr_2026_dna1.yaml")
+REP_LINES_PATH = Path("data/ppm_tables/appendix_c_rep_lines.csv")
+APPENDIX_G_PATH = Path("data/ppm_tables/appendix_g_class_a1_reduction_schedule.csv")
+
 
 @dataclass(frozen=True)
 class TieoutInputs:
@@ -51,12 +57,11 @@ class TieoutInputs:
 
 
 def load_inputs(root: Path) -> TieoutInputs:
-    deal = load_deal_terms(root / "data/deal_terms/stacr_2026_dna1.yaml")
+    deal = load_deal_terms(root / DEAL_TERMS_PATH)
     rep_lines = load_rep_lines(
-        root / "data/ppm_tables/appendix_c_rep_lines.csv",
-        cut_off_date_balance=deal.cut_off_date_balance,
+        root / REP_LINES_PATH, cut_off_date_balance=deal.cut_off_date_balance
     )
-    appendix_g = load_appendix_g(root / "data/ppm_tables/appendix_g_class_a1_reduction_schedule.csv")
+    appendix_g = load_appendix_g(root / APPENDIX_G_PATH)
     return TieoutInputs(deal=deal, rep_lines=rep_lines, appendix_g=appendix_g)
 
 

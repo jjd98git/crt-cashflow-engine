@@ -1,0 +1,13 @@
+# STACR 2026-DNA1 pricing speed: the Table 1 basis (YAML: original_notes.table1_basis_note;
+# register P65, T2, T38).  10 % CPR from the Closing Date, no Credit Events, redemption on
+# the Early Redemption Date (February 2031), flat SOFR Rate of Modeling Assumption (r).
+name: pricing-speed
+description: >
+  PPM pricing speed: 10 % CPR, 0 % CER, early redemption on, SOFR 3.65786 % flat,
+  Delinquency Test satisfied (Modeling Assumptions (a)-(s)).
+cpr_pct: 10
+cer_pct: 0
+sofr_pct: 3.65786
+early_redemption: true
+delinquency_test_satisfied: true
+rm_pct: 0

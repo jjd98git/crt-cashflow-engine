@@ -12,6 +12,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-cov", "ruff>=0.6", "mypy>=1.11", "types-PyYAML"]
+gui = ["streamlit>=1.30"]
 
 [build-system]
 requires = ["hatchling"]
@@ -25,6 +26,7 @@ testpaths = ["tests"]
 markers = [
     "fast: quick unit tests, run on every edit via the PostToolUse hook",
     "tieout: PPM tie-out regression tests",
+    "gui: headless Streamlit AppTest smoke tests (need the gui extra)",
 ]
 
 [tool.ruff]
@@ -32,6 +34,14 @@ line-length = 100
 src = ["src", "tests"]
 
 [tool.mypy]
-python_version = "3.11"
+# 3.12, not 3.11: numpy (a streamlit dependency) ships stubs using the 3.12 `type`
+# statement, and mypy parses them via polars' numpy.typing import before any override
+# can skip them.  The venv runs 3.13; requires-python is still >= 3.11.
+python_version = "3.12"
 strict = true
 files = ["src/crt"]
+
+# The GUI package imports pandas (pulled in by streamlit) which ships no type stubs.
+[[tool.mypy.overrides]]
+module = ["pandas", "pandas.*"]
+ignore_missing_imports = true
