@@ -185,6 +185,7 @@ scaling factor (BRIEF §2).
    the rest (Q17), so a residual of that size is expected and is **not** a failure of the
    ±0.02 tolerance except on a handful of long-dated 0 % CPR cells; if the engine shows the
    same pattern, escalate with the per-cell table rather than changing A2.
+   *Superseded 2026-09-07 (Q21): the engine showed exactly that pattern (12/336 WAL CER > 0 and 10/96 Credit Event Sensitivity cells outside tolerance); the diagnosis in `docs/validation/q21-credit-event-timing.md` adopted the fourth alternative combined with the second — credit events and prepayments in full both on the beginning-of-month balance, simultaneous, only the survivors amortize (A2/A3 revised; `01-pool.md` §3) — and the engine now ties 336/336 and 96/96, so the residual described here is no longer expected.*
 
 A mismatch surviving the list is escalated immediately (BRIEF §11) with the table of
 trials.
@@ -213,6 +214,8 @@ and compared it with the transcribed tables. Results, all with A1–A13 as speci
 This is evidence that the conventions are the PPM's, not a substitute for the engine
 tie-out: the engine must reproduce these independently, and `docs/validation/` will then
 carry the spec author's replication of a Payment Date against the engine's numbers.
+
+*Superseded 2026-09-07 (Q21): the replication above used the pre-Q21 A2/A3 reading; under `01-pool.md` §3 as amended the engine ties WAL CER > 0 336/336 (worst 0.0050 yr) and Credit Event Sensitivity 96/96 (worst 0.05 pp), with the CER 0 results above unchanged (`docs/validation/tieout.md`, `docs/validation/q21-credit-event-timing.md`).*
 
 ---
 

@@ -49,9 +49,11 @@ CER 1 %   → MDR = 0.00083717735912055953…
 
 These are the Bond Market Association conventions; the PPM states only "converted to an
 equivalent monthly rate" (`YAML: credit_events.cpr_definition`, `cer_definition`; Q11
-option 1). They are registered ASSUMED and were shown by the spec author's independent
-scratch replication to reproduce the PPM tables (`03-tieout.md` §6); the engine tie-out
-must confirm them.
+option 1). They are registered ASSUMED. The Q21 diagnosis
+(`docs/validation/q21-credit-event-timing.md` §3–§5) tested `CER / 12` and `CPR / 12`, each
+rate separately, against the Credit Event Sensitivity table and rejected both by 0.8–1.9 pp;
+the conversions above are the only ones that reproduce it. The engine tie-out must confirm
+them.
 
 ---
 
@@ -63,68 +65,82 @@ For rep-line `i` in month `m`, starting from `B = B[i,m−1]`, `N = N[i,m−1]`,
 If `B = 0` (rep-line fully paid): all flows are zero, `N[i,m] = N − 1`, skip to the next
 rep-line. If `B < 0` at any point: raise.
 
-**Step P1 — scheduled monthly payment** (Modeling Assumption (c), `YAML:
-modeling_assumptions.c_level_pay_amortization`, T7: level payment from the *outstanding*
-balance, the rate and the *remaining* term, recomputed every month):
+Reading adopted 2026-09-07 (Q21; `docs/validation/q21-credit-event-timing.md`): the loans of
+a rep-line that become Credit Event Reference Obligations in the month and the loans that
+prepay in full are both identified at the **beginning** of the month, on the same balance,
+and make no scheduled payment in the month; only the surviving loans amortize. This
+supersedes the earlier reading (scheduled principal first, credit events on the balance net
+of it, prepayments on the balance net of both), which left 10 of 96 Credit Event Sensitivity
+cells and 12 of 336 CER > 0 WAL cells outside tolerance; the adopted reading reproduces all
+of them in the independent replication.
+
+**Step P1 — credit events, on the beginning-of-month balance** (A2):
 
 ```
-if N ≥ 2:   Pmt[i,m] = round2( B × r / (1 − (1 + r)^(−N)) )
-if N = 1:   Pmt[i,m] = round2( B × (1 + r) )            (final instalment)
+CE[i,m] = round2( B × MDR )
+```
+
+`CE[i,m]` is the Credit Event UPB of the loans that become Credit Event Reference
+Obligations in month `m` (`YAML: credit_events.credit_event_upb`: "UPB as of the end of the
+Reporting Period"): for a loan that has stopped paying, that is its balance at the start of
+the month. Those loans pay neither scheduled principal nor interest in the month.
+
+**Step P2 — prepayments in full, on the beginning-of-month balance** (A1, A3; Modeling
+Assumption (g); no curtailments, Modeling Assumption (h), P72):
+
+```
+Prepay[i,m] = round2( B × SMM )
+```
+
+The prepaying loans pay off their whole balance, with 30 days' interest (§7), and make no
+separate scheduled principal payment. `CE` and `Prepay` are both computed on the same `B`;
+neither is net of the other (simultaneous, not sequential).
+
+**Step P3 — surviving balance:**
+
+```
+Bs = B − CE[i,m] − Prepay[i,m]          assert Bs ≥ 0
+```
+
+**Step P4 — scheduled monthly payment and interest of the survivors** (Modeling Assumption
+(c), `YAML: modeling_assumptions.c_level_pay_amortization`, T7: level payment from the
+*outstanding* balance, the rate and the *remaining* term, recomputed every month; 30 days'
+interest, Modeling Assumption (g), A15):
+
+```
+if N ≥ 2:   Pmt[i,m] = round2( Bs × r / (1 − (1 + r)^(−N)) )
+if N = 1:   Pmt[i,m] = round2( Bs × (1 + r) )            (final instalment)
 if N = 0:   raise (a positive balance with no remaining term is a data error)
+Int[i,m] = round2( Bs × r )
 ```
 
-`(1 + r)^(−N)` is an integer power in `Decimal`; no float. Because the balance is
-recomputed from the outstanding amount each month, a rep-line that has prepaid keeps
-amortizing on the same schedule shape; this is the literal reading of (c) and is
-equivalent, for a rep-line under proportional prepayments, to scaling the original
-schedule.
+`(1 + r)^(−N)` is an integer power in `Decimal`; no float. Because the payment is
+recomputed from the outstanding survivor balance each month, a rep-line keeps amortizing on
+the same schedule shape after prepayments and credit events; this is the literal reading of
+(c) and, for a rep-line under proportional removals, equals scaling the original schedule.
 
-**Step P2 — interest for the month** (30 days' interest, Modeling Assumption (g); A15):
-
-```
-Int[i,m] = round2( B × r )
-```
-
-**Step P3 — scheduled principal** (Stated Principal clause (a), `YAML:
+**Step P5 — scheduled principal** (Stated Principal clause (a), `YAML:
 principal.stated_principal`):
 
 ```
-if N ≥ 2:   SchedPrin[i,m] = min( B, Pmt[i,m] − Int[i,m] )
-if N = 1:   SchedPrin[i,m] = B
-B1 = B − SchedPrin[i,m]
+if N ≥ 2:   SchedPrin[i,m] = min( Bs, Pmt[i,m] − Int[i,m] )
+if N = 1:   SchedPrin[i,m] = Bs
+B[i,m] = Bs − SchedPrin[i,m]
+N[i,m] = N − 1
 ```
 
 The `min` guards the last few cents when rounding would otherwise overshoot; assert
 `SchedPrin ≥ 0`.
 
-**Step P4 — credit events, removed before prepayments, on the balance net of scheduled
-principal** (A2, A3):
-
-```
-CE[i,m] = round2( B1 × MDR )
-B2 = B1 − CE[i,m]
-```
-
-`CE[i,m]` is the Credit Event UPB of the loans that become Credit Event Reference
-Obligations in month `m` (`YAML: credit_events.credit_event_upb`: "UPB as of the end of
-the Reporting Period" — the balance after that month's scheduled principal). Under the
-adopted convention those loans pay their scheduled principal for the month (it is computed
-on `B` before removal); this is part of A2/A3, not a separate choice.
-
-**Step P5 — prepayments in full, on the balance net of scheduled principal and credit
-events** (A1, A3; Modeling Assumption (g); no curtailments, Modeling Assumption (h), P72):
-
-```
-Prepay[i,m] = round2( B2 × SMM )
-B[i,m] = B2 − Prepay[i,m]
-N[i,m] = N − 1
-```
-
-**Identity (assert):** `B[i,m] = B[i,m−1] − SchedPrin[i,m] − CE[i,m] − Prepay[i,m]`
+**Identity (assert):** `B[i,m] = B[i,m−1] − CE[i,m] − Prepay[i,m] − SchedPrin[i,m]`
 exactly.
 
-**Sequence within the month, restated:** scheduled payment → interest → scheduled
-principal → credit events → prepayments → roll the remaining term. Never reorder.
+**Sequence within the month, restated:** credit events and prepayments in full, both on the
+beginning balance → survivors → scheduled payment and interest on the survivors → scheduled
+principal → roll the remaining term. Never reorder. At `CER = 0` this sequence gives the
+same pool UPB and Stated Principal as the superseded one to within cents (only the split
+between `SchedPrin` and `Prepay` moves, by about `SchedPrin × SMM`), which is why the CER 0
+tables tied under either reading and why the CER > 0 tables are the only test of it.
 
 ---
 
@@ -194,13 +210,23 @@ ignore the tail.
 
 ## 7. Pool interest (defined; not consumed by the v1 tie-out)
 
-`Int[m]` in §4 is the pool's gross scheduled interest for the month, 30/360 on the
-beginning balance (A15). Modeling Assumption (g) adds "30 days' interest" on prepayments in
-full; since prepayments occur on the last day of the month after that month's scheduled
-payment, the prepaid loans have already paid their month's interest in `Int[m]` and no
-extra interest is due. The Notes' interest does not depend on pool interest (`YAML:
-interest.*`; no available-funds mechanism, P107), so pool interest appears in the pool
-output for the Excel export and for later actual-pool use only.
+`Int[m] = Σ_i Int[i,m]` (§3 P4, §4) is the survivors' scheduled interest for the month,
+30/360 on their beginning balance (A15). Modeling Assumption (g) adds "30 days' interest" on
+prepayments in full, received on the last day of the month: under §3 the prepaying loans
+have made no scheduled payment, so that interest is additional:
+
+```
+PoolInterest[m] = Int[m] + Σ_i round2( Prepay[i,m] × r[i] )
+```
+
+Credit Event Reference Obligations contribute no interest in the month they are removed (a
+loan reported as a Credit Event has stopped paying). None of this is tied out by a PPM
+table — the Notes' interest does not depend on pool interest (`YAML: interest.*`; no
+available-funds mechanism, P107) — so pool interest appears in the pool output for the
+Excel export and for later actual-pool use only. Register row A15 still carries the
+superseded wording ("prepayments in full carry no additional interest because they occur
+after the month's scheduled payment") and must be revised to this definition before pool
+interest is consumed anywhere (Q21 resolution, item for the manager).
 
 ---
 
@@ -209,10 +235,10 @@ output for the Excel export and for later actual-pool use only.
 | case | required behaviour |
 |---|---|
 | `B[i,m−1] = 0` | all flows 0; do not divide; still decrement `N` |
-| `N = 1` | final instalment: scheduled principal = whole balance (§3 P1/P3) |
+| `N = 1` | final instalment: scheduled principal = whole surviving balance (§3 P4/P5) |
 | `N = 0` with `B > 0` | raise, naming the rep-line and month |
-| `Pmt − Int > B` after rounding | capped by the `min` in P3 |
-| `CPR = 0` / `CER = 0` | `SMM = 0` / `MDR = 0`; steps still executed, amounts 0 |
+| `Pmt − Int > Bs` after rounding | capped by the `min` in P5 |
+| `CPR = 0` / `CER = 0` | `SMM = 0` / `MDR = 0`; steps still executed, amounts 0, `Bs = B` |
 | `CPR` or `CER` ≥ 1 or < 0 | reject at scenario load |
 | first Payment Date | two months per §6; nothing else special on the pool side |
 | final Payment Date (240) | month 241 only; leftover pool balance is simply the end state |
@@ -226,50 +252,64 @@ output for the Excel export and for later actual-pool use only.
 
 Inputs (Appendix C row 17): `B[17,0] = 5,703,897,138.22`, `N[17,0] = 350`,
 `rate = 6.933 %`, so `r = 0.06933 / 12 = 0.0057775` exactly. `SMM =
-0.00874161095469670576…` (§2). `MDR = 0`.
+0.00874161095469670576…` (§2). `MDR = 0`. (Numbers revised 2026-09-07 for the §3 reading
+adopted under Q21; the month-end balances are unchanged from the superseded reading.)
 
 **Month 1 (January 2026, month-end 2026-01-31)**
 
 | step | computation | result |
 |---|---|---|
-| P1 | `5,703,897,138.22 × 0.0057775 / (1 − 1.0057775^(−350))` → round2 | `Pmt = 38,015,953.09` |
-| P2 | `5,703,897,138.22 × 0.0057775 = 32,954,265.7157…` → round2 | `Int = 32,954,265.72` |
-| P3 | `38,015,953.09 − 32,954,265.72` | `SchedPrin = 5,061,687.37` |
-| | `B1 = 5,703,897,138.22 − 5,061,687.37` | `B1 = 5,698,835,450.85` |
-| P4 | `B1 × 0` | `CE = 0.00`; `B2 = 5,698,835,450.85` |
-| P5 | `5,698,835,450.85 × 0.0087416109546967…` → round2 | `Prepay = 49,817,002.41` |
-| | `B[17,1] = 5,698,835,450.85 − 49,817,002.41` | `5,649,018,448.44`; `N[17,1] = 349` |
+| P1 | `5,703,897,138.22 × 0` | `CE = 0.00` |
+| P2 | `5,703,897,138.22 × 0.0087416109546967…` → round2 | `Prepay = 49,861,249.71` |
+| P3 | `5,703,897,138.22 − 0 − 49,861,249.71` | `Bs = 5,654,035,888.51` |
+| P4 | `5,654,035,888.51 × 0.0057775 / (1 − 1.0057775^(−350))` → round2 | `Pmt = 37,683,632.42` |
+| | `5,654,035,888.51 × 0.0057775 = 32,666,192.3458…` → round2 | `Int = 32,666,192.35` |
+| P5 | `37,683,632.42 − 32,666,192.35` | `SchedPrin = 5,017,440.07` |
+| | `B[17,1] = 5,654,035,888.51 − 5,017,440.07` | `5,649,018,448.44`; `N[17,1] = 349` |
 
 **Month 2 (February 2026, month-end 2026-02-28)**
 
 | step | computation | result |
 |---|---|---|
-| P1 | `5,649,018,448.44 × 0.0057775 / (1 − 1.0057775^(−349))` → round2 | `Pmt = 37,683,632.42` |
-| P2 | `5,649,018,448.44 × 0.0057775` → round2 | `Int = 32,637,204.09` |
-| P3 | `37,683,632.42 − 32,637,204.09` | `SchedPrin = 5,046,428.33`; `B1 = 5,643,972,020.11` |
-| P4 | | `CE = 0.00`; `B2 = 5,643,972,020.11` |
-| P5 | `5,643,972,020.11 × SMM` → round2 | `Prepay = 49,337,407.64` |
+| P1 | | `CE = 0.00` |
+| P2 | `5,649,018,448.44 × SMM` → round2 | `Prepay = 49,381,521.55` |
+| P3 | `5,649,018,448.44 − 49,381,521.55` | `Bs = 5,599,636,926.89` |
+| P4 | `5,599,636,926.89 × 0.0057775 / (1 − 1.0057775^(−349))` → round2 | `Pmt = 37,354,216.77` |
+| | `5,599,636,926.89 × 0.0057775` → round2 | `Int = 32,351,902.35` |
+| P5 | `37,354,216.77 − 32,351,902.35` | `SchedPrin = 5,002,314.42` |
 | | | `B[17,2] = 5,594,634,612.47`; `N[17,2] = 348` |
 
 Rep-line 17's contribution to Payment Date 1 Stated Principal:
-`5,061,687.37 + 49,817,002.41 + 5,046,428.33 + 49,337,407.64 = 109,262,525.75`.
+`5,017,440.07 + 49,861,249.71 + 5,002,314.42 + 49,381,521.55 = 109,262,525.75`.
 
-**Pool totals for the same scenario** (all 31 rep-lines, same method), which the
+**Credit-event hand case — same rep-line, month 1, 10 % CPR, 1 % CER** (`MDR =
+0.00083717735912055953…`, §2): `CE = round2(5,703,897,138.22 × MDR) = 4,775,173.54`;
+`Prepay = 49,861,249.71` (unchanged: same `B`, same `SMM`); `Bs = 5,649,260,714.97`;
+`Pmt = 37,651,806.33`; `Int = 32,638,603.78`; `SchedPrin = 5,013,202.55`;
+`B[17,1] = 5,644,247,512.42`. Pool month 1 for this scenario: `SchedPrin[1] =
+20,714,216.91`, `Prepay[1] = 199,143,963.97`, `CE[1] = 19,071,864.30`, `UPB[1] =
+22,542,221,506.66`.
+
+**Pool totals at 10 % CPR, 0 % CER** (all 31 rep-lines, same method), which the
 `02-waterfall.md` example consumes:
 
 | month | `SchedPrin[m]` | `Prepay[m]` | `CE[m]` | `UPB[m]` |
 |---|---|---|---|---|
-| 1 (Jan 2026) | 20,914,552.99 | 198,961,137.10 | 0.00 | 22,561,275,861.75 |
-| 2 (Feb 2026) | 20,848,291.20 | 197,039,648.59 | 0.00 | 22,343,387,921.96 |
-| 3 (Mar 2026) | 20,782,242.77 | 195,135,534.31 | 0.00 | 22,127,470,144.88 |
+| 1 (Jan 2026) | 20,731,726.12 | 199,143,963.97 | 0.00 | 22,561,275,861.75 |
+| 2 (Feb 2026) | 20,666,043.58 | 197,221,896.21 | 0.00 | 22,343,387,921.96 |
+| 3 (Mar 2026) | 20,600,572.48 | 195,317,204.65 | 0.00 | 22,127,470,144.83 |
 
 Payment Date aggregates: `StatedPrincipal[1] = 437,763,629.88`, `UPB_end[1] =
 22,343,387,921.96`, `UPB_prev[1] = 22,781,151,551.84`; `StatedPrincipal[2] =
-215,917,777.08`, `UPB_end[2] = 22,127,470,144.88`, `UPB_prev[2] = 22,343,387,921.96`.
+215,917,777.13`, `UPB_end[2] = 22,127,470,144.83`, `UPB_prev[2] = 22,343,387,921.96`.
+(Under the superseded reading month 3 ended at 22,127,470,144.88 and `StatedPrincipal[2]`
+was 215,917,777.08 — five cents, the rounding of 31 rep-lines; Payment Date 1 is identical
+to the cent.)
 
-A unit test should reproduce the group-17 table above to the cent from the six inputs, and
-a second test should reproduce the three pool rows from the full Appendix C file. A third
-test at `CPR = 0, CER = 0` should show `Prepay = 0`, `CE = 0` and, for group 17, that the
-scheduled payment `38,015,953.09` is unchanged in month 2 (level-pay identity: with no
-prepayment the recomputed payment equals the original one to the cent, or differs by at
-most one cent from rounding — the test must assert the exact engine value, not "about").
+A unit test should reproduce the group-17 tables above to the cent from the six inputs
+(both the CER 0 months and the 1 % CER hand case), and a second test should reproduce the
+three pool rows from the full Appendix C file. A third test at `CPR = 0, CER = 0` should
+show `Prepay = 0`, `CE = 0` and, for group 17, that the scheduled payment `38,015,953.09` is
+unchanged in month 2 (level-pay identity: with no removals the recomputed payment equals the
+original one to the cent, or differs by at most one cent from rounding — the test must
+assert the exact engine value, not "about").

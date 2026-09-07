@@ -461,13 +461,14 @@ Note cashflows on 2026-03-25:
 | M-2A | 0 | 0 | 37,850,000.00 | 4.95786 % | 187,655.00 |
 | M-2B | 0 | 0 | 37,850,000.00 | 4.95786 % | 187,655.00 |
 
-**Payment Date 2** (same scenario; `StatedPrincipal[2] = 215,917,777.08`, `UPB_prev[2] =
-22,343,387,921.96`): `SeniorPct[2] = round7(21,555,782,500.91 / 22,343,387,921.96) =
-0.9647500`; `SeniorReduction = round2(0.96475 × 215,917,777.08) = 208,306,675.44`;
-A-1 `10,346,250.00`, A-1H `545,988.08`, A-H `197,414,437.36`; `SubordinateReduction =
-7,611,101.64` → M-1 `7,229,584.94`, M-1H `381,516.70`; `ORTP = 0.0278309`; balances after:
-A-H 21,078,800,619.63, A-1 255,207,500.00, A-1H 13,467,705.84, M-1 254,012,755.15, M-1H
-13,404,657.26; sum 22,127,470,144.88 = `UPB_end[2]` ✔.
+**Payment Date 2** (same scenario; `StatedPrincipal[2] = 215,917,777.13`, `UPB_prev[2] =
+22,343,387,921.96` — pool numbers per `01-pool.md` §9 as revised 2026-09-07 under Q21; Payment
+Date 1 above is unchanged to the cent): `SeniorPct[2] = round7(21,555,782,500.91 /
+22,343,387,921.96) = 0.9647500`; `SeniorReduction = round2(0.96475 × 215,917,777.13) =
+208,306,675.49`; A-1 `10,346,250.00`, A-1H `545,988.08`, A-H `197,414,437.41`;
+`SubordinateReduction = 7,611,101.64` → M-1 `7,229,584.94`, M-1H `381,516.70`; `ORTP =
+0.0278309`; balances after: A-H 21,078,800,619.58, A-1 255,207,500.00, A-1H 13,467,705.84,
+M-1 254,012,755.15, M-1H 13,404,657.26; sum 22,127,470,144.83 = `UPB_end[2]` ✔.
 
 These two Payment Dates are the hand-computable unit test for the waterfall. A third test
 should take a synthetic `CreditEventAmount[1] = 1,000,000.00` with the same pool numbers
