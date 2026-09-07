@@ -35,13 +35,20 @@ def collection_months_for_payment_date(payment_date_number: int) -> tuple[int, .
 
 @dataclass(frozen=True)
 class PoolMonth:
-    """Pool totals for one collection month (spec 01 section 4): sums of cent amounts."""
+    """Pool totals for one collection month (spec 01 section 4): sums of cent amounts.
+
+    ``interest`` is ``Int[m]``, the survivors' scheduled interest (section 4);
+    ``pool_interest`` is ``PoolInterest[m]`` of section 7 (A15): ``Int[m]`` plus the
+    prepaying loans' 30 days' interest.  Neither is consumed by the v1 waterfall.
+    """
 
     month: int
     scheduled_principal: Decimal
     interest: Decimal
     credit_event_amount: Decimal
     prepayment: Decimal
+    prepayment_interest: Decimal
+    pool_interest: Decimal
     upb_end: Decimal
 
 
@@ -155,13 +162,18 @@ def project_pool(
     months: list[PoolMonth] = []
     for month_index in range(LAST_COLLECTION_MONTH):
         rows = [history[month_index] for history in per_line]
+        interest = sum((r.interest for r in rows), ZERO)  # Int[m], section 4
+        prepayment_interest = sum((r.prepayment_interest for r in rows), ZERO)
         months.append(
             PoolMonth(
                 month=month_index + 1,
                 scheduled_principal=sum((r.scheduled_principal for r in rows), ZERO),
-                interest=sum((r.interest for r in rows), ZERO),
+                interest=interest,
                 credit_event_amount=sum((r.credit_event_amount for r in rows), ZERO),
                 prepayment=sum((r.prepayment for r in rows), ZERO),
+                prepayment_interest=prepayment_interest,
+                # Section 7 (A15): PoolInterest[m] = Int[m] + sum_i round2(Prepay[i,m] x r[i]).
+                pool_interest=interest + prepayment_interest,
                 upb_end=sum((r.balance_end for r in rows), ZERO),
             )
         )

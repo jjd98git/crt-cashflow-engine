@@ -45,7 +45,7 @@ AFTER_PD1 = {
     "B-3H": "56953878",
 }
 AFTER_PD2 = {
-    "A-H": "21078800619.63",
+    "A-H": "21078800619.58",
     "A-1": "255207500.00",
     "A-1H": "13467705.84",
     "M-1": "254012755.15",
@@ -135,14 +135,15 @@ def test_payment_date_1_note_cashflows(result_10_0: WaterfallResult) -> None:
 
 
 def test_payment_date_2_worked_example(result_10_0: WaterfallResult) -> None:
+    # Spec 02 section 12 Payment Date 2 as revised 2026-09-07 under Q21 (five cents moved).
     record = result_10_0.records[1]
     assert record.payment_date.isoformat() == "2026-04-25"
     assert record.senior_pct == D("0.9647500")
-    assert record.senior_reduction == D("208306675.44")
+    assert record.senior_reduction == D("208306675.49")
     assert record.senior_step is not None
     assert record.senior_step.allocated("A-1") == D("10346250.00")
     assert record.senior_step.allocated("A-1H") == D("545988.08")
-    assert record.senior_step.allocated("A-H") == D("197414437.36")
+    assert record.senior_step.allocated("A-H") == D("197414437.41")
     assert record.subordinate_reduction == D("7611101.64")
     assert record.subordinate_step is not None
     assert record.subordinate_step.allocated("M-1") == D("7229584.94")
@@ -150,7 +151,7 @@ def test_payment_date_2_worked_example(result_10_0: WaterfallResult) -> None:
     assert record.offered_reference_tranche_pct == D("0.0278309")
     for tranche, balance in AFTER_PD2.items():
         assert record.balances_after[tranche] == D(balance), tranche
-    assert sum(record.balances_after.values()) == D("22127470144.88")
+    assert sum(record.balances_after.values()) == D("22127470144.83")
     assert record.notes["A-1"].accrual_days == 31
     for note in NOTE_CLASSES:
         assert record.notes[note].balance_after == record.balances_after[note]
