@@ -289,3 +289,70 @@ scheduled", "equivalent monthly": no further specification.
    time, never by tuning.
 2. Simple annual/12 conversion. Non-standard; test only if option 1 fails.
 3. Apply rates to the balance before scheduled principal. Test only if option 1 fails.
+
+---
+
+## Q12 | Phase 2 | structured-cashflow-expert | OPEN 2026-09-03 — Do Tranche Write-down Amounts count in the WAL?
+
+**Question.** The PPM (p219) defines WAL as the time "until its balance is reduced to zero"
+and gives no formula. **Reading adopted (A10, ASSUMED):** yes, the WAL weight on a Payment
+Date is the net reduction of the Class Principal Balance (principal paid + write-downs −
+write-ups). **Evidence:** M-2B WAL at 0% CPR is 19.29 / 8.75 / 1.61 at CER 0 / 1% / 5% to
+Scheduled Maturity (p140); principal alone cannot retire $37.85MM in 1.6 years.
+**Recommendation.** Confirm A10; the engine tie-out at CER > 0 is the test.
+
+---
+
+## Q13 | Phase 2 | structured-cashflow-expert | OPEN 2026-09-03 — WAL day count and origin
+
+**Question.** No day count is stated. **Reading adopted (A9, ASSUMED):** 30/360 from the
+Closing Date 2026-02-17 to the unadjusted 25th, t[n] = (30n + 8)/360. **Evidence:** A-1's
+schedule is fixed by Appendix G; 30/360 gives 1.587 → printed 1.59, actual/365 gives 1.583
+→ 1.58; 48/48 CER-0 cells tie with 30/360, 42/48 with actual/365.
+**Recommendation.** Confirm A9.
+
+---
+
+## Q14 | Phase 3 | structured-cashflow-expert | OPEN 2026-09-03 — UPB basis of the 10% clean-up in Modeling Assumption (m)
+
+**Reading adopted (A11, ASSUMED):** the aggregate UPB at the end of the Reporting Period
+related to the Payment Date. Not exercised in the PPM grid before Payment Date 60 at CPR
+≤ 35%; matters for actual-pool and high-CPR runs. **Recommendation.** Confirm A11.
+
+---
+
+## Q15 | Phase 3 | structured-cashflow-expert | OPEN 2026-09-03 — Rounding of the hypothetical structure and of rep-line amounts
+
+**Reading adopted (A12, A8, A7, ASSUMED):** the PPM's p99 rounding rule (cent; 1/100,000 of
+a percentage point) applied to every structure amount and percentage; Note/H pair splits by
+exact ratio with the Note leg rounded and the H leg the remainder; rep-line amounts rounded
+to the cent at each step. **Evidence:** A8 reproduces both Appendix G columns exactly; A12
+makes the Payment Date 1 Subordinate Percentage exactly 3.52500%, a knife-edge against the
+3.525% Minimum Credit Enhancement threshold. **Recommendation.** Confirm.
+
+---
+
+## Q16 | Phase 4 | structured-cashflow-expert | OPEN 2026-09-03 — Decrement-table pass criterion vs whole-percent printing
+
+**Question.** The brief's ±0.25pp tolerance is tighter than the PPM's whole-percent print
+(p141 dagger). A correct model gives 23.47 where the PPM prints 23 (M-1, 25% CPR, Feb 2027).
+**Reading adopted (A13, ASSUMED):** primary pass = model rounded half-up to the printed
+precision equals the printed value; the ±0.25pp result is reported as a flag.
+**Recommendation.** Trey confirms which criterion is the definition of done.
+
+---
+
+## Q17 | Phase 4 | structured-cashflow-expert | OPEN 2026-09-03 — Residual +0.01 to +0.03 on some CER > 0 WAL cells
+
+**Question.** The spec author's scratch replication with A2 gives, over 96 CER > 0 cells,
+60 exact, 33 within ±0.01, 2 at +0.02 and 1 at +0.03 (model longer). **Reading adopted:**
+keep A2; escalate with the per-cell table if the engine shows any cell outside ±0.02, and
+only then test the 03-tieout.md §5 item-7 alternatives one at a time.
+**Recommendation.** Accept for now; revisit with engine numbers.
+
+---
+
+**Correction to Q8 (2026-09-03, structured-cashflow-expert).** The narrative in Q8 said
+the initial Senior Percentage is 95.200%. It is 96.47500%: A-1 and A-1H are senior for the
+Senior Percentage (YAML principal.senior_percentage). Table 3's 4.800% is subordination
+below A-H. The adopted option is unchanged.
