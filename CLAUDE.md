@@ -32,6 +32,8 @@ src/crt/io/          loaders + layout parsing + validation
 src/crt/pool/        pool projection (amortization, prepay, default, severity)
 src/crt/waterfall/   tranche allocation, performance tests, write-down/write-up
 src/crt/scenarios/   scenario parsing and vector construction
+src/crt/tieout/      PPM tie-out: WAL, principal windows, comparisons, report + manifest
+                     (`python -m crt.tieout` regenerates docs/validation/tieout.md)
 src/crt/excel/       workbook export
 tests/unit/          hand-computable cases per component
 tests/tieout/        PPM WAL / declining-balance regression tests
