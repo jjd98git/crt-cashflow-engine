@@ -6,13 +6,13 @@
 | 1 — PPM extraction | complete, gate closed 2026-09-03 (provisional register sign-off) | `data/deal_terms/stacr_2026_dna1.yaml` (258 cited fields); `data/ppm_tables/` (Appendix C, Appendix G, Table 1, WAL, Declining Balances, Credit Event Sensitivity); register 168 rows awaiting Trey |
 | 2 — Pool engine | **built** (rep-line, spec 01) | 2026-09-07 |
 | 3 — Waterfall engine | **built** (spec 02) | 2026-09-07 |
-| 4 — Tie-out | **running; partial** | CER 0 families PASS; CER>0 WAL 324/336, CES 86/96 — Q21 |
+| 4 — Tie-out | **PASS 2026-09-07** | all 5 families, 850 cells; Q21 resolved (credit events and prepayments both on the beginning balance) |
 | 5 — Excel export | blocked | Excel is installed on this machine; LibreOffice is not |
-| 6 — Scenario input | blocked | actual-pool runs need payment date statements (Q4) |
-| 7 — GUI | blocked | stack not chosen; propose in plan mode |
+| 6 — Scenario input | partial | flat YAML scenarios + run API + CSV export built 2026-09-07; ramps/steps validated but rejected by the engine; actual-pool mode needs Q4 |
+| 7 — GUI | **v1 built** (Streamlit) | `streamlit run src/crt/gui/app.py`; single run, compare, CSV download; Excel button disabled until Phase 5 |
 | 8 — AI shell | blocked | |
 
-Tie-out status (2026-09-07, `python -m crt.tieout`, 11 s): Table 1 windows 4/4 exact; Declining Balances CER 0 366/366; WAL CER 0 48/48 within ±0.02 (worst 0.0048); WAL CER>0 324/336 within ±0.02 (all within ±0.10, worst 0.084); Credit Event Sensitivity 86/96 round-match (all within ±0.25 pp). Overall FAIL pending Q21.
+Tie-out status (2026-09-07, `python -m crt.tieout`, 11 s): **PASS**. Table 1 windows 4/4 exact; Declining Balances CER 0 366/366 round-match; WAL CER 0 48/48 (worst 0.0048 yr); WAL CER>0 336/336 within ±0.02 (worst 0.0050 yr); Credit Event Sensitivity 96/96 round-match (worst 0.05 pp).
 
 ## Phase 0 summary (2026-09-03)
 
@@ -59,3 +59,17 @@ tie-out regression tests (2 failing honestly: CER>0 WAL and Credit Event Sensiti
 **Open.** Q12-Q17 (spec conventions A7-A15, need Trey's confirmation), Q18-Q20 (dev
 edge cases, v1-neutral), Q21 (escalation: within-month credit-event timing; no single
 alternative to A2/A3 ties both tables). Q4 still awaits payment date statements.
+
+## 2026-09-07 afternoon
+
+**Shipped.** Q21 resolved by first-principles replication (structured-cashflow-expert,
+`docs/validation/q21-credit-event-timing.md`): the PPM takes credit events and prepayments
+both on the beginning-of-month balance, simultaneously, with only survivors amortizing.
+Spec 01 §3 amended, A2/A3/A15 revised (ASSUMED, unconfirmed), engine updated, all tie-out
+tests green. Run API (`crt.api.run_scenario`), CSV export, validated scenario YAML files,
+and a Streamlit GUI (single run, compare, downloads) built and verified in the browser.
+
+**Open.** Trey to confirm A2, A3, A15 (revised today); Q18-Q20 (v1-neutral edge cases);
+Q22 (pool interest columns); Q4 (payment date statements, deferred). Next: Phase 5 Excel
+export with live formulas and the workbook recalculation test; GUI compare-chart x-axis
+cosmetic fix; MACR classes; RM>0 tables.

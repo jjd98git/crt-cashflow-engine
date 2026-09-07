@@ -342,7 +342,7 @@ precision equals the printed value; the ±0.25pp result is reported as a flag.
 
 ---
 
-## Q17 | Phase 4 | structured-cashflow-expert | OPEN 2026-09-03 — Residual +0.01 to +0.03 on some CER > 0 WAL cells
+## Q17 | Phase 4 | structured-cashflow-expert | SUPERSEDED 2026-09-07 by Q21 (the residual was the pre-Q21 A2/A3 convention; engine now 336/336 and 96/96) — was OPEN 2026-09-03 — Residual +0.01 to +0.03 on some CER > 0 WAL cells
 
 **Question.** The spec author's scratch replication with A2 gives, over 96 CER > 0 cells,
 60 exact, 33 within ±0.01, 2 at +0.02 and 1 at +0.03 (model longer). **Reading adopted:**
@@ -444,7 +444,7 @@ asserts the actual mechanism.
 
 ---
 
-## Q21 | Phase 4 | fintech-dev | OPEN — Trey 2026-09-07: 324/336 is NOT v1 done; diagnose before deciding — ESCALATION: 12 of 336 CER > 0 WAL cells outside ±0.02 and 10 of 96 Credit Event Sensitivity cells outside the A13 round-match, with A1–A15 implemented exactly as specified (supersedes Q17 with engine numbers)
+## Q21 | Phase 4 | fintech-dev | OPEN — diagnosed 2026-09-07 by structured-cashflow-expert (convention found; resolution and code change below; awaiting Trey's confirmation of revised A2/A3) — Trey 2026-09-07: 324/336 is NOT v1 done; diagnose before deciding — ESCALATION: 12 of 336 CER > 0 WAL cells outside ±0.02 and 10 of 96 Credit Event Sensitivity cells outside the A13 round-match, with A1–A15 implemented exactly as specified (supersedes Q17 with engine numbers)
 
 **Status of the tie-out (`docs/validation/tieout.md`, engine 0.0.1).** Table 1 windows 4/4
 exact; Declining Balances CER 0: 366/366 round-match (A13); WAL CER 0: 48/48 within ±0.02
@@ -518,3 +518,118 @@ CER/12, prepay-before-CE and the other orderings are much worse.
 3. Adopt H7e now. Numeric implication: CES 39/48 → 44/48; WAL 324 → 327/336 but worst miss
    −0.10. Rejected for the same reason.
 Never a scaling factor (BRIEF section 2).
+
+**Resolution 2026-09-07 — structured-cashflow-expert; recommendation for Trey and fintech-dev.**
+Method, every trial (104 combinations) and every cell: `docs/validation/q21-credit-event-timing.md`.
+
+**Finding.** An independent scratch replication (no engine code; it reproduces the engine's
+86/96 and its twelve failing WAL cells to four decimals with A1–A3 as built) enumerated the
+within-month conventions one variable at a time against the pool-only Credit Event Sensitivity
+table. Exactly one reproduces all 96 cells: **credit events and prepayments in full are both
+taken on the beginning-of-month balance, simultaneously (neither net of the other), and only
+the surviving loans make the month's scheduled payment.** Per rep-line and month:
+`CE = round2(B × MDR)`; `Prepay = round2(B × SMM)`; `Bs = B − CE − Prepay`; level payment,
+interest and scheduled principal computed on `Bs`; `B_end = Bs − SchedPrin`. Conversions stay
+`1 − (1 − x)^(1/12)` for both rates (`x/12` rejected by 0.8–1.9 pp); credit events start in
+January 2026; horizon month 241; clean-up on end-of-period UPB (A11) — each confirmed
+separately, every neighbour of the found convention is worse.
+
+| family | as built | new reading |
+|---|---|---|
+| Credit Event Sensitivity, 96 cells, round-match | 86/96, worst 0.108 pp | **96/96**, worst 0.050 pp |
+| WAL CER > 0, 336 cells, ±0.02 | 324/336, worst +0.084 | **336/336**, worst +0.005 (336/336 within ±0.01; 335 exact to the printed 2 dp) |
+| WAL CER 0, 48 cells | 48/48 | 48/48, identical |
+| Declining Balances CER 0, 390 Note cells | 390/390 | 390/390, identical |
+
+The CER 0 families cannot see the change (at `MDR = 0` the two sequences reach the same
+month-end balance to within cents), which is why they tied under the old reading and why the
+old reading survived until the CER > 0 tables were run. Q17's "+0.01 to +0.03, model longer"
+was this convention; it closes with Q21.
+
+**Recommendation — option 4: adopt the new reading.** Done in this pass: `docs/spec/01-pool.md`
+§2/§3/§7/§8/§9 restated (new P1–P5 order, revised worked example, new 1 % CER hand case);
+`docs/spec/02-waterfall.md` §12 Payment Date 2 moved by five cents (`StatedPrincipal[2] =
+215,917,777.13`, `UPB_end[2] = 22,127,470,144.83`; Payment Date 1 unchanged to the cent);
+register A2/A3 revised (ASSUMED, `confirmed_by_user = N`, "revised 2026-09-07 per q21
+diagnosis"); `docs/assumptions.md` re-rendered. No scaling factor or offset anywhere.
+Trey: confirm A2/A3 as revised. fintech-dev: implement the change below, update the tests,
+regenerate `docs/validation/tieout.md`; the expected result is 96/96 and 336/336 with every
+CER 0 family unchanged — if the engine does not reproduce that, the difference is in the
+implementation, not the convention, and `q21-credit-event-timing.md` §9 gives the cents to
+diff against.
+
+**Code-level change (only file: `src/crt/pool/rep_line.py`, `project_rep_line_month`).**
+Replace the P1–P5 block (from `# P1 - scheduled monthly payment.` through
+`balance_end = balance_after_credit_events - prepayment`) with:
+
+```python
+    # P1 - credit events on the beginning-of-month balance (A2, revised 2026-09-07 per Q21):
+    # the Credit Event UPB is the balance before the month's scheduled principal.
+    credit_event = round2(balance * mdr)
+
+    # P2 - prepayments in full on the beginning-of-month balance (A1, A3 revised per Q21;
+    # Modeling Assumption (g); no curtailments, P72).  Not net of credit events.
+    prepayment = round2(balance * smm)
+
+    # P3 - the surviving loans are the only ones that amortize this month.
+    survivor = balance - credit_event - prepayment
+    if survivor < ZERO:
+        raise RepLineProjectionError(
+            f"rep-line {group} month {month}: removals {credit_event + prepayment} exceed balance {balance}"
+        )
+
+    # P4 - scheduled payment and interest of the survivors (Modeling Assumption (c), A15).
+    payment = scheduled_payment(survivor, rate, remaining_term)
+    interest = round2(survivor * rate)
+
+    # P5 - scheduled principal (Stated Principal clause (a)).
+    if remaining_term >= 2:
+        sched_principal = min(survivor, payment - interest)
+    else:
+        sched_principal = survivor
+    if sched_principal < ZERO:
+        raise RepLineProjectionError(
+            f"rep-line {group} month {month}: negative scheduled principal {sched_principal}"
+        )
+    balance_end = survivor - sched_principal
+```
+
+The `RepLineMonth` fields, the `balance_end < ZERO` guard and the identity assertion
+(`balance − sched_principal − credit_event − prepayment`) are unchanged and still hold;
+`scheduled_payment(...)` for `survivor == ZERO` returns 0 and needs no special case. Update
+the module docstring's order sentence to "credit events and prepayments on the beginning
+balance → survivors → scheduled payment → interest → scheduled principal → roll the term"
+and the two inline citations. `rates.py`, `projection.py`, the scenarios, the waterfall and
+the tie-out code do not change. Tests (`tests/unit/test_pool.py`): group-17 month 1/2
+intermediates become `scheduled_payment 37,683,632.42 / 37,354,216.77`, `interest
+32,666,192.35 / 32,351,902.35`, `scheduled_principal 5,017,440.07 / 5,002,314.42`,
+`prepayment 49,861,249.71 / 49,381,521.55` (month-end balances unchanged); pool rows months
+1–3 and `pd2.stated_principal = 215,917,777.13`, `pd2.upb_end = 22,127,470,144.83` per
+`01-pool.md` §9; add the 1 % CER hand case from §9 (`credit_event_amount 4,775,173.54`,
+`balance_end 5,644,247,512.42`; pool `CE[1] = 19,071,864.30`). The CPR 0 / CER 0 level-pay
+identity test is unaffected. Waterfall test for Payment Date 2: `SeniorReduction
+208,306,675.49`, A-H share `197,414,437.41`, A-H balance `21,078,800,619.58`.
+
+**Housekeeping for the manager once the engine re-runs:** register A15's note ("prepayments in
+full carry no additional interest because they occur after the month's scheduled payment") is
+stale — pool interest is not consumed by v1 and `01-pool.md` §7 now states the reading
+consistent with the new order; `03-tieout.md` §5 item 7 and §6, `04-open-items.md` row 6 and
+Q17 describe the old residual as expected and should be marked superseded by Q21;
+`docs/validation/tieout-diagnostics.md` should gain the row "7 (A2 + A3 basis, simultaneous
+on the beginning balance, survivors amortize) — CES 86/96 → 96/96, WAL 324 → 336/336 — kept".
+
+---
+
+## Q22 | Phase 5 | fintech-dev via manager | OPEN 2026-09-07 — Pool interest exposed by the run API
+
+**Question.** After the Q21 change the pool projection carries two interest figures: survivors'
+scheduled interest `Int[m]` (spec 01 §4) and `PoolInterest[m] = Int[m] + Σ Prepay × r` (spec
+01 §7, A15). `RunResult.pool_months.interest`, the CSV export and the GUI "Total interest" line
+expose `Int[m]` only. Pool interest is not a tie-out target and is not consumed by the v1
+waterfall.
+
+**Options.**
+1. **(Recommended)** Expose both columns (`scheduled_interest`, `pool_interest`) in the API,
+   CSV and GUI, labelled per the spec, before the Excel export (Phase 5) freezes the layout.
+2. Expose `PoolInterest[m]` only. Loses the split the spec defines.
+3. Leave as is. Understates pool interest by roughly `Prepay × r` per month.
