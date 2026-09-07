@@ -76,7 +76,7 @@ from the data alone.
 
 ---
 
-## Q4 | Phase 0 | manager | ACCEPTED 2026-09-03 — Trey to source the Mar–Aug 2026 payment date statements; not blocking Phases 1–4
+## Q4 | Phase 0 | manager | DEFERRED 2026-09-07 (Trey: go forward without them) — Trey to source the Mar–Aug 2026 payment date statements; not blocking Phases 1–4
 
 **Question.** Six Payment Dates (March–August 2026) have occurred. The class balances,
 factors, cumulative Credit Event Net Loss and test outcomes after those dates exist only
@@ -292,7 +292,7 @@ scheduled", "equivalent monthly": no further specification.
 
 ---
 
-## Q12 | Phase 2 | structured-cashflow-expert | OPEN 2026-09-03 — Do Tranche Write-down Amounts count in the WAL?
+## Q12 | Phase 2 | structured-cashflow-expert | CLOSED 2026-09-07 — A10 confirmed by Trey — Do Tranche Write-down Amounts count in the WAL?
 
 **Question.** The PPM (p219) defines WAL as the time "until its balance is reduced to zero"
 and gives no formula. **Reading adopted (A10, ASSUMED):** yes, the WAL weight on a Payment
@@ -303,7 +303,7 @@ Scheduled Maturity (p140); principal alone cannot retire $37.85MM in 1.6 years.
 
 ---
 
-## Q13 | Phase 2 | structured-cashflow-expert | OPEN 2026-09-03 — WAL day count and origin
+## Q13 | Phase 2 | structured-cashflow-expert | CLOSED 2026-09-07 — A9 confirmed by Trey — WAL day count and origin
 
 **Question.** No day count is stated. **Reading adopted (A9, ASSUMED):** 30/360 from the
 Closing Date 2026-02-17 to the unadjusted 25th, t[n] = (30n + 8)/360. **Evidence:** A-1's
@@ -313,7 +313,7 @@ schedule is fixed by Appendix G; 30/360 gives 1.587 → printed 1.59, actual/365
 
 ---
 
-## Q14 | Phase 3 | structured-cashflow-expert | OPEN 2026-09-03 — UPB basis of the 10% clean-up in Modeling Assumption (m)
+## Q14 | Phase 3 | structured-cashflow-expert | CLOSED 2026-09-07 — A11 confirmed by Trey — UPB basis of the 10% clean-up in Modeling Assumption (m)
 
 **Reading adopted (A11, ASSUMED):** the aggregate UPB at the end of the Reporting Period
 related to the Payment Date. Not exercised in the PPM grid before Payment Date 60 at CPR
@@ -321,7 +321,7 @@ related to the Payment Date. Not exercised in the PPM grid before Payment Date 6
 
 ---
 
-## Q15 | Phase 3 | structured-cashflow-expert | OPEN 2026-09-03 — Rounding of the hypothetical structure and of rep-line amounts
+## Q15 | Phase 3 | structured-cashflow-expert | CLOSED 2026-09-07 — A7, A8, A12 confirmed by Trey — Rounding of the hypothetical structure and of rep-line amounts
 
 **Reading adopted (A12, A8, A7, ASSUMED):** the PPM's p99 rounding rule (cent; 1/100,000 of
 a percentage point) applied to every structure amount and percentage; Note/H pair splits by
@@ -332,7 +332,7 @@ makes the Payment Date 1 Subordinate Percentage exactly 3.52500%, a knife-edge a
 
 ---
 
-## Q16 | Phase 4 | structured-cashflow-expert | OPEN 2026-09-03 — Decrement-table pass criterion vs whole-percent printing
+## Q16 | Phase 4 | structured-cashflow-expert | CLOSED 2026-09-07 — Trey: round-match (A13) is the pass criterion; ±0.25 pp stays a reported flag — Decrement-table pass criterion vs whole-percent printing
 
 **Question.** The brief's ±0.25pp tolerance is tighter than the PPM's whole-percent print
 (p141 dagger). A correct model gives 23.47 where the PPM prints 23 (M-1, 25% CPR, Feb 2027).
@@ -444,7 +444,7 @@ asserts the actual mechanism.
 
 ---
 
-## Q21 | Phase 4 | fintech-dev | OPEN 2026-09-07 — ESCALATION: 12 of 336 CER > 0 WAL cells outside ±0.02 and 10 of 96 Credit Event Sensitivity cells outside the A13 round-match, with A1–A15 implemented exactly as specified (supersedes Q17 with engine numbers)
+## Q21 | Phase 4 | fintech-dev | OPEN — Trey 2026-09-07: 324/336 is NOT v1 done; diagnose before deciding — ESCALATION: 12 of 336 CER > 0 WAL cells outside ±0.02 and 10 of 96 Credit Event Sensitivity cells outside the A13 round-match, with A1–A15 implemented exactly as specified (supersedes Q17 with engine numbers)
 
 **Status of the tie-out (`docs/validation/tieout.md`, engine 0.0.1).** Table 1 windows 4/4
 exact; Declining Balances CER 0: 366/366 round-match (A13); WAL CER 0: 48/48 within ±0.02
