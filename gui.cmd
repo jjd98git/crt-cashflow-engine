@@ -1,3 +1,3 @@
 @echo off
 cd /d "%~dp0"
-.venv\Scripts\python -m streamlit run src\crt\guipp.py
+.venv\Scripts\python -m streamlit run src\crt\gui\app.py

@@ -18,6 +18,13 @@ uv pip install -e ".[dev]"
 pytest -q
 ```
 
+## Run
+- GUI: double-click `gui.cmd`. From PowerShell run two separate lines (PowerShell 5.1 has
+  no `&&`): `cd "C:\Users\jjdeg\OneDrive\Desktop\crt-cashflow-engine"` then
+  `.venv\Scripts\python -m streamlit run src\crt\gui\app.py`.
+- Tie-out: double-click `tieout.cmd`, or run `.venv\Scripts\python -m crt.tieout`.
+- Scenario files live in `scenarios/`; CSV bundles download from the GUI.
+
 ## Data
 Source files are in `data/raw/` and are gitignored. See `data/README.md` for provenance.
 
