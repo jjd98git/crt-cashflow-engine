@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>STACR 2026-DNA1 engine: load diagnostics</title>
+  <link rel="stylesheet" href="app.css">
+  <style>
+    main.diag-page { max-width: 1100px; margin: 0 auto; }
+    table.diag-table td, table.diag-table th { vertical-align: top; }
+    td.url { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8rem; }
+    td.result { overflow-wrap: anywhere; font-size: 0.85rem; }
+    .ok { color: var(--pass); }
+    .bad { color: var(--fail); }
+    textarea#report { width: 100%; min-height: 12rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header class="site">
+    <h1>Engine load diagnostics</h1>
+    <p class="tagline">
+      Tests, one file at a time, everything the <a href="index.html">cashflow engine page</a> fetches
+      while it starts, and says exactly which request fails and how. Nothing here runs the engine.
+    </p>
+  </header>
+
+  <main class="diag-page stack">
+    <section class="panel">
+      <h2>This browser</h2>
+      <p id="env" class="diag"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Files</h2>
+      <p class="hint">
+        The manifest is fetched first (with a cache-busting query); every file it lists is then
+        added below. "Test" fetches one URL and reports the HTTP status, byte count, the SHA-256
+        against the manifest where one is listed, and the time taken. A thrown error is shown with
+        the browser's own name and message.
+      </p>
+      <div class="buttons">
+        <button id="test-all" type="button" class="primary">Test all</button>
+        <button id="reload-manifest" type="button">Reload manifest</button>
+      </div>
+      <p id="manifest-status" class="status"></p>
+      <div class="table-scroll">
+        <table class="data diag-table">
+          <thead><tr><th>What</th><th>URL</th><th></th><th>Result</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Report</h2>
+      <p class="hint">Copy this text into a bug report; it contains no personal data beyond the browser's user-agent string.</p>
+      <div class="buttons"><button id="copy-report" type="button">Copy report</button></div>
+      <p id="copy-status" class="status"></p>
+      <textarea id="report" readonly></textarea>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+    (() => {
+      const PYODIDE_VERSION = "0.29.3"; // keep in step with worker.js
+      const EXTERNAL = [
+        ["Pyodide loader (jsdelivr)", `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/pyodide.js`],
+        ["Chart.js (cdnjs)", "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"],
+      ];
+      const $ = (id) => document.getElementById(id);
+      const rowsBody = $("rows");
+      const results = new Map(); // url -> result text
+      let rows = []; // {label, url, entry|null, button, cell}
+
+      function baseUrl() {
+        return new URL(".", window.location.href).href;
+      }
+
+      function features() {
+        return {
+          WebAssembly: typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function",
+          Worker: typeof Worker === "function",
+          "crypto.subtle": Boolean(window.crypto && window.crypto.subtle),
+          "secure context": window.isSecureContext === true,
+        };
+      }
+
+      function envText() {
+        const flags = Object.entries(features()).map(([k, v]) => `${k}: ${v ? "yes" : "NO"}`).join(", ");
+        const online = typeof navigator.onLine === "boolean" ? (navigator.onLine ? "online" : "OFFLINE") : "unknown";
+        return [
+          `Browser: ${navigator.userAgent}`,
+          `Network: ${online}. Page: ${window.location.href}`,
+          `Base URL for project files: ${baseUrl()}`,
+          `Features: ${flags}`,
+          `Time: ${new Date().toISOString()}`,
+        ].join("\n");
+      }
+
+      async function sha256Hex(bytes) {
+        if (!(window.crypto && window.crypto.subtle)) return null;
+        const digest = await crypto.subtle.digest("SHA-256", bytes);
+        return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      async function testUrl(url, entry, bust) {
+        const started = performance.now();
+        const target = new URL(url);
+        if (bust) target.searchParams.set("v", String(Date.now()));
+        let response;
+        try {
+          response = await fetch(target.toString(), { cache: bust ? "reload" : "no-cache" });
+        } catch (error) {
+          return { ok: false, text: `GET ${target} failed: ${error.name}: ${error.message}` };
+        }
+        if (!response.ok) {
+          return { ok: false, text: `GET ${target} failed: HTTP ${response.status} ${response.statusText}` };
+        }
+        let bytes;
+        try {
+          bytes = new Uint8Array(await response.arrayBuffer());
+        } catch (error) {
+          return { ok: false, text: `GET ${target} failed while reading the body: ${error.name}: ${error.message}` };
+        }
+        const ms = Math.round(performance.now() - started);
+        const parts = [`HTTP ${response.status}`, `${bytes.length} bytes`, `${ms} ms`];
+        const type = response.headers.get("content-type");
+        if (type) parts.push(type);
+        let ok = true;
+        if (entry) {
+          if (bytes.length !== entry.bytes) {
+            ok = false;
+            parts.push(`SIZE MISMATCH: manifest says ${entry.bytes}`);
+          }
+          const digest = await sha256Hex(bytes);
+          if (digest === null) parts.push("SHA-256 not checked (no crypto.subtle)");
+          else if (digest === entry.sha256) parts.push("SHA-256 matches");
+          else {
+            ok = false;
+            parts.push(`SHA-256 MISMATCH: got ${digest}, manifest says ${entry.sha256}`);
+          }
+        }
+        return { ok, text: parts.join(", "), bytes };
+      }
+
+      function setResult(row, result) {
+        row.cell.textContent = result.text;
+        row.cell.className = `result ${result.ok ? "ok" : "bad"}`;
+        results.set(row.url, `${result.ok ? "OK " : "FAIL"} ${row.label}: ${result.text}`);
+        renderReport();
+      }
+
+      async function runRow(row, bust) {
+        row.button.disabled = true;
+        row.cell.textContent = "testing";
+        row.cell.className = "result";
+        try {
+          setResult(row, await testUrl(row.url, row.entry, bust));
+        } finally {
+          row.button.disabled = false;
+        }
+      }
+
+      function addRow(label, url, entry) {
+        const tr = document.createElement("tr");
+        const what = document.createElement("td");
+        what.textContent = label;
+        const where = document.createElement("td");
+        where.className = "url";
+        where.textContent = url;
+        const action = document.createElement("td");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "Test";
+        action.append(button);
+        const cell = document.createElement("td");
+        cell.className = "result";
+        cell.textContent = "not tested";
+        tr.append(what, where, action, cell);
+        rowsBody.append(tr);
+        const row = { label, url, entry, button, cell };
+        button.addEventListener("click", () => runRow(row, true));
+        rows.push(row);
+        return row;
+      }
+
+      function renderReport() {
+        const lines = [envText(), ""];
+        for (const row of rows) lines.push(results.get(row.url) || `--   ${row.label}: not tested (${row.url})`);
+        $("report").value = lines.join("\n");
+      }
+
+      async function loadManifest() {
+        rowsBody.replaceChildren();
+        rows = [];
+        results.clear();
+        for (const [label, url] of EXTERNAL) addRow(label, url, null);
+        const manifestUrl = new URL("manifest.json", window.location.href).toString();
+        const manifestRow = addRow("build manifest", manifestUrl, null);
+        $("manifest-status").textContent = `Fetching ${manifestUrl}`;
+        const result = await testUrl(manifestUrl, null, true);
+        setResult(manifestRow, result);
+        if (!result.ok) {
+          $("manifest-status").textContent = `The manifest could not be read: ${result.text}`;
+          return;
+        }
+        let manifest;
+        try {
+          manifest = JSON.parse(new TextDecoder().decode(result.bytes));
+        } catch (error) {
+          $("manifest-status").textContent = `manifest.json is not valid JSON: ${error.name}: ${error.message}`;
+          return;
+        }
+        const entries = [];
+        for (const entry of manifest.wheels || []) entries.push([`dependency wheel ${entry.requirement || entry.file_name}`, entry]);
+        if (manifest.wheel) entries.push(["engine wheel", manifest.wheel]);
+        for (const entry of manifest.files || []) entries.push([`project file ${entry.path}`, entry]);
+        for (const [label, entry] of entries) addRow(label, new URL(entry.path, window.location.href).toString(), entry);
+        $("manifest-status").textContent =
+          `Manifest built ${manifest.generated_utc || "(undated)"}, engine ${manifest.engine_version || "?"}, ` +
+          `commit ${manifest.git_commit || "none"}: ${entries.length} files listed.`;
+        renderReport();
+      }
+
+      async function testAll() {
+        $("test-all").disabled = true;
+        try {
+          for (const row of rows) await runRow(row, true);
+        } finally {
+          $("test-all").disabled = false;
+        }
+      }
+
+      async function copyReport() {
+        renderReport();
+        const text = $("report").value;
+        try {
+          await navigator.clipboard.writeText(text);
+          $("copy-status").textContent = "Copied.";
+        } catch (error) {
+          $("report").select();
+          $("copy-status").textContent = `Clipboard unavailable (${error.name}); the text is selected, copy it by hand.`;
+        }
+      }
+
+      $("env").textContent = envText();
+      $("test-all").addEventListener("click", testAll);
+      $("reload-manifest").addEventListener("click", loadManifest);
+      $("copy-report").addEventListener("click", copyReport);
+      loadManifest();
+    })();
+  </script>
+</body>
+</html>

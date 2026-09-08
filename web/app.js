@@ -36,6 +36,8 @@
     boot: $("boot"),
     bootList: $("boot-list"),
     bootError: $("boot-error"),
+    bootDiag: $("boot-diag"),
+    bootRetry: $("boot-retry"),
     app: $("app"),
     engineLine: $("engine-line"),
     form: $("scenario-form"),
@@ -73,6 +75,8 @@
 
   let worker = null;
   let info = null;
+  let workerBaseUrl = null; // reported by the worker: the directory it resolves files from
+  let bootAttempt = 0;
   let current = null; // the payload on screen
   const charts = {};
   const pending = new Map(); // requestId -> {resolve, reject}
@@ -188,6 +192,10 @@
       case "ready":
         onReady(message);
         break;
+      case "diag":
+        workerBaseUrl = message.base_url;
+        showDiagnostics();
+        break;
       case "result":
       case "file":
       case "tieout":
@@ -214,9 +222,57 @@
     }
   }
 
+  // ------------------------------------------------------------------ diagnostics
+
+  function featureReport() {
+    // What the boot needs from the browser, each named so a failure report says which.
+    const secure = typeof window.isSecureContext === "boolean" ? window.isSecureContext : false;
+    return {
+      WebAssembly: typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function",
+      Worker: typeof Worker === "function",
+      "crypto.subtle": Boolean(window.crypto && window.crypto.subtle),
+      "secure context": secure,
+    };
+  }
+
+  function diagnosticsText() {
+    const features = featureReport();
+    const flags = Object.entries(features)
+      .map(([name, ok]) => `${name}: ${ok ? "yes" : "NO"}`)
+      .join(", ");
+    const online = typeof navigator.onLine === "boolean" ? (navigator.onLine ? "online" : "OFFLINE") : "unknown";
+    return [
+      `Browser: ${navigator.userAgent}`,
+      `Network: ${online}. Page: ${window.location.href}`,
+      `Worker base URL: ${workerBaseUrl || "(worker not started)"}`,
+      `Features: ${flags}`,
+      `Boot attempt ${bootAttempt}`,
+    ].join("\n");
+  }
+
+  function showDiagnostics() {
+    el.bootDiag.hidden = false;
+    el.bootDiag.textContent = diagnosticsText();
+  }
+
   function showBootError(text) {
     el.bootError.hidden = false;
     el.bootError.textContent = `The engine could not start: ${text}`;
+    showDiagnostics();
+    el.bootRetry.hidden = false;
+    el.bootRetry.disabled = false;
+  }
+
+  function missingFeatureMessage() {
+    const missing = Object.entries(featureReport())
+      .filter(([, ok]) => !ok)
+      .map(([name]) => name);
+    if (missing.length === 0) return null;
+    const list = missing.join(", ");
+    const why = missing.includes("secure context")
+      ? " The page is not in a secure context: crypto.subtle (used to verify every file) is only available over https or on localhost."
+      : "";
+    return `this browser is missing ${list}.${why} The app needs a current browser (Chrome, Edge, Firefox or Safari) over https.`;
   }
 
   function onReady(message) {
@@ -224,9 +280,11 @@
     const build = message.build || {};
     const runtime = message.runtime || {};
     const built = build.generated_utc ? `, built ${build.generated_utc}` : "";
+    const origins = Array.isArray(message.origins) && message.origins.length ? message.origins.join(", ") : "unknown";
     el.engineLine.textContent =
       `Engine ${info.engine_version}, commit ${shortCommit(build.git_commit)}${built}. ` +
-      `Runs on Pyodide ${runtime.pyodide} (CPython ${runtime.python}) with ${runtime.openpyxl}.`;
+      `Runs on Pyodide ${runtime.pyodide} (CPython ${runtime.python}) with ${runtime.openpyxl}. ` +
+      `Origins the engine loader contacted: ${origins}.`;
     renderDeal(info.deal);
     renderShippedTieout(info.tieout_status);
     populateForm();
@@ -727,7 +785,8 @@
 
   // ------------------------------------------------------------------ start
 
-  function start() {
+  function resetBootList() {
+    clear(el.bootList);
     for (const phase of BOOT_PHASES) {
       const item = document.createElement("li");
       item.dataset.phase = phase;
@@ -737,17 +796,56 @@
       item.append(label);
       el.bootList.append(item);
     }
-    if (typeof Worker === "undefined") {
-      showBootError("this browser has no Web Worker support.");
+  }
+
+  function startWorker() {
+    bootAttempt += 1;
+    resetBootList();
+    setError(el.bootError, "");
+    el.bootRetry.hidden = true;
+    workerBaseUrl = null;
+    showDiagnostics();
+    const missing = missingFeatureMessage();
+    if (missing) {
+      showBootError(missing);
       return;
     }
     if (typeof Chart === "undefined") {
       showBootError("Chart.js did not load from cdnjs (offline, or the CDN is blocked).");
       return;
     }
-    worker = new Worker("worker.js");
+    // A retry fetches the worker script itself afresh (cache-busting query); the worker
+    // resolves every project file against its own URL, so the query is harmless.
+    const workerUrl = bootAttempt === 1 ? "worker.js" : `worker.js?v=${Date.now()}`;
+    try {
+      worker = new Worker(new URL(workerUrl, window.location.href));
+    } catch (error) {
+      showBootError(`new Worker(${workerUrl}) failed: ${error.name}: ${error.message}`);
+      return;
+    }
     worker.addEventListener("message", onWorkerMessage);
-    worker.addEventListener("error", (event) => showBootError(event.message || "worker error"));
+    worker.addEventListener("error", (event) => {
+      const where = event.filename ? ` (${event.filename}:${event.lineno})` : "";
+      showBootError(`worker error${where}: ${event.message || "no message"}`);
+    });
+  }
+
+  function restartBoot() {
+    el.bootRetry.disabled = true;
+    if (worker) {
+      worker.terminate();
+      worker = null;
+    }
+    for (const [requestId, entry] of pending) {
+      entry.reject(new Error("the engine was restarted"));
+      pending.delete(requestId);
+    }
+    startWorker();
+  }
+
+  function start() {
+    startWorker();
+    el.bootRetry.addEventListener("click", restartBoot);
     el.form.addEventListener("submit", runScenario);
     el.noteSelect.addEventListener("change", () => current && noteFlows(current, el.noteSelect.value));
     el.downloadCsv.addEventListener("click", () => download("csv"));

@@ -15,6 +15,18 @@
         "true"
       ],
       "port": 8501
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": ".venv/Scripts/python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "web/dist"
+      ],
+      "port": 8765
     }
   ]
 }

@@ -396,3 +396,17 @@ footer.site {
 a {
   color: var(--accent);
 }
+
+#boot-diag,
+.diag {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+#boot-error {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}

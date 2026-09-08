@@ -4,7 +4,8 @@ What these prove: the bridge returns engine values as strings that agree with a 
 ``run_scenario`` call, relays engine refusals verbatim, produces the CSV bundle and the
 workbook; ``crt.api`` imports without polars (the browser has none); the run manifest
 degrades to ``git_commit = None`` when git is unavailable; and ``scripts/build_web.py``
-ships every input file with a matching SHA-256.
+ships every input file and the vendored dependency wheels with matching SHA-256 hashes,
+with a worker that never refers to a package index.
 """
 
 from __future__ import annotations
@@ -50,6 +51,27 @@ def bridge(project_root: Path) -> ModuleType:
 @pytest.fixture(scope="module")
 def build_web(project_root: Path) -> ModuleType:
     return _load_module(project_root / "scripts" / "build_web.py", "build_web_under_test")
+
+
+@pytest.fixture
+def offline_wheels(build_web: ModuleType, monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
+    """Stand in for ``pip download`` (no network in the fast suite): write one deterministic
+    fake wheel per pinned requirement, named the way pip would name it."""
+    contents: dict[str, bytes] = {}
+
+    def fake_download(requirements: tuple[str, ...], out_dir: Path) -> list[Path]:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        wheels: list[Path] = []
+        for requirement in requirements:
+            name, version = requirement.split("==", 1)
+            wheel = out_dir / f"{name}-{version}-py3-none-any.whl"
+            wheel.write_bytes(f"fake wheel {requirement}\n".encode() * 7)
+            contents[wheel.name] = wheel.read_bytes()
+            wheels.append(wheel)
+        return wheels
+
+    monkeypatch.setattr(build_web, "download_wheels", fake_download)
+    return contents
 
 
 PRICING_SPEED_FORM = {
@@ -192,7 +214,7 @@ def test_build_web_collects_every_input(build_web: ModuleType, project_root: Pat
 
 
 def test_build_web_manifest_hashes_match(
-    build_web: ModuleType, project_root: Path, tmp_path: Path
+    build_web: ModuleType, project_root: Path, tmp_path: Path, offline_wheels: dict[str, bytes]
 ) -> None:
     dist = build_web.build(project_root, tmp_path / "dist", skip_wheel=True)
     manifest = json.loads((dist / "manifest.json").read_text(encoding="utf-8"))
@@ -207,3 +229,62 @@ def test_build_web_manifest_hashes_match(
         assert shipped.stat().st_size == entry["bytes"]
     for name in build_web.PAGE_FILES:
         assert (dist / name).is_file()
+    assert (dist / "diag.html").is_file()
+
+
+def test_build_web_vendors_dependency_wheels(
+    build_web: ModuleType, project_root: Path, tmp_path: Path, offline_wheels: dict[str, bytes]
+) -> None:
+    """The manifest's ``wheels`` list is the vendored dependencies in install order, each
+    shipped under wheels/ with the SHA-256 and byte count of the file actually served."""
+    assert build_web.VENDORED_WHEELS == ("et_xmlfile==2.0.0", "openpyxl==3.1.5")
+    dist = build_web.build(project_root, tmp_path / "dist", skip_wheel=True)
+    manifest = json.loads((dist / "manifest.json").read_text(encoding="utf-8"))
+    wheels = manifest["wheels"]
+    assert [w["requirement"] for w in wheels] == list(build_web.VENDORED_WHEELS)
+    assert len(offline_wheels) == len(wheels)
+    for entry in wheels:
+        assert entry["path"] == f"wheels/{entry['file_name']}"
+        shipped = dist / entry["path"]
+        assert shipped.is_file(), entry
+        assert shipped.read_bytes() == offline_wheels[entry["file_name"]]
+        assert hashlib.sha256(shipped.read_bytes()).hexdigest() == entry["sha256"]
+        assert shipped.stat().st_size == entry["bytes"]
+
+
+def test_build_web_worker_never_contacts_a_package_index(
+    build_web: ModuleType, project_root: Path, tmp_path: Path, offline_wheels: dict[str, bytes]
+) -> None:
+    dist = build_web.build(project_root, tmp_path / "dist", skip_wheel=True)
+    for name in ("worker.js", "index.html", "app.js", "diag.html"):
+        text = (dist / name).read_text(encoding="utf-8").lower()
+        assert "pypi" not in text, name
+        assert "pythonhosted" not in text, name
+    worker = (dist / "worker.js").read_text(encoding="utf-8")
+    assert "deps=False" in worker
+    assert "emfs:" in worker
+    assert "manifest.wheels" in worker
+
+
+def test_download_wheels_fetches_pinned_wheels_only(build_web: ModuleType, tmp_path: Path) -> None:
+    """``pip download`` is invoked binary-only, without dependencies, into the given
+    directory; the result is one wheel per requirement in requirement order."""
+    calls: list[list[str]] = []
+
+    def fake_run(command: list[str], **kwargs: object) -> None:
+        calls.append(command)
+        dest = Path(command[command.index("--dest") + 1])
+        # pip writes them in whatever order it resolves; the function must reorder.
+        (dest / "openpyxl-3.1.5-py2.py3-none-any.whl").write_bytes(b"o")
+        (dest / "et_xmlfile-2.0.0-py3-none-any.whl").write_bytes(b"e")
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(build_web.subprocess, "run", fake_run)
+        wheels = build_web.download_wheels(("et_xmlfile==2.0.0", "openpyxl==3.1.5"), tmp_path / "w")
+    assert [w.name for w in wheels] == [
+        "et_xmlfile-2.0.0-py3-none-any.whl",
+        "openpyxl-3.1.5-py2.py3-none-any.whl",
+    ]
+    assert len(calls) == 1
+    assert "--only-binary=:all:" in calls[0] and "--no-deps" in calls[0]
+    assert calls[0][-2:] == ["et_xmlfile==2.0.0", "openpyxl==3.1.5"]
