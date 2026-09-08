@@ -83,3 +83,12 @@ verified by rendering in Excel via COM; per-tranche allocation columns in the AP
 
 **Next.** Phase 5 proper: live-formula workbook and the Excel-COM recalculation test;
 Q22 pool interest columns; GUI compare-chart axis; MACR classes; RM>0 tables.
+
+## 2026-09-08 (later)
+
+**Shipped.** Browser app at https://jjd98git.github.io/crt-cashflow-engine/ : the real engine
+runs client-side under Pyodide (CPython 3.13 in WebAssembly), deployed by
+`.github/workflows/pages.yml` from `scripts/build_web.py`. Verified on the live page: boot,
+pricing-speed run in 0.6 s reproducing Table 1, stacked tranche charts, CSV/xlsx downloads,
+in-browser 96-scenario tie-out PASS. Repo is PUBLIC by Trey's instruction (GitHub Pages on the
+free plan needs a public repo); the brief's private-repo rule is overridden until further notice.
