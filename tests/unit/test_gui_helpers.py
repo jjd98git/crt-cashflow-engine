@@ -1,5 +1,5 @@
 """GUI helpers that need no Streamlit: the tie-out status parser, the deal display, the
-formatting boundary and the CSV bundle."""
+formatting boundary, the CSV bundle and the values workbook download."""
 
 from __future__ import annotations
 
@@ -13,7 +13,12 @@ import pytest
 
 from crt.api import run_scenario
 from crt.gui.deal_view import load_deal_display
-from crt.gui.downloads import bundle_file_name, csv_bundle_bytes
+from crt.gui.downloads import (
+    bundle_file_name,
+    csv_bundle_bytes,
+    workbook_bytes,
+    workbook_download_name,
+)
 from crt.gui.formatting import money, percent_of_fraction, summary_table, wal
 from crt.gui.tieout_status import load_tieout_status, parse_tieout_status
 from crt.io.deal_terms import DealTerms
@@ -105,10 +110,20 @@ def test_summary_table_and_csv_bundle(project_root: Path) -> None:
     with zipfile.ZipFile(io.BytesIO(payload)) as archive:
         names = sorted(archive.namelist())
         assert names == sorted(
-            ["pool_months.csv", "structure.csv", "note_cashflows.csv", "note_summary.csv",
-             "pool_totals.csv", "manifest.json"]
+            ["pool_months.csv", "structure.csv", "tranche_allocations.csv", "note_cashflows.csv",
+             "note_summary.csv", "tranche_summary.csv", "pool_totals.csv", "manifest.json"]
         )
         manifest = json.loads(archive.read("manifest.json"))
         assert manifest["run_id"] == result.manifest.run_id
     assert csv_bundle_bytes(result) == payload  # same result -> same bytes
     assert bundle_file_name(result) == f"crt_run_pricing-speed_{result.manifest.run_id}.zip"
+
+    workbook = workbook_bytes(result)
+    assert workbook[:2] == b"PK"  # an xlsx is a zip container
+    with zipfile.ZipFile(io.BytesIO(workbook)) as archive:
+        assert "xl/workbook.xml" in archive.namelist()
+    assert workbook_bytes(result) == workbook  # same result -> same bytes
+    assert (
+        workbook_download_name(result)
+        == f"crt_structure_pricing-speed_{result.manifest.run_id}.xlsx"
+    )
