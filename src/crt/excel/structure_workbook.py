@@ -24,6 +24,7 @@ only in the README timestamp cell.
 from __future__ import annotations
 
 import io
+import re
 import zipfile
 from collections.abc import Iterable, Sequence
 from datetime import UTC, date, datetime
@@ -871,19 +872,36 @@ def build_structure_workbook(result: RunResult) -> Workbook:
 
 
 def structure_workbook_bytes(result: RunResult) -> bytes:
-    """Serialise the workbook with content-only zip bytes (fixed entry timestamps)."""
+    """Serialise the workbook with content-only zip bytes (fixed entry timestamps).
+
+    openpyxl overwrites ``docProps/core.xml``'s ``dcterms:modified`` with the wall-clock
+    time at save (``openpyxl.writer.excel.save_workbook``), so that one value is re-pinned
+    to the run's manifest timestamp here; otherwise two saves a second apart differ.
+    """
     raw = io.BytesIO()
     build_structure_workbook(result).save(raw)
+    pinned_modified = (
+        f'<dcterms:modified xsi:type="dcterms:W3CDTF">{result.manifest.timestamp_utc}'
+        "</dcterms:modified>"
+    )
     out = io.BytesIO()
     with (
         zipfile.ZipFile(raw) as source,
         zipfile.ZipFile(out, "w", compression=zipfile.ZIP_DEFLATED) as target,
     ):
         for info in source.infolist():
+            payload = source.read(info.filename)
+            if info.filename == "docProps/core.xml":
+                payload = re.sub(
+                    rb"<dcterms:modified[^>]*>[^<]*</dcterms:modified>",
+                    pinned_modified.encode("utf-8"),
+                    payload,
+                    count=1,
+                )
             entry = zipfile.ZipInfo(info.filename, date_time=_ZIP_ENTRY_DATETIME)
             entry.compress_type = zipfile.ZIP_DEFLATED
             entry.external_attr = info.external_attr
-            target.writestr(entry, source.read(info.filename))
+            target.writestr(entry, payload)
     return out.getvalue()
 
 
