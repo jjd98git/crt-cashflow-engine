@@ -11,6 +11,8 @@ of the repo for size and reproducibility reasons, not confidentiality ones.
 | `raw/26DNA1_20260801_lld.txt` | Freddie Mac CRT loan-level monthly disclosure (Clarity download) | 2026-08 reporting period |
 | `raw/stacr-2026-dna1-ppm.pdf` | STACR REMIC 2026-DNA1 private placement memorandum | 285 pages |
 | `raw/stacr-2026-dna1-ppm.txt` | derived | `pdftotext -layout` extract; use this, not the PDF |
+| `raw/stacr-2026-dna2-ppm.pdf` | https://capitalmarkets.freddiemac.com/crt/docs/legal-documents/stacr/stacr-2026-dna2-ppm.pdf | STACR REMIC 2026-DNA2 private placement memorandum dated 2026-03-17; 293 pages; sha256 1e7ccf29bcae6f9d… (second deal, generality test) |
+| `raw/stacr-2026-dna2-ppm.txt` | derived | `pdftotext -layout` extract |
 | `raw/crt-reference-pool-disclosure-file-layouts-v4.2.pdf` | https://capitalmarkets.freddiemac.com/crt/docs/pdfs/crt-reference-pool-disclosure-file-layouts.pdf | Version 4.2, effective July 2026. Defines the 93 positional fields |
 | `raw/crt-reference-pool-disclosure-file-layouts-v4.2.txt` | derived | `pdftotext -layout` extract |
 | `raw/crt-reference-pool-glossary.pdf` | https://capitalmarkets.freddiemac.com/crt/docs/pdfs/crt-reference-pool-glossary.pdf | Version 4.2. Field definitions and code enumerations |
