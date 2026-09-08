@@ -29,6 +29,18 @@ pytest -q
   secret scan; the regenerated tie-out report is attached to each run as an artifact
   (*Actions → the run → Artifacts → tieout-report*).
 
+## Run in the browser
+**https://jjd98git.github.io/crt-cashflow-engine/** - no install, no login. The page loads the
+real Python engine (the `crt` wheel built from this repository) into the browser with
+[Pyodide](https://pyodide.org/) and runs it client-side in a Web Worker; nothing is uploaded.
+You can pick a PPM grid point or type a scenario, see the Note summary, the tranche stack, the
+write-downs and the pool balance, open the full tables, download the CSV bundle or the Excel
+workbook, and run the 96-scenario PPM tie-out on demand. Every number on the page is a string the
+engine produced; the page does no arithmetic. The site is built by `scripts/build_web.py` and
+deployed by `.github/workflows/pages.yml` on every push to `main`. To build and serve it
+locally: `.venv\Scripts\python scriptsuild_web.py`, then `python -m http.server 8777` inside
+`web\dist` and open http://127.0.0.1:8777/.
+
 ## Run locally
 - GUI: double-click `gui.cmd`. From PowerShell run two separate lines (PowerShell 5.1 has
   no `&&`): `cd "C:\Users\jjdeg\OneDrive\Desktop\crt-cashflow-engine"` then

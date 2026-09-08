@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>STACR 2026-DNA1 cashflow engine</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="site">
+    <h1>STACR 2026-DNA1 cashflow engine</h1>
+    <p class="tagline">
+      Reference-pool and reference-tranche cashflows for Freddie Mac STACR REMIC 2026-DNA1 under a
+      prepayment / credit-event scenario, computed by the project's Python engine.
+    </p>
+    <div class="badges">
+      <span class="badge strong">Runs entirely in your browser; nothing is uploaded</span>
+      <span class="badge">Decimal arithmetic, deterministic manifest per run</span>
+      <span class="badge"><a href="https://github.com/jjd98git/crt-cashflow-engine">Source on GitHub</a></span>
+    </div>
+    <p id="engine-line">Engine version and commit appear once the runtime has loaded.</p>
+  </header>
+
+  <section id="boot" aria-live="polite">
+    <h2>Starting the engine</h2>
+    <p class="hint">
+      The Python runtime (Pyodide) is downloaded from jsdelivr, openpyxl from PyPI, and the engine
+      wheel plus the deal data from this site; every project file is checked against the SHA-256 in
+      the build manifest before it is used. First load takes 10-30 seconds depending on the
+      connection; later loads are faster because the browser caches the runtime.
+    </p>
+    <ul id="boot-list"></ul>
+    <p id="boot-error" class="error" hidden></p>
+  </section>
+
+  <main id="app" hidden>
+    <div class="layout">
+      <aside class="stack">
+        <section class="panel">
+          <h2>Scenario</h2>
+          <form id="scenario-form" autocomplete="off">
+            <label for="preset">Scenario file</label>
+            <select id="preset"></select>
+            <p id="preset-note" class="hint"></p>
+
+            <label for="scenario-name">Scenario name</label>
+            <input id="scenario-name" type="text" value="ad-hoc">
+
+            <label for="cpr-select">CPR (%) - PPM grid (T25) or custom</label>
+            <select id="cpr-select"></select>
+            <input id="cpr-custom" type="text" inputmode="decimal" placeholder="e.g. 7.5" hidden>
+
+            <label for="cer-select">CER (%) - PPM grid (T26, RM = 0) or custom</label>
+            <select id="cer-select"></select>
+            <input id="cer-custom" type="text" inputmode="decimal" placeholder="e.g. 0.75" hidden>
+
+            <label for="sofr">SOFR Rate (%, flat)</label>
+            <input id="sofr" type="text" inputmode="decimal">
+            <p class="hint">Modeling Assumption (r): 3.65786 % flat (P12).</p>
+
+            <label class="check"><input id="early-redemption" type="checkbox" checked>
+              Early redemption (February 2031 or 10 % clean-up)</label>
+            <p class="hint">T18: off = To Scheduled Maturity Date, on = To Early Redemption Date.</p>
+
+            <label class="check"><input id="delinquency" type="checkbox" checked>
+              Delinquency Test satisfied every Payment Date</label>
+            <p class="hint">
+              Modeling Assumption (e), T10 / P73. Off requires the Distressed Principal Balance
+              vector, which this page does not take: the engine refuses to run and says so.
+            </p>
+
+            <button id="run-button" class="primary" type="submit">Run scenario</button>
+            <p id="run-status" class="status"></p>
+            <p id="run-error" class="error" hidden></p>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h2>Deal</h2>
+          <table><tbody id="deal-facts"></tbody></table>
+          <h3>Reference Tranches (Table 3)</h3>
+          <table>
+            <thead><tr><th>Tranche</th><th class="num">Initial notional</th></tr></thead>
+            <tbody id="deal-tranches"></tbody>
+          </table>
+          <p class="hint">* Original Note issued against this tranche.</p>
+          <h3>Original Notes (Table 1)</h3>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Note</th><th class="num">Balance</th><th class="num">Margin %</th>
+                <th class="num">Coupon %</th><th class="num">WAL</th><th>Window</th></tr></thead>
+              <tbody id="deal-notes"></tbody>
+            </table>
+          </div>
+        </section>
+      </aside>
+
+      <div class="stack">
+        <section id="results" class="panel" hidden>
+          <h2>Results</h2>
+          <p id="manifest-line" class="manifest"></p>
+
+          <h3>Summary per Note</h3>
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th>Note</th><th class="num">Original balance</th><th class="num">WAL (years)</th>
+                <th>First principal PD</th><th>Last principal PD</th><th class="num">Total principal</th>
+                <th class="num">Total interest</th><th class="num">Total write-downs</th><th class="num">Final balance</th>
+              </tr></thead>
+              <tbody id="summary-body"></tbody>
+            </table>
+          </div>
+
+          <h3>Reference Tranches, lifetime</h3>
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th>Tranche</th><th class="num">Initial notional</th><th class="num">% of pool</th>
+                <th class="num">Principal</th><th class="num">Write-downs</th><th class="num">Write-ups</th>
+                <th class="num">Increases (A-H)</th><th class="num">Final balance</th>
+              </tr></thead>
+              <tbody id="tranche-summary-body"></tbody>
+            </table>
+          </div>
+
+          <h3>Pool totals</h3>
+          <table><tbody id="pool-body"></tbody></table>
+
+          <h3>Reference Tranche balances after each Payment Date, all twelve tranches</h3>
+          <p class="chart-caption">Stacked Class Notional Amounts, first loss (B-3H) at the bottom, A-H on top.</p>
+          <div class="chart"><canvas id="chart-stack-all"></canvas></div>
+
+          <h3>Reference Tranche balances, excluding A-H</h3>
+          <p class="chart-caption">The same stack without the retained senior tranche, which dwarfs the others.</p>
+          <div class="chart"><canvas id="chart-stack-ex"></canvas></div>
+
+          <h3>Tranche Write-down Amounts per Payment Date</h3>
+          <div class="chart"><canvas id="chart-write-downs"></canvas></div>
+
+          <h3>
+            Note principal, interest and write-down
+            <span class="inline-select"><label for="note-select">Note</label><select id="note-select"></select></span>
+          </h3>
+          <div class="chart"><canvas id="chart-note-flows"></canvas></div>
+
+          <h3>Reference Pool balance by collection month</h3>
+          <div class="chart"><canvas id="chart-pool"></canvas></div>
+
+          <h3>Full tables</h3>
+          <p class="hint">Exact engine digits (the same values as the CSV bundle). Open a table to render it.</p>
+          <div id="tables"></div>
+
+          <h3>Downloads</h3>
+          <div class="buttons">
+            <button id="download-csv" type="button">Download CSV bundle</button>
+            <button id="download-xlsx" type="button">Download Excel workbook</button>
+          </div>
+          <p class="hint">
+            The CSV bundle is crt.api.export_csv (seven tables plus manifest.json); the workbook is
+            crt.excel.structure_workbook (engine values with charts; no formulas yet). Both are built in
+            the browser by the same Python code the command line uses.
+          </p>
+          <p id="download-status" class="status"></p>
+        </section>
+
+        <section class="panel">
+          <h2>PPM tie-out</h2>
+          <div id="tieout-shipped"></div>
+          <p class="hint">
+            The tie-out compares the engine's WAL, principal-window, declining-balance and
+            credit-event-sensitivity figures for all 96 PPM scenarios against the offering
+            memorandum's tables. Running it here takes from about 15 seconds to a couple of minutes
+            depending on the machine, and keeps the engine busy; the page stays responsive.
+          </p>
+          <button id="tieout-run" type="button">Run PPM tie-out in the browser</button>
+          <p id="tieout-status" class="status"></p>
+          <div id="tieout-result"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site">
+    <p>
+      The page does no arithmetic: every figure, table and chart value is a string produced by the
+      engine (Python Decimal), and the charts plot display-only copies of those strings. The engine
+      wheel, the deal terms, the PPM tables and the assumptions register are the repository's own
+      files, hashed in the build manifest.
+    </p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+name: Pages
+
+# Builds web/dist (engine wheel + deal data + the Pyodide page) and deploys it to
+# GitHub Pages: https://jjd98git.github.io/crt-cashflow-engine/
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build web/dist
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Create venv and install
+        run: |
+          uv venv .venv
+          uv pip install --python .venv/bin/python -e ".[dev]"
+
+      - name: Build the site (wheel, data, manifest)
+        run: .venv/bin/python scripts/build_web.py
+
+      - name: Show what will be deployed
+        run: |
+          find web/dist -type f | sort
+          cat web/dist/manifest.json
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    name: deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
