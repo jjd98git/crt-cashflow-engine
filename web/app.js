@@ -9,22 +9,9 @@
 "use strict";
 
 (() => {
-  // Same palette as crt/excel/structure_workbook.py TRANCHE_COLOURS.
-  const TRANCHE_COLOURS = {
-    "A-H": "#1F3864",
-    "A-1": "#2E75B6",
-    "A-1H": "#9DC3E6",
-    "M-1": "#BF9000",
-    "M-1H": "#FFD966",
-    "M-2A": "#ED7D31",
-    "M-2AH": "#F4B183",
-    "M-2B": "#C55A11",
-    "M-2BH": "#F8CBAD",
-    "B-1H": "#E97D7D",
-    "B-2H": "#A61C1C",
-    "B-3H": "#FF0000",
-  };
-  const PRINCIPAL_COLOUR = "#2E75B6";
+  // Tranche colours and the stack order arrive in every run payload (payload.colours,
+  // payload.stack_order_bottom_up) from crt.presentation, the same source the Excel
+  // export and the Streamlit GUI use; nothing about tranches is hard-coded here.
   const INTEREST_COLOUR = "#7F7F7F";
   const WRITE_DOWN_COLOUR = "#C00000";
   const POOL_COLOUR = "#1F3864";
@@ -476,7 +463,7 @@
       const swatch = cell("th", "");
       const dot = document.createElement("span");
       dot.className = "swatch";
-      dot.style.background = TRANCHE_COLOURS[t.tranche];
+      dot.style.background = payload.colours[t.tranche];
       swatch.append(dot, document.createTextNode(t.tranche));
       el.trancheBody.append(
         row([
@@ -524,7 +511,7 @@
     }
   }
 
-  function baseOptions({ stacked, yLabel }) {
+  function baseOptions({ stacked, yLabel, legendTopOfStackFirst }) {
     const theme = chartTheme();
     return {
       responsive: true,
@@ -532,7 +519,14 @@
       animation: false,
       interaction: { mode: "index", intersect: false },
       plugins: {
-        legend: { position: "bottom", labels: { color: theme.text, boxWidth: 12 } },
+        // Chart.js lists legend items in dataset order (bottom of the stack first);
+        // reverse for the tranche stacks so the legend reads top of the stack first,
+        // as the workbook's charts do, with each H tranche next to its Note.
+        legend: {
+          position: "bottom",
+          reverse: Boolean(legendTopOfStackFirst),
+          labels: { color: theme.text, boxWidth: 12 },
+        },
         tooltip: {
           itemSort: (a, b) => b.datasetIndex - a.datasetIndex,
           callbacks: {
@@ -558,14 +552,16 @@
   }
 
   function stackedArea(key, canvasId, payload, tranches) {
+    // Datasets in stack order: the first is filled to the origin, each next one to the
+    // previous, so dataset order is the stack order (bottom first).
     destroyChart(key);
     const labels = payload.payment_dates.map((d) => d.date);
     const datasets = tranches.map((tranche, index) => ({
       label: tranche,
       data: payload.balances_after[tranche].map(Number),
       rawStrings: payload.balances_after[tranche],
-      borderColor: TRANCHE_COLOURS[tranche],
-      backgroundColor: withAlpha(TRANCHE_COLOURS[tranche], 0.85),
+      borderColor: payload.colours[tranche],
+      backgroundColor: withAlpha(payload.colours[tranche], 0.85),
       fill: index === 0 ? "origin" : "-1",
       pointRadius: 0,
       borderWidth: 1,
@@ -574,7 +570,11 @@
     charts[key] = new Chart($(canvasId), {
       type: "line",
       data: { labels, datasets },
-      options: baseOptions({ stacked: true, yLabel: "Class Notional Amount after the Payment Date" }),
+      options: baseOptions({
+        stacked: true,
+        yLabel: "Class Notional Amount after the Payment Date",
+        legendTopOfStackFirst: true,
+      }),
     });
   }
 
@@ -585,13 +585,17 @@
       label: tranche,
       data: payload.write_downs[tranche].map(Number),
       rawStrings: payload.write_downs[tranche],
-      backgroundColor: TRANCHE_COLOURS[tranche],
+      backgroundColor: payload.colours[tranche],
       borderWidth: 0,
     }));
     charts.writeDowns = new Chart($("chart-write-downs"), {
       type: "bar",
       data: { labels, datasets },
-      options: baseOptions({ stacked: true, yLabel: "Tranche Write-down Amount on the Payment Date" }),
+      options: baseOptions({
+        stacked: true,
+        yLabel: "Tranche Write-down Amount on the Payment Date",
+        legendTopOfStackFirst: true,
+      }),
     });
   }
 
@@ -600,7 +604,7 @@
     const labels = payload.payment_dates.map((d) => d.date);
     const flows = payload.note_flows[note];
     const series = [
-      ["Principal", flows.principal, PRINCIPAL_COLOUR],
+      ["Principal", flows.principal, payload.colours[note]],
       ["Interest", flows.interest, INTEREST_COLOUR],
       ["Write-down", flows.write_down, WRITE_DOWN_COLOUR],
     ];
@@ -645,7 +649,8 @@
   }
 
   function renderCharts(payload) {
-    const bottomUp = payload.tranche_order.slice().reverse(); // B-3H first, A-H last (on top)
+    // B-3H first (bottom), each Note followed by its H tranche, A-H last (top).
+    const bottomUp = payload.stack_order_bottom_up;
     stackedArea("stackAll", "chart-stack-all", payload, bottomUp);
     stackedArea("stackEx", "chart-stack-ex", payload, bottomUp.filter((t) => t !== "A-H"));
     writeDownBars(payload, bottomUp);

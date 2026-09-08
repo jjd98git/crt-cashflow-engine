@@ -19,9 +19,16 @@ from crt.gui.downloads import (
     workbook_bytes,
     workbook_download_name,
 )
-from crt.gui.formatting import money, percent_of_fraction, summary_table, wal
+from crt.gui.formatting import (
+    money,
+    percent_of_fraction,
+    summary_table,
+    tranche_balance_chart_frame,
+    wal,
+)
 from crt.gui.tieout_status import load_tieout_status, parse_tieout_status
 from crt.io.deal_terms import DealTerms
+from crt.presentation import STACK_ORDER_BOTTOM_UP, tranche_colour_css
 from crt.scenarios.loader import load_scenario
 from crt.tieout.run import DEAL_TERMS_PATH
 
@@ -127,3 +134,58 @@ def test_summary_table_and_csv_bundle(project_root: Path) -> None:
         workbook_download_name(result)
         == f"crt_structure_pricing-speed_{result.manifest.run_id}.xlsx"
     )
+
+
+def test_tranche_chart_frame_columns_follow_the_stack_order(project_root: Path) -> None:
+    source = project_root / "scenarios/pricing_speed.yaml"
+    result = run_scenario(
+        load_scenario(source),
+        project_root=project_root,
+        scenario_name="pricing-speed",
+        scenario_source=source,
+        timestamp="2026-01-01T00:00:00Z",
+    )
+    frame = tranche_balance_chart_frame(result, include_a_h=True)
+    assert list(frame.columns) == list(STACK_ORDER_BOTTOM_UP)
+    without_a_h = tranche_balance_chart_frame(result)
+    assert list(without_a_h.columns) == [t for t in STACK_ORDER_BOTTOM_UP if t != "A-H"]
+    labelled = tranche_balance_chart_frame(result, label="A")
+    assert list(labelled.columns)[:2] == ["B-3H (A)", "B-2H (A)"]
+    # Spec 02 section 12 balances after Payment Date 1, as the lossy float copies.
+    assert frame.loc[1, "A-1"] == float(D("265553750.00"))
+    assert frame.loc[1, "A-1H"] == float(D("14013693.92"))
+
+
+def test_stacked_tranche_chart_encodes_stack_order_and_colours(project_root: Path) -> None:
+    pytest.importorskip("altair")
+    from crt.gui.charts import STACK_RANK_FIELD, stack_columns, stacked_tranche_chart
+
+    source = project_root / "scenarios/pricing_speed.yaml"
+    result = run_scenario(
+        load_scenario(source),
+        project_root=project_root,
+        scenario_name="pricing-speed",
+        scenario_source=source,
+        timestamp="2026-01-01T00:00:00Z",
+    )
+    frame = tranche_balance_chart_frame(result, include_a_h=True)
+    spec = stacked_tranche_chart(frame, title="stack").to_dict()
+    encoding = spec["encoding"]
+    top_down = list(reversed(STACK_ORDER_BOTTOM_UP))
+    # Legend and colour scale: top of the stack first, each H next to its Note.
+    assert encoding["color"]["sort"] == top_down
+    assert encoding["color"]["scale"]["domain"] == top_down
+    assert encoding["color"]["scale"]["range"] == [tranche_colour_css(t) for t in top_down]
+    # Stacking: explicit rank ascending from the bottom of the stack; y stacked from zero.
+    assert encoding["order"]["field"] == STACK_RANK_FIELD
+    assert encoding["order"]["sort"] == "ascending"
+    assert encoding["y"]["stack"] == "zero"
+    rows = spec["datasets"][spec["data"]["name"]]
+    rank_of = {row["Tranche"]: row[STACK_RANK_FIELD] for row in rows}
+    assert [t for t, _ in sorted(rank_of.items(), key=lambda item: item[1])] == list(
+        STACK_ORDER_BOTTOM_UP
+    )
+    assert len(rows) == len(result.structure) * len(STACK_ORDER_BOTTOM_UP)
+    # A frame whose columns are out of stack order is refused, not silently re-sorted.
+    with pytest.raises(ValueError, match="stack order"):
+        stack_columns(frame[["A-1H", "A-1"]])

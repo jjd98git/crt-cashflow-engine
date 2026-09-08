@@ -42,6 +42,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from crt.api import RunResult, StructureRow
 from crt.io.appendix_g import EXPECTED_A1_PORTION_TOTAL, EXPECTED_A1H_PORTION_TOTAL
 from crt.io.deal_terms import NOTE_CLASSES, TRANCHE_ORDER
+from crt.presentation import STACK_ORDER_BOTTOM_UP, STACK_ORDER_TOP_DOWN, TRANCHE_COLOURS
 
 # Sheet names, in workbook order.
 SHEET_NAMES: tuple[str, ...] = (
@@ -61,8 +62,9 @@ VALUES_ONLY_SENTENCE = (
     "(BRIEF §9) is a later deliverable"
 )
 
-# Tranches bottom-up: first loss at the bottom of every stack, A-H on top.
-BOTTOM_UP_ORDER: tuple[str, ...] = tuple(reversed(TRANCHE_ORDER))
+# Tranches bottom-up: first loss at the bottom of every stack, each Note directly under
+# its H tranche, A-H on top (crt.presentation; shared with the GUI and the browser page).
+BOTTOM_UP_ORDER: tuple[str, ...] = STACK_ORDER_BOTTOM_UP
 # Roles per spec 02 section 1 (Table 3).
 TRANCHE_ROLES: dict[str, str] = {
     "A-H": "retained senior",
@@ -78,22 +80,8 @@ TRANCHE_ROLES: dict[str, str] = {
     "B-2H": "retained",
     "B-3H": "retained first loss",
 }
-# One palette for every chart: senior tranches in cool blues, subordinate in warm
-# golds/oranges, the B-H tranches in reds with B-3H (first loss) pure red.
-TRANCHE_COLOURS: dict[str, str] = {
-    "A-H": "1F3864",
-    "A-1": "2E75B6",
-    "A-1H": "9DC3E6",
-    "M-1": "BF9000",
-    "M-1H": "FFD966",
-    "M-2A": "ED7D31",
-    "M-2AH": "F4B183",
-    "M-2B": "C55A11",
-    "M-2BH": "F8CBAD",
-    "B-1H": "E97D7D",
-    "B-2H": "A61C1C",
-    "B-3H": "FF0000",
-}
+# One palette for every chart (crt.presentation.TRANCHE_COLOURS, re-exported): a Note's H
+# tranche is a lighter tint of the Note's own hue.
 INTEREST_COLOUR = "7F7F7F"
 WRITE_DOWN_COLOUR = "C00000"
 THRESHOLD_COLOUR = "C00000"
@@ -237,7 +225,7 @@ def _readme_sheet(ws: Worksheet, result: RunResult) -> None:
         ws, row, ("Tranche", "Role", "Initial Class Notional Amount", "% of pool", "Chart colour")
     )
     row += 1
-    for tranche in TRANCHE_ORDER:
+    for tranche in STACK_ORDER_TOP_DOWN:
         summary = result.tranche_summary_for(tranche)
         values = (
             tranche,

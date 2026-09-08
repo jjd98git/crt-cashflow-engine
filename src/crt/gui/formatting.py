@@ -12,8 +12,9 @@ from typing import Any
 import pandas as pd
 
 from crt.api import RunResult, SummaryDifference
-from crt.io.deal_terms import NOTE_CLASSES, TRANCHE_ORDER
+from crt.io.deal_terms import NOTE_CLASSES
 from crt.money import round_half_up
+from crt.presentation import STACK_ORDER_BOTTOM_UP
 
 WAL_DISPLAY_PLACES = 2  # R6: WAL reported to 2 decimals; the stored value is unrounded
 PERCENT_DISPLAY_PLACES = 5  # R3: percentages are carried to 1/100,000 of a point
@@ -97,14 +98,17 @@ def _float_frame(result: RunResult, table: str) -> pd.DataFrame:
     return pd.DataFrame(frame.to_dicts())
 
 
-def tranche_balance_chart_frame(result: RunResult, *, label: str | None = None) -> pd.DataFrame:
-    """Class Notional Amount after each Payment Date, one column per Reference Tranche
-    (A-H omitted: it dwarfs the others)."""
+def tranche_balance_chart_frame(
+    result: RunResult, *, label: str | None = None, include_a_h: bool = False
+) -> pd.DataFrame:
+    """Class Notional Amount after each Payment Date, one column per Reference Tranche in
+    stack order (bottom of the stack first, each Note directly followed by its H tranche).
+    A-H is omitted unless asked for: it dwarfs the others."""
     structure = _float_frame(result, "structure").set_index("payment_date_number")
     columns = {
         f"balance_after_{t}": (f"{t} ({label})" if label else t)
-        for t in TRANCHE_ORDER
-        if t != "A-H"
+        for t in STACK_ORDER_BOTTOM_UP
+        if include_a_h or t != "A-H"
     }
     return structure[list(columns)].rename(columns=columns)
 

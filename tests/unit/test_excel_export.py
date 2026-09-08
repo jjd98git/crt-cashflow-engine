@@ -25,6 +25,7 @@ from crt.excel.structure_workbook import (
     SHEET_NAMES,
     STRUCTURE_HEADERS,
     VALUES_ONLY_SENTENCE,
+    build_structure_workbook,
     export_structure_workbook,
     structure_workbook_bytes,
 )
@@ -298,3 +299,32 @@ def test_cli_rejects_bad_override(project_root: Path, tmp_path: Path, capsys: py
     assert code == 1
     assert "CPR 1.50 must satisfy 0 <= CPR < 1" in capsys.readouterr().err
     assert not (tmp_path / "x.xlsx").exists()
+
+
+def test_charts_stack_in_presentation_order_with_presentation_colours(pricing: RunResult) -> None:
+    """The workbook's bottom-up order is the shared one (each Note directly under its H
+    tranche) and every stacked series carries ``crt.presentation``'s colour."""
+    from crt.presentation import STACK_ORDER_BOTTOM_UP, tranche_colour
+
+    assert BOTTOM_UP_ORDER == STACK_ORDER_BOTTOM_UP
+    for note in NOTE_CLASSES:
+        assert BOTTOM_UP_ORDER[BOTTOM_UP_ORDER.index(note) + 1] == note + "H"
+    workbook = build_structure_workbook(pricing)
+    charts = workbook["Charts"]._charts
+    assert len(charts) == EXPECTED_CHART_COUNT
+    stack_all, stack_ex, write_downs, cumulative = charts[:4]
+    for chart, tranches in (
+        (stack_all, BOTTOM_UP_ORDER),
+        (stack_ex, tuple(t for t in BOTTOM_UP_ORDER if t != "A-H")),
+        (write_downs, BOTTOM_UP_ORDER),
+        (cumulative, BOTTOM_UP_ORDER),
+    ):
+        assert chart.grouping == "stacked"
+        fills = [s.graphicalProperties.solidFill.srgbClr for s in chart.series]
+        colours = [getattr(fill, "val", fill) for fill in fills]  # str, or RGB(.val)
+        assert colours == [tranche_colour(t) for t in tranches]
+    # README legend: top of the stack first, mirroring the charts.
+    readme = list(workbook["README"].iter_rows(values_only=True))
+    legend_start = next(i for i, row in enumerate(readme) if row[0] == "Tranche") + 1
+    legend = [row[0] for row in readme[legend_start : legend_start + len(BOTTOM_UP_ORDER)]]
+    assert legend == list(reversed(BOTTOM_UP_ORDER))

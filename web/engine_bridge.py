@@ -30,6 +30,7 @@ from crt.api import TABLE_NAMES, RunResult, run_scenario
 from crt.gui.tieout_status import TIEOUT_REPORT_PATH, parse_tieout_status
 from crt.io.deal_terms import NOTE_CLASSES, TRANCHE_ORDER, DealTerms
 from crt.money import round_half_up
+from crt.presentation import STACK_ORDER_BOTTOM_UP, tranche_colour_css
 from crt.scenarios.grid import PPM_CER_AXIS_PCT, PPM_CPR_AXIS_PCT
 from crt.scenarios.loader import FlatVector, load_scenario_file, scenario_from_values
 from crt.scenarios.scenario import Scenario
@@ -129,10 +130,18 @@ def init_session(root: str) -> str:
             "presets": _presets(root_path),
             "tieout_status": _tieout_status(root_path),
             "tranche_order": list(TRANCHE_ORDER),
+            "stack_order_bottom_up": list(STACK_ORDER_BOTTOM_UP),
+            "colours": _colours(),
             "note_classes": list(NOTE_CLASSES),
             "table_names": list(TABLE_NAMES),
         }
     )
+
+
+def _colours() -> dict[str, str]:
+    """Chart colour per tranche as ``#RRGGBB`` (crt.presentation, shared with Excel and
+    the GUI): an H tranche is a lighter tint of its Note's hue."""
+    return {tranche: tranche_colour_css(tranche) for tranche in TRANCHE_ORDER}
 
 
 def _build_info(root: Path) -> dict[str, Any] | None:
@@ -368,6 +377,10 @@ def _result_payload(result: RunResult) -> dict[str, Any]:
             for row in structure
         ],
         "tranche_order": list(TRANCHE_ORDER),
+        # Stack order (bottom first; each Note directly followed by its H tranche) and
+        # colours for the charts: the page hard-codes neither.
+        "stack_order_bottom_up": list(STACK_ORDER_BOTTOM_UP),
+        "colours": _colours(),
         "balances_after": {
             t: [exact(row.balances_after[t]) for row in structure] for t in TRANCHE_ORDER
         },

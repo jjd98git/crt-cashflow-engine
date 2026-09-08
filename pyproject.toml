@@ -12,7 +12,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-cov", "ruff>=0.6", "mypy>=1.11", "types-PyYAML", "types-openpyxl"]
-gui = ["streamlit>=1.30"]
+gui = ["streamlit>=1.30", "altair>=5"]
 
 [build-system]
 requires = ["hatchling"]

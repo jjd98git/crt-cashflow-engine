@@ -8,6 +8,7 @@ import streamlit as st
 
 from crt.api import TABLE_NAMES, RunResult, compare_summaries
 from crt.gui import formatting as fmt
+from crt.gui.charts import stacked_tranche_chart
 from crt.gui.downloads import (
     bundle_file_name,
     csv_bundle_bytes,
@@ -15,6 +16,11 @@ from crt.gui.downloads import (
     workbook_download_name,
 )
 from crt.io.deal_terms import NOTE_CLASSES
+
+STACK_CAPTION = (
+    "Class Notional Amounts stacked bottom-up: first loss (B-3H) at the bottom, each Note "
+    "directly under its retained H tranche (same hue, lighter), A-H on top."
+)
 
 
 def manifest_line(result: RunResult) -> str:
@@ -56,6 +62,26 @@ def render_downloads(result: RunResult, key: str) -> None:
     )
 
 
+def render_tranche_stacks(result: RunResult, *, label: str | None = None) -> None:
+    """The two stacked tranche charts of a run: all twelve tranches, then the same stack
+    without A-H so the subordinate tranches are legible (as the workbook's Charts sheet)."""
+    suffix = f" — {label}" if label else ""
+    st.altair_chart(
+        stacked_tranche_chart(
+            fmt.tranche_balance_chart_frame(result, include_a_h=True),
+            title=f"Reference Tranche stack after each Payment Date{suffix}",
+        ),
+        width="stretch",
+    )
+    st.altair_chart(
+        stacked_tranche_chart(
+            fmt.tranche_balance_chart_frame(result),
+            title=f"Subordinate stack, A-H excluded{suffix}",
+        ),
+        width="stretch",
+    )
+
+
 def render_results(result: RunResult, key: str = "single") -> None:
     st.caption(manifest_line(result))
     st.subheader("Summary per Note")
@@ -63,8 +89,8 @@ def render_results(result: RunResult, key: str = "single") -> None:
     st.dataframe(fmt.pool_totals_table(result))
 
     st.subheader("Reference Tranche balances after each Payment Date")
-    st.caption("Class Notional Amounts; A-H omitted from the chart (see the structure table).")
-    st.line_chart(fmt.tranche_balance_chart_frame(result))
+    st.caption(STACK_CAPTION)
+    render_tranche_stacks(result)
 
     st.subheader("Note principal and interest")
     note = st.selectbox("Note", NOTE_CLASSES, key=f"{key}_flows_note")
@@ -102,6 +128,12 @@ def render_compare(result_a: RunResult, result_b: RunResult) -> None:
             fmt.note_balance_chart_frame(result_b, label="B"),
         )
     )
+    st.subheader("Reference Tranche stacks, A and B")
+    st.caption(STACK_CAPTION)
+    left, right = st.columns(2)
+    for column, label, result in ((left, "A", result_a), (right, "B", result_b)):
+        with column:
+            render_tranche_stacks(result, label=f"Scenario {label}")
     st.subheader("Pool balance, A vs B")
     st.line_chart(
         _overlay(

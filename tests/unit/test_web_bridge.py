@@ -598,3 +598,22 @@ def test_download_wheels_fetches_pinned_wheels_only(build_web: ModuleType, tmp_p
     assert len(calls) == 1
     assert "--only-binary=:all:" in calls[0] and "--no-deps" in calls[0]
     assert calls[0][-2:] == ["et_xmlfile==2.0.0", "openpyxl==3.1.5"]
+
+
+def test_payload_carries_stack_order_and_colours(bridge: ModuleType, project_root: Path) -> None:
+    """The page hard-codes neither the stack order nor the palette: both come from
+    ``crt.presentation`` through the session info and every run payload."""
+    from crt.presentation import STACK_ORDER_BOTTOM_UP, tranche_colour_css
+
+    info = json.loads(bridge.init_session(str(project_root)))
+    payload = json.loads(bridge.run_form(json.dumps(PRICING_SPEED_FORM)))
+    assert payload["ok"], payload
+    for carrier in (info, payload):
+        assert carrier["stack_order_bottom_up"] == list(STACK_ORDER_BOTTOM_UP)
+        assert carrier["stack_order_bottom_up"][0] == "B-3H"
+        assert carrier["stack_order_bottom_up"][-1] == "A-H"
+        assert carrier["colours"] == {t: tranche_colour_css(t) for t in carrier["tranche_order"]}
+        assert all(len(c) == 7 and c.startswith("#") for c in carrier["colours"].values())
+    app_js = (project_root / "web" / "app.js").read_text(encoding="utf-8")
+    assert "payload.stack_order_bottom_up" in app_js and "payload.colours" in app_js
+    assert "TRANCHE_COLOURS" not in app_js
