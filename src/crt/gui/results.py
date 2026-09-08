@@ -8,7 +8,12 @@ import streamlit as st
 
 from crt.api import TABLE_NAMES, RunResult, compare_summaries
 from crt.gui import formatting as fmt
-from crt.gui.downloads import bundle_file_name, csv_bundle_bytes
+from crt.gui.downloads import (
+    bundle_file_name,
+    csv_bundle_bytes,
+    workbook_bytes,
+    workbook_download_name,
+)
 from crt.io.deal_terms import NOTE_CLASSES
 
 
@@ -38,11 +43,16 @@ def render_downloads(result: RunResult, key: str) -> None:
         mime="application/json",
         key=f"{key}_manifest",
     )
-    columns[2].button(
-        "Excel export — Phase 5",
-        disabled=True,
+    columns[2].download_button(
+        "Download Excel workbook (values)",
+        data=workbook_bytes(result),
+        file_name=workbook_download_name(result),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         key=f"{key}_excel",
-        help="The auditable workbook export is Phase 5 and is not built yet.",
+        help="Engine values with charts of the tranche stack; no formulas yet.",
+    )
+    columns[2].caption(
+        "Values only: live formulas come with the Phase 5 auditable workbook (BRIEF §9)."
     )
 
 

@@ -1,4 +1,5 @@
-"""Bundle a run's CSV export and manifest into an in-memory zip for the download button."""
+"""In-memory payloads for the download buttons: the CSV bundle (zip) and the values
+workbook (xlsx)."""
 
 from __future__ import annotations
 
@@ -8,6 +9,7 @@ import zipfile
 from pathlib import Path
 
 from crt.api import RunResult, export_csv
+from crt.excel.structure_workbook import structure_workbook_bytes, workbook_file_name
 
 # Fixed timestamp inside the archive so that the zip bytes depend only on the file
 # contents (zip headers otherwise carry the local write time).
@@ -30,3 +32,13 @@ def csv_bundle_bytes(result: RunResult) -> bytes:
 def bundle_file_name(result: RunResult) -> str:
     safe = "".join(c if c.isalnum() or c in "-_." else "_" for c in result.manifest.scenario_name)
     return f"crt_run_{safe}_{result.manifest.run_id}.zip"
+
+
+def workbook_bytes(result: RunResult) -> bytes:
+    """The values workbook of ``crt.excel.structure_workbook`` (no formulas; BRIEF section 9's
+    live-formula workbook is a later Phase 5 deliverable)."""
+    return structure_workbook_bytes(result)
+
+
+def workbook_download_name(result: RunResult) -> str:
+    return workbook_file_name(result)
