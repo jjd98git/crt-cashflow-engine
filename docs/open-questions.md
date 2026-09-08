@@ -93,6 +93,9 @@ months of real payments, independent of the PPM tables.
 at-issuance loan-level file if available) and drops them in `data/raw/`. Not blocking for
 Phases 1–4, which use the PPM; needed before Phase 6 scenario runs on the actual pool.
 
+
+**2026-09-08 sourcing attempt (Manager).** Freddie Mac's STACR deal-documents page lists only the offering and trust documents for 2026-DNA1 and names U.S. Bank as Indenture Trustee; the monthly Payment Date statements are published on the U.S. Bank trust gateway (login required) and deal-level monthly data on Clarity (registration required). Neither is reachable from this session. Trey holds the credentials; the statements for the March to August 2026 Payment Dates are what actual-pool mode and Q20 need.
+
 ---
 
 ## Q5 | Phase 0 | manager | CLOSED 2026-09-03 — recommendation adopted; ppm-analyst checks for an assumed ANY in Phase 1
