@@ -36,10 +36,28 @@ real Python engine (the `crt` wheel built from this repository) into the browser
 You can pick a PPM grid point or type a scenario, see the Note summary, the tranche stack, the
 write-downs and the pool balance, open the full tables, download the CSV bundle or the Excel
 workbook, and run the 96-scenario PPM tie-out on demand. Every number on the page is a string the
-engine produced; the page does no arithmetic. The site is built by `scripts/build_web.py` and
-deployed by `.github/workflows/pages.yml` on every push to `main`. To build and serve it
-locally: `.venv\Scripts\python scriptsuild_web.py`, then `python -m http.server 8777` inside
-`web\dist` and open http://127.0.0.1:8777/.
+engine produced; the page does no arithmetic.
+
+- **Single origin.** The page contacts the GitHub Pages site and nothing else: the Pyodide
+  runtime (about 12 MB), Chart.js, the engine wheel, its two pure-Python dependencies
+  (openpyxl, et_xmlfile) and the deal data are all copied into the site at build time, each
+  with its SHA-256 in `manifest.json`, and the worker verifies every file before using it.
+  No CDN and no package index is contacted at runtime; the engine line under the title says
+  which origins were actually seen.
+- **File names.** Project files and wheels are served under neutral, content-addressed names
+  (`files/<hash>.bin`; the manifest maps each logical path to its served path) so `.yaml`,
+  `.csv`, `.json` and `.whl` never appear in a fetched URL. The runtime under `pyodide/` is the
+  exception: Pyodide fetches its own files by name, so that directory keeps `pyodide.asm.wasm`,
+  `python_stdlib.zip`, `pyodide-lock.json` and two `.whl` files. A proxy that blocks `.wasm` or
+  `application/wasm` blocks exactly those and nothing else.
+- **Diagnostics.** If the page cannot start, it names the exact URL that failed;
+  [diag.html](https://jjd98git.github.io/crt-cashflow-engine/diag.html) lists every URL the
+  page fetches and tests them one at a time (status, bytes, SHA-256, content type).
+
+The site is built by `scripts/build_web.py` (pinned SHA-256 for every downloaded runtime and
+vendor file, cached under `web/.cache/`) and deployed by `.github/workflows/pages.yml` on every
+push to `main`. To build and serve it locally: `.venv\Scripts\python scripts\build_web.py`, then
+`python -m http.server 8777` inside `web\dist` and open http://127.0.0.1:8777/.
 
 ## Run locally
 - GUI: double-click `gui.cmd`. From PowerShell run two separate lines (PowerShell 5.1 has

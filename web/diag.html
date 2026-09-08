@@ -20,7 +20,7 @@
   <header class="site">
     <h1>Engine load diagnostics</h1>
     <p class="tagline">
-      Tests, one file at a time, everything the <a href="index.html">cashflow engine page</a> fetches
+      Tests, one file at a time, every URL the <a href="index.html">cashflow engine page</a> fetches
       while it starts, and says exactly which request fails and how. Nothing here runs the engine.
     </p>
   </header>
@@ -34,16 +34,29 @@
     <section class="panel">
       <h2>Files</h2>
       <p class="hint">
-        The manifest is fetched first (with a cache-busting query); every file it lists is then
-        added below. "Test" fetches one URL and reports the HTTP status, byte count, the SHA-256
-        against the manifest where one is listed, and the time taken. A thrown error is shown with
-        the browser's own name and message.
+        Every URL below is on this site; the page contacts no other origin. The manifest is
+        fetched first (with a cache-busting query) and every file it lists is then added.
+        "Test" fetches one URL and reports the HTTP status, byte count, the SHA-256 against the
+        manifest, the content type and the time taken. A thrown error is shown with the browser's
+        own name and message.
+      </p>
+      <p class="hint">
+        File names: project files and wheels are served under neutral names,
+        <code>files/&lt;hash&gt;.bin</code>, so no <code>.yaml</code>, <code>.csv</code>,
+        <code>.json</code> or <code>.whl</code> appears in those URLs; the "What" column gives the
+        real name. The Python runtime under <code>pyodide/</code> is the exception: Pyodide fetches
+        its own files by name, so that directory keeps <code>pyodide.asm.wasm</code>,
+        <code>python_stdlib.zip</code>, <code>pyodide-lock.json</code> and two <code>.whl</code>
+        files. If only the <code>pyodide/</code> rows fail, something between this browser and the
+        site is filtering by file extension or content type (a <code>.wasm</code> block looks
+        exactly like that).
       </p>
       <div class="buttons">
         <button id="test-all" type="button" class="primary">Test all</button>
         <button id="reload-manifest" type="button">Reload manifest</button>
       </div>
       <p id="manifest-status" class="status"></p>
+      <p id="origins" class="status"></p>
       <div class="table-scroll">
         <table class="data diag-table">
           <thead><tr><th>What</th><th>URL</th><th></th><th>Result</th></tr></thead>
@@ -64,11 +77,8 @@
   <script>
     "use strict";
     (() => {
-      const PYODIDE_VERSION = "0.29.3"; // keep in step with worker.js
-      const EXTERNAL = [
-        ["Pyodide loader (jsdelivr)", `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/pyodide.js`],
-        ["Chart.js (cdnjs)", "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"],
-      ];
+      const MANIFEST_SERVED = "manifest.bin"; // what worker.js fetches (scripts/build_web.py MANIFEST_SERVED)
+      const MANIFEST_JSON = "manifest.json"; // byte-identical readable copy
       const $ = (id) => document.getElementById(id);
       const rowsBody = $("rows");
       const results = new Map(); // url -> result text
@@ -76,6 +86,10 @@
 
       function baseUrl() {
         return new URL(".", window.location.href).href;
+      }
+
+      function siteUrl(relative) {
+        return new URL(relative, baseUrl()).toString();
       }
 
       function features() {
@@ -93,10 +107,19 @@
         return [
           `Browser: ${navigator.userAgent}`,
           `Network: ${online}. Page: ${window.location.href}`,
-          `Base URL for project files: ${baseUrl()}`,
+          `Base URL for every file: ${baseUrl()}`,
           `Features: ${flags}`,
           `Time: ${new Date().toISOString()}`,
         ].join("\n");
+      }
+
+      function originsText() {
+        // Assert, from the rows themselves, that every tested URL is on this site.
+        const site = window.location.origin;
+        const foreign = Array.from(new Set(rows.map((row) => new URL(row.url).origin))).filter((o) => o !== site);
+        if (rows.length === 0) return "Origins: (no URLs listed yet)";
+        if (foreign.length === 0) return `Origins: all ${rows.length} URLs are on ${site}; no other origin is contacted.`;
+        return `WARNING: URLs on other origins than ${site}: ${foreign.join(", ")}`;
       }
 
       async function sha256Hex(bytes) {
@@ -106,12 +129,14 @@
       }
 
       async function testUrl(url, entry, bust) {
+        // Same policy as worker.js: a plain fetch normally, every cache bypassed on a
+        // bust (the buttons always bust so a stale copy is never what gets tested).
         const started = performance.now();
         const target = new URL(url);
         if (bust) target.searchParams.set("v", String(Date.now()));
         let response;
         try {
-          response = await fetch(target.toString(), { cache: bust ? "reload" : "no-cache" });
+          response = await fetch(target.toString(), bust ? { cache: "reload" } : undefined);
         } catch (error) {
           return { ok: false, text: `GET ${target} failed: ${error.name}: ${error.message}` };
         }
@@ -183,11 +208,12 @@
         const row = { label, url, entry, button, cell };
         button.addEventListener("click", () => runRow(row, true));
         rows.push(row);
+        $("origins").textContent = originsText();
         return row;
       }
 
       function renderReport() {
-        const lines = [envText(), ""];
+        const lines = [envText(), originsText(), ""];
         for (const row of rows) lines.push(results.get(row.url) || `--   ${row.label}: not tested (${row.url})`);
         $("report").value = lines.join("\n");
       }
@@ -196,11 +222,10 @@
         rowsBody.replaceChildren();
         rows = [];
         results.clear();
-        for (const [label, url] of EXTERNAL) addRow(label, url, null);
-        const manifestUrl = new URL("manifest.json", window.location.href).toString();
-        const manifestRow = addRow("build manifest", manifestUrl, null);
-        $("manifest-status").textContent = `Fetching ${manifestUrl}`;
-        const result = await testUrl(manifestUrl, null, true);
+        const manifestRow = addRow("build manifest (what the worker fetches)", siteUrl(MANIFEST_SERVED), null);
+        addRow("build manifest, readable copy", siteUrl(MANIFEST_JSON), null);
+        $("manifest-status").textContent = `Fetching ${manifestRow.url}`;
+        const result = await testUrl(manifestRow.url, null, true);
         setResult(manifestRow, result);
         if (!result.ok) {
           $("manifest-status").textContent = `The manifest could not be read: ${result.text}`;
@@ -210,17 +235,26 @@
         try {
           manifest = JSON.parse(new TextDecoder().decode(result.bytes));
         } catch (error) {
-          $("manifest-status").textContent = `manifest.json is not valid JSON: ${error.name}: ${error.message}`;
+          $("manifest-status").textContent = `${MANIFEST_SERVED} is not valid JSON: ${error.name}: ${error.message}`;
           return;
         }
-        const entries = [];
-        for (const entry of manifest.wheels || []) entries.push([`dependency wheel ${entry.requirement || entry.file_name}`, entry]);
-        if (manifest.wheel) entries.push(["engine wheel", manifest.wheel]);
-        for (const entry of manifest.files || []) entries.push([`project file ${entry.path}`, entry]);
-        for (const [label, entry] of entries) addRow(label, new URL(entry.path, window.location.href).toString(), entry);
+        const entries = []; // [label, served path, entry]
+        const runtime = manifest.runtime || {};
+        for (const entry of runtime.files || []) {
+          entries.push([`Pyodide ${runtime.pyodide_version || ""} runtime: ${entry.file_name}`, entry.path, entry]);
+        }
+        for (const entry of manifest.vendor || []) entries.push([`${entry.name} ${entry.version}`, entry.path, entry]);
+        for (const entry of manifest.wheels || []) {
+          entries.push([`dependency wheel ${entry.requirement || entry.file_name}`, entry.served, entry]);
+        }
+        if (manifest.wheel) entries.push([`engine wheel ${manifest.wheel.file_name}`, manifest.wheel.served, manifest.wheel]);
+        for (const entry of manifest.files || []) entries.push([`project file ${entry.path}`, entry.served, entry]);
+        for (const [label, served, entry] of entries) addRow(label, siteUrl(served), entry);
         $("manifest-status").textContent =
           `Manifest built ${manifest.generated_utc || "(undated)"}, engine ${manifest.engine_version || "?"}, ` +
-          `commit ${manifest.git_commit || "none"}: ${entries.length} files listed.`;
+          `commit ${manifest.git_commit || "none"}: ${entries.length} files listed ` +
+          `(${(runtime.files || []).length} runtime, ${(manifest.vendor || []).length} vendor, ` +
+          `${(manifest.wheels || []).length + (manifest.wheel ? 1 : 0)} wheels, ${(manifest.files || []).length} project).`;
         renderReport();
       }
 

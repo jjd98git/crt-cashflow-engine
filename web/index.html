@@ -25,12 +25,12 @@
   <section id="boot" aria-live="polite">
     <h2>Starting the engine</h2>
     <p class="hint">
-      The Python runtime (Pyodide) is downloaded from jsdelivr; the engine wheel, its two
-      pure-Python dependencies (openpyxl, et_xmlfile) and the deal data come from this site, each
-      checked against the SHA-256 in the build manifest before it is used. First load takes 10-30
-      seconds depending on the connection; later loads are faster because the browser caches the
-      runtime. If a file fails to load, the message below names it; <a href="diag.html">diag.html</a>
-      tests every file one at a time.
+      Everything comes from this site and nowhere else: the Python runtime (Pyodide, about 12 MB),
+      the engine wheel, its two pure-Python dependencies (openpyxl, et_xmlfile) and the deal data,
+      each checked against the SHA-256 in the build manifest before it is used. First load takes
+      10-30 seconds depending on the connection; later loads are faster because the browser caches
+      the runtime. If a file fails to load, the message below names its exact URL;
+      <a href="diag.html">diag.html</a> tests every file one at a time.
     </p>
     <ul id="boot-list"></ul>
     <p id="boot-error" class="error" hidden></p>
@@ -195,7 +195,7 @@
     </p>
   </footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+  <script src="vendor/chart.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

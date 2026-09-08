@@ -4,8 +4,9 @@ What these prove: the bridge returns engine values as strings that agree with a 
 ``run_scenario`` call, relays engine refusals verbatim, produces the CSV bundle and the
 workbook; ``crt.api`` imports without polars (the browser has none); the run manifest
 degrades to ``git_commit = None`` when git is unavailable; and ``scripts/build_web.py``
-ships every input file and the vendored dependency wheels with matching SHA-256 hashes,
-with a worker that never refers to a package index.
+ships every input file, the vendored dependency wheels, the self-hosted Pyodide runtime and
+Chart.js with matching SHA-256 hashes, under neutral ``.bin`` names for project files and
+wheels, with pages that refer to no third-party origin and no package index.
 """
 
 from __future__ import annotations
@@ -71,6 +72,60 @@ def offline_wheels(build_web: ModuleType, monkeypatch: pytest.MonkeyPatch) -> di
         return wheels
 
     monkeypatch.setattr(build_web, "download_wheels", fake_download)
+    return contents
+
+
+FAKE_LOCK = {
+    "info": {"version": "0.29.3", "python": "3.13.2"},
+    "packages": {
+        # A synthetic dependency chain: the closure must follow ``depends``, not guess.
+        "micropip": {
+            "file_name": "micropip-9.9-py3-none-any.whl",
+            "sha256": "m" * 64,
+            "version": "9.9",
+            "depends": ["packaging"],
+        },
+        "packaging": {
+            "file_name": "packaging-1.0-py3-none-any.whl",
+            "sha256": "p" * 64,
+            "version": "1.0",
+            "depends": [],
+        },
+        "pyyaml": {
+            "file_name": "pyyaml-6.0-cp313-cp313-pyodide_2025_0_wasm32.whl",
+            "sha256": "y" * 64,
+            "version": "6.0",
+            "depends": [],
+        },
+        "unused": {
+            "file_name": "unused-0-py3-none-any.whl",
+            "sha256": "u" * 64,
+            "version": "0",
+            "depends": [],
+        },
+    },
+}
+
+
+@pytest.fixture
+def offline_runtime(build_web: ModuleType, monkeypatch: pytest.MonkeyPatch) -> dict[str, bytes]:
+    """Stand in for the pinned downloads (Pyodide runtime, Chart.js): write deterministic
+    fake bytes under the requested file name, a parseable lock file for
+    ``pyodide-lock.json``.  Returns file name -> bytes for what the build must ship."""
+    contents: dict[str, bytes] = {}
+
+    def fake_fetch(download: object, cache_dir: Path) -> Path:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        name = str(download.file_name)  # type: ignore[attr-defined]
+        target = cache_dir / name
+        if name == build_web.PYODIDE_LOCK_FILE:
+            target.write_text(json.dumps(FAKE_LOCK), encoding="utf-8")
+        else:
+            target.write_bytes(f"fake runtime file {name}\n".encode() * 3)
+        contents[name] = target.read_bytes()
+        return target
+
+    monkeypatch.setattr(build_web, "fetch_pinned", fake_fetch)
     return contents
 
 
@@ -213,57 +268,207 @@ def test_build_web_collects_every_input(build_web: ModuleType, project_root: Pat
     assert all(p.is_file() for p in files)
 
 
-def test_build_web_manifest_hashes_match(
-    build_web: ModuleType, project_root: Path, tmp_path: Path, offline_wheels: dict[str, bytes]
-) -> None:
-    dist = build_web.build(project_root, tmp_path / "dist", skip_wheel=True)
-    manifest = json.loads((dist / "manifest.json").read_text(encoding="utf-8"))
+@pytest.fixture
+def built_dist(
+    build_web: ModuleType,
+    project_root: Path,
+    tmp_path: Path,
+    offline_wheels: dict[str, bytes],
+    offline_runtime: dict[str, bytes],
+) -> Path:
+    """One offline build (no engine wheel) of the site into a temporary directory."""
+    return build_web.build(
+        project_root, tmp_path / "dist", skip_wheel=True, cache_dir=tmp_path / "cache"
+    )
+
+
+def _manifest(dist: Path) -> dict[str, object]:
+    manifest: dict[str, object] = json.loads((dist / "manifest.json").read_text(encoding="utf-8"))
+    return manifest
+
+
+def _check_shipped(dist: Path, entry: dict[str, object], served: str) -> Path:
+    shipped = dist / served
+    assert shipped.is_file(), entry
+    assert hashlib.sha256(shipped.read_bytes()).hexdigest() == entry["sha256"], entry
+    assert shipped.stat().st_size == entry["bytes"], entry
+    return shipped
+
+
+def test_build_web_manifest_hashes_match(build_web: ModuleType, built_dist: Path) -> None:
+    dist = built_dist
+    manifest = _manifest(dist)
     assert manifest["wheel"] is None
     assert manifest["engine_version"] == "0.0.1"
-    paths = {entry["path"] for entry in manifest["files"]}
+    files = manifest["files"]
+    assert isinstance(files, list)
+    paths = {entry["path"] for entry in files}
     assert {"engine_bridge.py", "build_info.json", "pyproject.toml"} <= paths
-    for entry in manifest["files"]:
-        shipped = dist / entry["path"]
-        assert shipped.is_file(), entry
-        assert hashlib.sha256(shipped.read_bytes()).hexdigest() == entry["sha256"]
-        assert shipped.stat().st_size == entry["bytes"]
+    for entry in files:
+        _check_shipped(dist, entry, str(entry["served"]))
+        assert entry["served"] == build_web.served_name(str(entry["sha256"]))
     for name in build_web.PAGE_FILES:
         assert (dist / name).is_file()
     assert (dist / "diag.html").is_file()
+    # The served manifest is the readable copy, byte for byte.
+    assert (dist / "manifest.bin").read_bytes() == (dist / "manifest.json").read_bytes()
+    assert manifest["served_manifest"] == "manifest.bin"
 
 
 def test_build_web_vendors_dependency_wheels(
-    build_web: ModuleType, project_root: Path, tmp_path: Path, offline_wheels: dict[str, bytes]
+    build_web: ModuleType, built_dist: Path, offline_wheels: dict[str, bytes]
 ) -> None:
     """The manifest's ``wheels`` list is the vendored dependencies in install order, each
-    shipped under wheels/ with the SHA-256 and byte count of the file actually served."""
+    served as files/<hash>.bin with the SHA-256 and byte count of the file actually served."""
     assert build_web.VENDORED_WHEELS == ("et_xmlfile==2.0.0", "openpyxl==3.1.5")
-    dist = build_web.build(project_root, tmp_path / "dist", skip_wheel=True)
-    manifest = json.loads((dist / "manifest.json").read_text(encoding="utf-8"))
-    wheels = manifest["wheels"]
+    wheels = _manifest(built_dist)["wheels"]
+    assert isinstance(wheels, list)
     assert [w["requirement"] for w in wheels] == list(build_web.VENDORED_WHEELS)
     assert len(offline_wheels) == len(wheels)
     for entry in wheels:
-        assert entry["path"] == f"wheels/{entry['file_name']}"
-        shipped = dist / entry["path"]
-        assert shipped.is_file(), entry
-        assert shipped.read_bytes() == offline_wheels[entry["file_name"]]
-        assert hashlib.sha256(shipped.read_bytes()).hexdigest() == entry["sha256"]
-        assert shipped.stat().st_size == entry["bytes"]
+        assert entry["path"] == f"wheels/{entry['file_name']}"  # logical name, kept
+        shipped = _check_shipped(built_dist, entry, str(entry["served"]))
+        assert shipped.read_bytes() == offline_wheels[str(entry["file_name"])]
 
 
-def test_build_web_worker_never_contacts_a_package_index(
-    build_web: ModuleType, project_root: Path, tmp_path: Path, offline_wheels: dict[str, bytes]
-) -> None:
-    dist = build_web.build(project_root, tmp_path / "dist", skip_wheel=True)
+def test_build_web_pages_reference_no_third_party_origin(built_dist: Path) -> None:
+    """Zero third-party origins at runtime: nothing the page loads names a CDN or a
+    package index.  (``manifest.json`` records the build-time *source* of each download;
+    it is not code and the worker never follows those URLs.)"""
     for name in ("worker.js", "index.html", "app.js", "diag.html"):
-        text = (dist / name).read_text(encoding="utf-8").lower()
-        assert "pypi" not in text, name
-        assert "pythonhosted" not in text, name
-    worker = (dist / "worker.js").read_text(encoding="utf-8")
+        text = (built_dist / name).read_text(encoding="utf-8").lower()
+        for host in ("jsdelivr", "cdnjs", "pypi", "pythonhosted", "cloudflare"):
+            assert host not in text, f"{name} mentions {host}"
+    worker = (built_dist / "worker.js").read_text(encoding="utf-8")
     assert "deps=False" in worker
     assert "emfs:" in worker
     assert "manifest.wheels" in worker
+    assert "importScripts" in worker
+    assert "manifest.bin" in worker
+    assert 'cache: "no-cache"' not in worker  # plain fetch first, "reload" only on the retry
+    assert 'cache: "reload"' in worker
+    # Pyodide 0.29.3 hangs when instantiateStreaming refuses a mislabelled .wasm; the
+    # worker wraps it, compiles from an ArrayBuffer and reports the URL instead.
+    assert "WebAssembly.instantiateStreaming = " in worker
+    assert '"application/wasm"' in worker and "arrayBuffer()" in worker
+    index = (built_dist / "index.html").read_text(encoding="utf-8")
+    assert 'src="vendor/chart.umd.min.js"' in index
+    assert "https://" not in index.split("<script")[1]  # no external script tag
+
+
+def test_build_web_manifest_runtime_and_vendor_sections(
+    build_web: ModuleType, built_dist: Path, offline_runtime: dict[str, bytes]
+) -> None:
+    """``runtime`` lists what loadPyodide + loadPackage fetch from pyodide/ (the lock's
+    dependency closure of micropip and pyyaml), ``vendor`` lists Chart.js; every entry
+    carries the hash and byte count of the shipped file."""
+    manifest = _manifest(built_dist)
+    runtime = manifest["runtime"]
+    assert isinstance(runtime, dict)
+    assert runtime["pyodide_version"] == build_web.PYODIDE_VERSION == "0.29.3"
+    assert runtime["index_url"] == "pyodide/"
+    assert runtime["packages"] == ["micropip", "pyyaml"]
+    names = [entry["file_name"] for entry in runtime["files"]]
+    assert names[:5] == [
+        "pyodide.js",
+        "pyodide.asm.js",
+        "pyodide.asm.wasm",
+        "python_stdlib.zip",
+        "pyodide-lock.json",
+    ]
+    # From FAKE_LOCK: micropip -> packaging, pyyaml; "unused" is not shipped.
+    assert names[5:] == [
+        "micropip-9.9-py3-none-any.whl",
+        "packaging-1.0-py3-none-any.whl",
+        "pyyaml-6.0-cp313-cp313-pyodide_2025_0_wasm32.whl",
+    ]
+    for entry in runtime["files"]:
+        assert entry["path"] == f"pyodide/{entry['file_name']}"
+        shipped = _check_shipped(built_dist, entry, str(entry["path"]))
+        assert shipped.read_bytes() == offline_runtime[str(entry["file_name"])]
+        assert len(str(entry["sha256"])) == 64
+    vendor = manifest["vendor"]
+    assert isinstance(vendor, list) and len(vendor) == 1
+    chart = vendor[0]
+    assert (chart["name"], chart["version"]) == ("Chart.js", "4.5.1")
+    assert chart["path"] == "vendor/chart.umd.min.js"
+    shipped = _check_shipped(built_dist, chart, str(chart["path"]))
+    assert shipped.read_bytes() == offline_runtime["chart.umd.min.js"]
+
+
+def test_build_web_serves_neutral_names(build_web: ModuleType, built_dist: Path) -> None:
+    """Every served path for a project file or wheel ends in ``.bin``; apart from the
+    Pyodide runtime (which keeps its own names) and manifest.json, no ``.whl``, ``.yaml``,
+    ``.csv`` or ``.json`` exists anywhere under dist."""
+    manifest = _manifest(built_dist)
+    entries = list(manifest["files"]) + list(manifest["wheels"])  # type: ignore[call-overload]
+    if manifest["wheel"]:
+        entries.append(manifest["wheel"])
+    assert entries
+    for entry in entries:
+        served = str(entry["served"])
+        assert served.startswith("files/") and served.endswith(".bin"), entry
+        assert served.count("/") == 1
+    filtered = {".whl", ".yaml", ".yml", ".csv", ".json", ".md", ".toml", ".py"}
+    for path in built_dist.rglob("*"):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(built_dist).as_posix()
+        if relative.startswith(f"{build_web.PYODIDE_SUBDIR}/") or relative == "manifest.json":
+            continue
+        assert path.suffix not in filtered, relative
+
+
+def test_fetch_pinned_caches_and_verifies(build_web: ModuleType, tmp_path: Path) -> None:
+    """A download is fetched once, verified against the pin, and reused from the cache
+    while it still matches; a wrong hash is refused and leaves nothing under the name."""
+    payload = b"runtime bytes\n"
+    digest = hashlib.sha256(payload).hexdigest()
+    calls: list[str] = []
+
+    def fake_urlopen(url: str, timeout: float = 0) -> io.BytesIO:
+        calls.append(url)
+        return io.BytesIO(payload)  # BytesIO is a context manager, like the real response
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(build_web.urllib.request, "urlopen", fake_urlopen)
+        good = build_web.Download("https://example.invalid/pyodide.js", "pyodide.js", digest)
+        first = build_web.fetch_pinned(good, tmp_path / "cache")
+        assert first.read_bytes() == payload
+        second = build_web.fetch_pinned(good, tmp_path / "cache")
+        assert second == first and calls == [good.url]  # cache hit, no second download
+        (tmp_path / "cache" / "pyodide.js").write_bytes(b"corrupted")
+        build_web.fetch_pinned(good, tmp_path / "cache")
+        assert len(calls) == 2 and first.read_bytes() == payload  # re-fetched, repaired
+
+        bad = build_web.Download("https://example.invalid/other.js", "other.js", "0" * 64)
+        with pytest.raises(RuntimeError, match="does not match the pinned"):
+            build_web.fetch_pinned(bad, tmp_path / "cache")
+        assert not (tmp_path / "cache" / "other.js").exists()
+        assert not (tmp_path / "cache" / "other.js.part").exists()
+
+
+def test_lock_package_closure_follows_depends(build_web: ModuleType) -> None:
+    closure = build_web.lock_package_closure(FAKE_LOCK, ("micropip", "pyyaml"))
+    assert [p["name"] for p in closure] == ["micropip", "packaging", "pyyaml"]
+    assert closure[0]["sha256"] == "m" * 64
+    with pytest.raises(KeyError, match="nonexistent"):
+        build_web.lock_package_closure(FAKE_LOCK, ("nonexistent",))
+
+
+def test_pinned_pyodide_core_set_is_complete(build_web: ModuleType) -> None:
+    """The five files loadPyodide() fetches from indexURL, each with a 64-hex pin."""
+    assert set(build_web.PYODIDE_CORE_SHA256) == {
+        "pyodide.js",
+        "pyodide.asm.js",
+        "pyodide.asm.wasm",
+        "python_stdlib.zip",
+        "pyodide-lock.json",
+    }
+    for name, digest in build_web.PYODIDE_CORE_SHA256.items():
+        assert len(digest) == 64 and int(digest, 16) >= 0, name
+    assert len(build_web.CHARTJS_SHA256) == 64
+    assert build_web.PYODIDE_SOURCE.endswith("/v0.29.3/full/")
 
 
 def test_download_wheels_fetches_pinned_wheels_only(build_web: ModuleType, tmp_path: Path) -> None:

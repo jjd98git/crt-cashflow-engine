@@ -1,26 +1,34 @@
 /* CRT Cashflow Engine - Web Worker.
  *
  * Owns the Pyodide runtime so the page stays responsive while the engine runs.  Boot:
- * download Pyodide, load the bundled micropip + PyYAML, fetch manifest.json, write every
+ * load the self-hosted Pyodide runtime from this site's pyodide/ directory, load its
+ * bundled micropip + PyYAML from the same directory, fetch the build manifest, write every
  * listed file into /project after checking its SHA-256, install the vendored wheels
  * (et_xmlfile, openpyxl) and the engine wheel from this site (each SHA-256 checked, no
  * package index is ever contacted), import engine_bridge.py and load the deal.  Then
  * answer "run", "download" and "tieout" messages.  Every number leaves Python as a
  * string; this file never computes anything.
  *
- * Every file this site serves is resolved against this script's own URL, fetched with a
- * cache-busting query on one automatic retry, and reported on failure as
- * "GET <absolute URL> failed: <reason>" so a user on another machine can say exactly
- * which file did not arrive (web/diag.html tests them one by one).
+ * Single origin: every URL this worker (and Pyodide, via indexURL) fetches is resolved
+ * against this script's own URL, so the only origin contacted is the site itself; the
+ * "ready" message lists the origins actually seen so the page can assert that.  Project
+ * files and wheels are served under neutral names (files/<hash>.bin, see the manifest's
+ * "served" field); the runtime under pyodide/ keeps Pyodide's own file names.
+ *
+ * Every fetch is reported on failure as "GET <absolute URL> failed: <reason>" so a user
+ * on another machine can say exactly which file did not arrive (diag.html tests them
+ * one by one).  One automatic retry per file, with a cache-busting query.
  */
 "use strict";
 
 const PYODIDE_VERSION = "0.29.3"; // CPython 3.13.2; C _decimal built in; micropip + pyyaml bundled
-const PYODIDE_INDEX_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+const PYODIDE_SUBDIR = "pyodide/"; // scripts/build_web.py PYODIDE_SUBDIR
+const MANIFEST_FILE = "manifest.bin"; // scripts/build_web.py MANIFEST_SERVED
 const PROJECT_ROOT = "/project";
 const WHEEL_DIR = "/wheels";
 const RETRY_PAUSE_MS = 1000; // one automatic retry per file, after this pause
 const BASE_URL = new URL(".", self.location.href).href; // the directory this script came from
+const PYODIDE_INDEX_URL = new URL(PYODIDE_SUBDIR, BASE_URL).href;
 
 let pyodide = null;
 let bridge = null;
@@ -42,7 +50,7 @@ function errorName(error) {
 }
 
 function siteUrl(relative, bust) {
-  const url = new URL(relative, self.location.href);
+  const url = new URL(relative, BASE_URL);
   if (bust) url.searchParams.set("v", String(Date.now()));
   return url.toString();
 }
@@ -58,10 +66,12 @@ function describeFetchFailure(url, error) {
 }
 
 async function fetchBytesOnce(relative, bust) {
+  // First attempt: a plain fetch (the browser cache may answer it; served names are
+  // content-addressed so a cached copy is the right copy).  Retry: bypass every cache.
   const url = siteUrl(relative, bust);
   let response;
   try {
-    response = await fetch(url, { cache: bust ? "reload" : "no-cache" });
+    response = await fetch(url, bust ? { cache: "reload" } : undefined);
   } catch (error) {
     throw describeFetchFailure(url, error);
   }
@@ -81,16 +91,16 @@ async function sha256Hex(bytes) {
 }
 
 async function fetchVerifiedOnce(entry, bust) {
-  const bytes = await fetchBytesOnce(entry.path, bust);
+  // entry.served is the URL on this site; entry.path the logical name it stands for.
+  const bytes = await fetchBytesOnce(entry.served, bust);
+  const where = `${entry.path} (${siteUrl(entry.served)})`;
   if (bytes.length !== entry.bytes) {
-    throw new Error(
-      `${siteUrl(entry.path)}: ${bytes.length} bytes served, manifest says ${entry.bytes}`
-    );
+    throw new Error(`${where}: ${bytes.length} bytes served, manifest says ${entry.bytes}`);
   }
   const digest = await sha256Hex(bytes);
   if (digest !== entry.sha256) {
     throw new Error(
-      `${siteUrl(entry.path)}: SHA-256 ${digest} does not match the manifest's ${entry.sha256}; refusing to load it`
+      `${where}: SHA-256 ${digest} does not match the manifest's ${entry.sha256}; refusing to load it`
     );
   }
   return bytes;
@@ -138,6 +148,36 @@ function checkBaseUrl() {
   }
 }
 
+function makeWasmLoadingRobust() {
+  // Pyodide 0.29.3 (pyodide.js, getInstantiateWasmFunc) fetches pyodide.asm.wasm itself and
+  // hands the response straight to WebAssembly.instantiateStreaming; if that throws it only
+  // console.warn()s, and loadPyodide() then never resolves.  instantiateStreaming refuses
+  // any response not labelled application/wasm (a server or proxy that relabels .wasm), so
+  // do here what Emscripten's own loader would: check the label, compile from an
+  // ArrayBuffer when it is wrong, and report any failure with its URL instead of hanging.
+  const native = WebAssembly.instantiateStreaming;
+  if (typeof native !== "function") return;
+  WebAssembly.instantiateStreaming = async function (source, imports) {
+    let response = null;
+    try {
+      response = await source;
+      if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      const type = (response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+      if (type === "application/wasm") return await native.call(WebAssembly, response, imports);
+      status(
+        "runtime",
+        `${response.url} is served as ${type || "no content type"}, not application/wasm; compiling it from memory instead`
+      );
+      return await WebAssembly.instantiate(await response.arrayBuffer(), imports);
+    } catch (error) {
+      const url = response && response.url ? response.url : `${PYODIDE_INDEX_URL}pyodide.asm.wasm`;
+      const text = `GET ${url} failed: ${errorName(error)}: ${errorText(error)}`;
+      post({ type: "error", context: "boot", text }); // loadPyodide would otherwise hang silently
+      throw new Error(text);
+    }
+  };
+}
+
 function loadPyodideScript() {
   const url = `${PYODIDE_INDEX_URL}pyodide.js`;
   try {
@@ -159,18 +199,27 @@ async function installWheel(entry, label) {
   await pyodide.runPythonAsync("import micropip\nawait micropip.install(WHEEL_URL, deps=False)");
 }
 
-function originsContacted() {
-  // Every origin this worker fetched from during boot (resource timing), so the page can
-  // show that only this site and the Pyodide CDN were contacted.
+function resourcesFetched() {
+  // Every URL this worker fetched during boot (resource timing: fetch(), importScripts
+  // and Pyodide's own loads), so the page can show which origins were contacted and
+  // assert that only this site was.
   try {
-    const origins = new Set();
-    for (const entry of performance.getEntriesByType("resource")) {
-      origins.add(new URL(entry.name).origin);
-    }
-    return Array.from(origins).sort();
+    return performance.getEntriesByType("resource").map((entry) => entry.name);
   } catch (error) {
-    return [`unavailable: ${errorText(error)}`];
+    return [];
   }
+}
+
+function originsOf(urls) {
+  const origins = new Set();
+  for (const url of urls) {
+    try {
+      origins.add(new URL(url).origin);
+    } catch (error) {
+      origins.add(`unparseable: ${url}`);
+    }
+  }
+  return Array.from(origins).sort();
 }
 
 async function boot() {
@@ -179,25 +228,38 @@ async function boot() {
 
   status(
     "runtime",
-    `Downloading the Python runtime (Pyodide ${PYODIDE_VERSION}, about 11 MB) from ${PYODIDE_INDEX_URL}`
+    `Loading the Python runtime (Pyodide ${PYODIDE_VERSION}, about 12 MB) from ${PYODIDE_INDEX_URL}`
   );
   loadPyodideScript();
+  makeWasmLoadingRobust();
   try {
+    // Pyodide fetches pyodide.asm.js, pyodide.asm.wasm, python_stdlib.zip and
+    // pyodide-lock.json from indexURL by their own names (see makeWasmLoadingRobust for
+    // the .wasm content-type case).
     pyodide = await loadPyodide({ indexURL: PYODIDE_INDEX_URL });
   } catch (error) {
     throw new Error(`loadPyodide(${PYODIDE_INDEX_URL}) failed: ${errorName(error)}: ${errorText(error)}`);
   }
 
-  status("packages", "Loading micropip and PyYAML (bundled with Pyodide)");
-  await pyodide.loadPackage(["micropip", "pyyaml"]);
+  status("packages", `Loading micropip and PyYAML from ${PYODIDE_INDEX_URL}`);
+  try {
+    await pyodide.loadPackage(["micropip", "pyyaml"]);
+  } catch (error) {
+    throw new Error(`loadPackage(micropip, pyyaml) from ${PYODIDE_INDEX_URL} failed: ${errorName(error)}: ${errorText(error)}`);
+  }
 
-  status("manifest", `Reading the build manifest ${siteUrl("manifest.json")}`);
-  const manifest = JSON.parse(new TextDecoder().decode(await fetchBytes("manifest", "manifest.json")));
+  status("manifest", `Reading the build manifest ${siteUrl(MANIFEST_FILE)}`);
+  const manifest = JSON.parse(new TextDecoder().decode(await fetchBytes("manifest", MANIFEST_FILE)));
   if (!manifest.wheel) {
-    throw new Error("manifest.json lists no engine wheel (scripts/build_web.py was run with --skip-wheel)");
+    throw new Error(`${MANIFEST_FILE} lists no engine wheel (scripts/build_web.py was run with --skip-wheel)`);
   }
   if (!Array.isArray(manifest.wheels) || manifest.wheels.length === 0) {
-    throw new Error("manifest.json lists no vendored dependency wheels (rebuild with scripts/build_web.py)");
+    throw new Error(`${MANIFEST_FILE} lists no vendored dependency wheels (rebuild with scripts/build_web.py)`);
+  }
+  if (manifest.runtime && manifest.runtime.pyodide_version !== PYODIDE_VERSION) {
+    throw new Error(
+      `${MANIFEST_FILE} was built for Pyodide ${manifest.runtime.pyodide_version}, this worker expects ${PYODIDE_VERSION}`
+    );
   }
 
   const total = manifest.files.length;
@@ -221,10 +283,15 @@ async function boot() {
   bridge = pyodide.pyimport("engine_bridge");
   const info = JSON.parse(bridge.init_session(PROJECT_ROOT));
   const pythonVersion = pyodide.runPython("import sys; sys.version.split()[0]");
+  const fetched = resourcesFetched();
+  const origins = originsOf(fetched);
   post({
     type: "ready",
     info,
-    origins: originsContacted(),
+    origins,
+    site_origin: new URL(BASE_URL).origin,
+    single_origin: origins.length === 1 && origins[0] === new URL(BASE_URL).origin,
+    fetched_urls: fetched.length,
     build: {
       generated_utc: manifest.generated_utc,
       git_commit: manifest.git_commit,

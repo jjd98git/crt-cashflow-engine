@@ -275,16 +275,27 @@
     return `this browser is missing ${list}.${why} The app needs a current browser (Chrome, Edge, Firefox or Safari) over https.`;
   }
 
+  function originsLine(message) {
+    // The worker reports every origin it (and Pyodide) fetched from.  The site is built
+    // to contact one origin only, so anything else is named as a warning.
+    const site = window.location.origin;
+    const origins = Array.isArray(message.origins) ? message.origins : [];
+    const count = typeof message.fetched_urls === "number" ? ` (${message.fetched_urls} requests)` : "";
+    if (origins.length === 0) return "Origins contacted: unknown (no resource timing in this browser).";
+    const foreign = origins.filter((origin) => origin !== site);
+    if (foreign.length === 0) return `Origins contacted: ${site} only, this site${count}.`;
+    return `WARNING: origins contacted besides this site (${site}): ${foreign.join(", ")}${count}.`;
+  }
+
   function onReady(message) {
     info = message.info;
     const build = message.build || {};
     const runtime = message.runtime || {};
     const built = build.generated_utc ? `, built ${build.generated_utc}` : "";
-    const origins = Array.isArray(message.origins) && message.origins.length ? message.origins.join(", ") : "unknown";
     el.engineLine.textContent =
       `Engine ${info.engine_version}, commit ${shortCommit(build.git_commit)}${built}. ` +
       `Runs on Pyodide ${runtime.pyodide} (CPython ${runtime.python}) with ${runtime.openpyxl}. ` +
-      `Origins the engine loader contacted: ${origins}.`;
+      originsLine(message);
     renderDeal(info.deal);
     renderShippedTieout(info.tieout_status);
     populateForm();
@@ -811,7 +822,9 @@
       return;
     }
     if (typeof Chart === "undefined") {
-      showBootError("Chart.js did not load from cdnjs (offline, or the CDN is blocked).");
+      showBootError(
+        `Chart.js did not load from ${new URL("vendor/chart.umd.min.js", window.location.href)} (this site; offline, or a script filter blocked it).`
+      );
       return;
     }
     // A retry fetches the worker script itself afresh (cache-busting query); the worker

@@ -43,6 +43,7 @@ jobs:
       - name: Show what will be deployed
         run: |
           find web/dist -type f | sort
+          du -sh web/dist web/dist/pyodide web/dist/files
           cat web/dist/manifest.json
 
       - uses: actions/upload-pages-artifact@v3

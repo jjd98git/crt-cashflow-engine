@@ -15,6 +15,7 @@ __pycache__/
 .ruff_cache/
 dist/
 build/
+web/.cache/    # verified build-time downloads (Pyodide runtime, Chart.js)
 
 # Outputs
 out/
