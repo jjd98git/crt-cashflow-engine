@@ -4,8 +4,8 @@ This is the surface the Streamlit GUI and, later, the AI shell call.  It does no
 any cashflow arithmetic of its own: every dollar in a ``RunResult`` is read off the pool
 projection (``crt.pool.projection``) or the waterfall records (``crt.waterfall.engine``),
 the WAL and the principal windows come from ``crt.tieout.wal``, and the only sums taken
-here are the per-Note lifetime totals and the pool totals, which are plain additions of
-engine cents.  Money stays ``Decimal`` inside ``RunResult``; ``to_frames`` is the single
+here are the per-Note and per-tranche lifetime totals, the running (cumulative) tranche
+write-downs and the pool totals, which are plain additions of engine cents.  Money stays ``Decimal`` inside ``RunResult``; ``to_frames`` is the single
 place where it is converted (to ``str`` or ``float``) and that conversion is display-only.
 """
 
@@ -24,7 +24,7 @@ from typing import Any, Literal
 import polars as pl
 
 from crt.io.deal_terms import NOTE_CLASSES, TRANCHE_ORDER, DealTerms
-from crt.money import ZERO
+from crt.money import ZERO, round7
 from crt.pool.projection import PoolProjection, collection_months_for_payment_date
 from crt.scenarios.loader import scenario_as_dict
 from crt.scenarios.scenario import Scenario
@@ -46,7 +46,7 @@ from crt.tieout.run import (
     load_inputs,
 )
 from crt.tieout.wal import principal_window, weighted_average_life
-from crt.waterfall.engine import WaterfallResult, run_waterfall
+from crt.waterfall.engine import PaymentDateRecord, WaterfallResult, run_waterfall
 from crt.waterfall.interest import payment_date
 
 # Inputs hashed into every scenario-run manifest, relative to the project root.
@@ -60,8 +60,10 @@ SCENARIO_RUN_INPUT_FILES: tuple[Path, ...] = (
 TABLE_NAMES: tuple[str, ...] = (
     "pool_months",
     "structure",
+    "tranche_allocations",
     "note_cashflows",
     "note_summary",
+    "tranche_summary",
     "pool_totals",
 )
 MANIFEST_FILE_NAME = "manifest.json"
@@ -125,7 +127,41 @@ class StructureRow:
     offered_reference_tranche_pct: Decimal
     supplemental_reduction: Decimal
     pool_upb_end: Decimal
-    balances_after: dict[str, Decimal]  # keyed by TRANCHE_ORDER
+    # Every dict below is keyed by TRANCHE_ORDER and read straight off the engine's
+    # PaymentDateRecord / StepResult objects (nothing is recomputed here).
+    balances_before: dict[str, Decimal]  # Class Notional Amounts immediately prior
+    # Principal allocated on the Payment Date: Steps 2-4 (Senior, Subordinate and
+    # Supplemental Reduction Amounts) plus the Maturity Date 100 % payment (spec 02
+    # sections 6-9).
+    principal_allocated: dict[str, Decimal]
+    write_down_allocated: dict[str, Decimal]  # Step 1 Tranche Write-down Amount
+    write_up_allocated: dict[str, Decimal]  # Step 1 Tranche Write-up Amount
+    # Increases of a Class Notional Amount on the Payment Date.  Only A-H ever grows: the
+    # Supplemental Senior Increase Amount (spec 02 section 8), the A-H increase on
+    # write-down (section 5) and the Stated Principal clause (e) floor excess (Q19); every
+    # other tranche is zero.  Needed for the per-tranche identity below.
+    increase_allocated: dict[str, Decimal]
+    # Running sum of write_down_allocated over Payment Dates 1..n (a Decimal addition).
+    cumulative_write_down: dict[str, Decimal]
+    balances_after: dict[str, Decimal]
+
+
+@dataclass(frozen=True)
+class TrancheAllocationRow:
+    """What one Reference Tranche received or lost on one Payment Date (the long form of
+    the ``StructureRow`` dicts, one row per Payment Date and tranche).  Per row:
+    ``balance_before - principal - write_down + write_up + increase == balance_after``."""
+
+    payment_date_number: int
+    payment_date: date
+    tranche: str
+    balance_before: Decimal
+    principal: Decimal
+    write_down: Decimal
+    write_up: Decimal
+    increase: Decimal
+    cumulative_write_down: Decimal
+    balance_after: Decimal
 
 
 @dataclass(frozen=True)
@@ -160,6 +196,20 @@ class NoteSummary:
     total_interest: Decimal
     total_write_downs: Decimal
     total_write_ups: Decimal
+    final_balance: Decimal
+
+
+@dataclass(frozen=True)
+class TrancheSummary:
+    """Lifetime figures of one Reference Tranche (plain sums of the allocation rows)."""
+
+    tranche: str
+    initial_class_notional_amount: Decimal
+    initial_pct_of_pool: Decimal  # initial notional / Cut-off Date Balance, round7 (R3)
+    total_principal: Decimal
+    total_write_downs: Decimal
+    total_write_ups: Decimal
+    total_increases: Decimal
     final_balance: Decimal
 
 
@@ -228,10 +278,13 @@ class RunManifest:
 class RunResult:
     manifest: RunManifest
     scenario: Scenario
+    deal: DealTerms  # the deal terms the run used (the exporter cites them by register id)
     pool_months: tuple[PoolMonthRow, ...]
     structure: tuple[StructureRow, ...]
+    tranche_allocations: tuple[TrancheAllocationRow, ...]
     note_cashflows: tuple[NoteCashflowRow, ...]
     note_summaries: tuple[NoteSummary, ...]
+    tranche_summaries: tuple[TrancheSummary, ...]
     pool_totals: PoolTotals
     waterfall: WaterfallResult
     pool: PoolProjection
@@ -241,6 +294,12 @@ class RunResult:
             if summary.note == note:
                 return summary
         raise RunApiError(f"no summary for Note {note!r}")
+
+    def tranche_summary_for(self, tranche: str) -> TrancheSummary:
+        for summary in self.tranche_summaries:
+            if summary.tranche == tranche:
+                return summary
+        raise RunApiError(f"no summary for Reference Tranche {tranche!r}")
 
     def to_frames(self, *, money_as: MoneyAs = "str") -> dict[str, pl.DataFrame]:
         """DISPLAY ONLY.  One polars DataFrame per table in ``TABLE_NAMES``.  Every
@@ -265,10 +324,14 @@ class RunResult:
             return [_as_flat_dict(row) for row in self.pool_months]
         if table == "structure":
             return [_structure_row_dict(row) for row in self.structure]
+        if table == "tranche_allocations":
+            return [_as_flat_dict(row) for row in self.tranche_allocations]
         if table == "note_cashflows":
             return [_as_flat_dict(row) for row in self.note_cashflows]
         if table == "note_summary":
             return [_as_flat_dict(row) for row in self.note_summaries]
+        if table == "tranche_summary":
+            return [_as_flat_dict(row) for row in self.tranche_summaries]
         if table == "pool_totals":
             return [_as_flat_dict(self.pool_totals)]
         raise RunApiError(f"unknown table {table!r}; expected one of {TABLE_NAMES}")
@@ -278,8 +341,22 @@ def _as_flat_dict(row: Any) -> dict[str, Any]:
     return dict(vars(row))
 
 
+# The per-tranche dicts of a StructureRow; the structure table keeps only balances_after
+# (expanded to one column per tranche) and the rest is the tranche_allocations table.
+_STRUCTURE_ROW_TRANCHE_DICTS: tuple[str, ...] = (
+    "balances_before",
+    "principal_allocated",
+    "write_down_allocated",
+    "write_up_allocated",
+    "increase_allocated",
+    "cumulative_write_down",
+)
+
+
 def _structure_row_dict(row: StructureRow) -> dict[str, Any]:
     flat = _as_flat_dict(row)
+    for name in _STRUCTURE_ROW_TRANCHE_DICTS:
+        flat.pop(name)
     balances = flat.pop("balances_after")
     for tranche in TRANCHE_ORDER:
         flat[f"balance_after_{tranche}"] = balances[tranche]
@@ -352,9 +429,67 @@ def _pool_month_rows(
     return tuple(rows)
 
 
+def _principal_allocated(record: PaymentDateRecord) -> dict[str, Decimal]:
+    """Principal allocated to each tranche on the Payment Date: the Step 2-4 amounts
+    recorded by the engine, or the 100 % Maturity Date payment (spec 02 section 9).  On
+    the Maturity Date the engine records no Step 2-4 results, and before it the maturity
+    payment dict is all zeros, so the two never overlap."""
+    n = record.payment_date_number
+    steps = (record.senior_step, record.subordinate_step, record.supplemental_step)
+    if record.is_maturity_date:
+        if any(step is not None for step in steps):
+            raise RunApiError(f"Payment Date {n}: Maturity Date with Step 2-4 results")
+        return {name: record.maturity_payment_by_tranche[name] for name in TRANCHE_ORDER}
+    if any(step is None for step in steps):
+        raise RunApiError(f"Payment Date {n}: Step 2-4 results missing before the Maturity Date")
+    return {
+        name: sum((step.allocated(name) for step in steps if step is not None), ZERO)
+        + record.maturity_payment_by_tranche[name]
+        for name in TRANCHE_ORDER
+    }
+
+
+def _increase_allocated(record: PaymentDateRecord) -> dict[str, Decimal]:
+    """Class Notional Amount increases on the Payment Date, all of which go to A-H: the
+    Supplemental Senior Increase Amount (equal to the Supplemental Reduction Amount, spec 02
+    section 8), the A-H increase on write-down (section 5) and the Stated Principal clause
+    (e) floor excess (Q19).  Every other tranche is zero."""
+    increases = {name: ZERO for name in TRANCHE_ORDER}
+    increases["A-H"] = (
+        record.supplemental_reduction
+        + record.a_h_increase_on_write_down
+        + record.pool.stated_principal_floor_excess_to_a_h
+    )
+    return increases
+
+
 def _structure_rows(waterfall: WaterfallResult) -> tuple[StructureRow, ...]:
     rows: list[StructureRow] = []
+    cumulative_write_down = {name: ZERO for name in TRANCHE_ORDER}
     for record in waterfall.records:
+        n = record.payment_date_number
+        principal = _principal_allocated(record)
+        write_down = {name: record.write_down_step.allocated(name) for name in TRANCHE_ORDER}
+        write_up = {name: record.write_up_step.allocated(name) for name in TRANCHE_ORDER}
+        increase = _increase_allocated(record)
+        for name in TRANCHE_ORDER:
+            # Spec 00 section 3.3 per tranche: the balance moves only by what the engine
+            # allocated to it on this Payment Date.
+            expected_after = (
+                record.balances_before[name]
+                - principal[name]
+                - write_down[name]
+                + write_up[name]
+                + increase[name]
+            )
+            if expected_after != record.balances_after[name]:
+                raise RunApiError(
+                    f"Payment Date {n}: {name} before {record.balances_before[name]} - principal "
+                    f"{principal[name]} - write-down {write_down[name]} + write-up "
+                    f"{write_up[name]} + increase {increase[name]} = {expected_after} != after "
+                    f"{record.balances_after[name]}"
+                )
+            cumulative_write_down[name] += write_down[name]
         rows.append(
             StructureRow(
                 payment_date_number=record.payment_date_number,
@@ -383,10 +518,61 @@ def _structure_rows(waterfall: WaterfallResult) -> tuple[StructureRow, ...]:
                 offered_reference_tranche_pct=record.offered_reference_tranche_pct,
                 supplemental_reduction=record.supplemental_reduction,
                 pool_upb_end=record.pool.upb_end,
+                balances_before={name: record.balances_before[name] for name in TRANCHE_ORDER},
+                principal_allocated=principal,
+                write_down_allocated=write_down,
+                write_up_allocated=write_up,
+                increase_allocated=increase,
+                cumulative_write_down=dict(cumulative_write_down),
                 balances_after={name: record.balances_after[name] for name in TRANCHE_ORDER},
             )
         )
     return tuple(rows)
+
+
+def _tranche_allocation_rows(
+    structure: tuple[StructureRow, ...],
+) -> tuple[TrancheAllocationRow, ...]:
+    rows: list[TrancheAllocationRow] = []
+    for row in structure:
+        for tranche in TRANCHE_ORDER:
+            rows.append(
+                TrancheAllocationRow(
+                    payment_date_number=row.payment_date_number,
+                    payment_date=row.payment_date,
+                    tranche=tranche,
+                    balance_before=row.balances_before[tranche],
+                    principal=row.principal_allocated[tranche],
+                    write_down=row.write_down_allocated[tranche],
+                    write_up=row.write_up_allocated[tranche],
+                    increase=row.increase_allocated[tranche],
+                    cumulative_write_down=row.cumulative_write_down[tranche],
+                    balance_after=row.balances_after[tranche],
+                )
+            )
+    return tuple(rows)
+
+
+def _tranche_summaries(
+    structure: tuple[StructureRow, ...], deal: DealTerms
+) -> tuple[TrancheSummary, ...]:
+    summaries: list[TrancheSummary] = []
+    for tranche in TRANCHE_ORDER:
+        initial = deal.initial_class_notional_amounts[tranche]  # P24-P31, P3-P6
+        summaries.append(
+            TrancheSummary(
+                tranche=tranche,
+                initial_class_notional_amount=initial,
+                # A display ratio (the workbook's README legend), rounded per R3 (P51).
+                initial_pct_of_pool=round7(initial / deal.cut_off_date_balance),  # P10
+                total_principal=sum((r.principal_allocated[tranche] for r in structure), ZERO),
+                total_write_downs=sum((r.write_down_allocated[tranche] for r in structure), ZERO),
+                total_write_ups=sum((r.write_up_allocated[tranche] for r in structure), ZERO),
+                total_increases=sum((r.increase_allocated[tranche] for r in structure), ZERO),
+                final_balance=structure[-1].balances_after[tranche],
+            )
+        )
+    return tuple(summaries)
 
 
 def _note_cashflow_rows(waterfall: WaterfallResult) -> tuple[NoteCashflowRow, ...]:
@@ -558,6 +744,7 @@ def run_scenario(
     waterfall = run_waterfall(pool, inputs.deal, inputs.appendix_g, scenario)
 
     pool_months = _pool_month_rows(pool, inputs.deal, waterfall.maturity_payment_date_number)
+    structure = _structure_rows(waterfall)
     manifest = _manifest(
         root=project_root,
         scenario=scenario,
@@ -569,10 +756,13 @@ def run_scenario(
     return RunResult(
         manifest=manifest,
         scenario=scenario,
+        deal=inputs.deal,
         pool_months=pool_months,
-        structure=_structure_rows(waterfall),
+        structure=structure,
+        tranche_allocations=_tranche_allocation_rows(structure),
         note_cashflows=_note_cashflow_rows(waterfall),
         note_summaries=_note_summaries(waterfall, inputs.deal),
+        tranche_summaries=_tranche_summaries(structure, inputs.deal),
         pool_totals=_pool_totals(pool_months, inputs.deal, waterfall),
         waterfall=waterfall,
         pool=pool,

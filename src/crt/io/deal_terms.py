@@ -70,6 +70,7 @@ class NoteTerms:
 class DealTerms:
     """The deal facts the v1 engine consumes, all typed and validated."""
 
+    name: str  # YAML deal.name (PPM front page); a label, used in reports only
     closing_date: date  # P1
     cut_off_date: date  # P9
     cut_off_date_balance: Decimal  # P10
@@ -286,7 +287,12 @@ def load_deal_terms(path: Path) -> DealTerms:
             "deal terms: principal.appendix_g_schedule aggregates missing"
         ) from None
 
+    name = _leaf(raw, "deal.name")
+    if not isinstance(name, str) or not name.strip():
+        raise DealTermsError("deal terms: 'deal.name' must be a non-empty string")
+
     return DealTerms(
+        name=name.strip(),
         closing_date=_date(raw, "deal.closing_date"),
         cut_off_date=_date(raw, "deal.cut_off_date"),
         cut_off_date_balance=cut_off_date_balance,
