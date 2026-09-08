@@ -76,7 +76,7 @@ from the data alone.
 
 ---
 
-## Q4 | Phase 0 | manager | DEFERRED 2026-09-07 (Trey: go forward without them) — Trey to source the Mar–Aug 2026 payment date statements; not blocking Phases 1–4
+## Q4 | Phase 0 | manager | OPEN — 2026-09-08: Trey asked whether the 25th payment date is what is needed; it is not. Needed: the monthly Payment Date statements (class balances, factors, losses) published on Freddie Mac's CRT site after each Payment Date. Manager to attempt sourcing them directly — Trey to source the Mar–Aug 2026 payment date statements; not blocking Phases 1–4
 
 **Question.** Six Payment Dates (March–August 2026) have occurred. The class balances,
 factors, cumulative Credit Event Net Loss and test outcomes after those dates exist only
@@ -359,7 +359,7 @@ below A-H. The adopted option is unchanged.
 
 ---
 
-## Q18 | Phase 3 | fintech-dev | OPEN 2026-09-07 — Tranche Write-up split for a Note/H pair whose prior balances are both zero
+## Q18 | Phase 3 | fintech-dev | CLOSED 2026-09-08 — option 1 adopted by Trey (split by cumulative unreimbursed write-downs) — Tranche Write-up split for a Note/H pair whose prior balances are both zero
 
 **Question.** Spec 02 section 5 requires the Tranche Write-up Amount to be split between a
 Note tranche and its H tranche "pro rata by Class Notional Amounts immediately prior" with the
@@ -385,7 +385,7 @@ pro rata, which is always the case under the PPM's write-down order.
 
 ---
 
-## Q19 | Phase 3 | fintech-dev | OPEN 2026-09-07 — Timing of the Stated Principal clause (e) floor excess added to A-H
+## Q19 | Phase 3 | fintech-dev | CLOSED 2026-09-08 — option 1 adopted by Trey (with Step 1, before the Reduction Amounts) — Timing of the Stated Principal clause (e) floor excess added to A-H
 
 **Question.** Stated Principal is floored at zero and the excess of clause (e) over (a)–(d)
 is added to A-H (`principal.stated_principal`, P96). Spec 01 section 5 says to implement the
@@ -407,7 +407,7 @@ hundred-thousandth of a percent for any plausible data correction.
 
 ---
 
-## Q20 | Phase 3 | fintech-dev | OPEN 2026-09-07 — A8 pair split drifts from the printed Appendix G columns by one cent on five Payment Dates
+## Q20 | Phase 3 | fintech-dev | CLOSED 2026-09-08 — option 1 adopted by Trey (keep A8; verify against payment date statements when available) — A8 pair split drifts from the printed Appendix G columns by one cent on five Payment Dates
 
 **Question.** A8 takes the Note/H ratio from the Class Notional Amounts "immediately prior to
 the Payment Date". Appendix G prints a constant 10,346,250.00 / 545,988.08 split for Payment
@@ -444,7 +444,7 @@ asserts the actual mechanism.
 
 ---
 
-## Q21 | Phase 4 | fintech-dev | OPEN — diagnosed 2026-09-07 by structured-cashflow-expert (convention found; resolution and code change below; awaiting Trey's confirmation of revised A2/A3) — Trey 2026-09-07: 324/336 is NOT v1 done; diagnose before deciding — ESCALATION: 12 of 336 CER > 0 WAL cells outside ±0.02 and 10 of 96 Credit Event Sensitivity cells outside the A13 round-match, with A1–A15 implemented exactly as specified (supersedes Q17 with engine numbers)
+## Q21 | Phase 4 | fintech-dev | CLOSED 2026-09-08 — A2/A3/A15 confirmed by Trey; engine change deployed, tie-out PASS — diagnosed 2026-09-07 by structured-cashflow-expert (convention found; resolution and code change below; awaiting Trey's confirmation of revised A2/A3) — Trey 2026-09-07: 324/336 is NOT v1 done; diagnose before deciding — ESCALATION: 12 of 336 CER > 0 WAL cells outside ±0.02 and 10 of 96 Credit Event Sensitivity cells outside the A13 round-match, with A1–A15 implemented exactly as specified (supersedes Q17 with engine numbers)
 
 **Status of the tie-out (`docs/validation/tieout.md`, engine 0.0.1).** Table 1 windows 4/4
 exact; Declining Balances CER 0: 366/366 round-match (A13); WAL CER 0: 48/48 within ±0.02
@@ -620,7 +620,7 @@ on the beginning balance, survivors amortize) — CES 86/96 → 96/96, WAL 324 �
 
 ---
 
-## Q22 | Phase 5 | fintech-dev via manager | OPEN 2026-09-07 — Pool interest exposed by the run API
+## Q22 | Phase 5 | fintech-dev via manager | CLOSED 2026-09-08 — option 1 adopted by Trey (expose scheduled_interest and pool_interest columns) — Pool interest exposed by the run API
 
 **Question.** After the Q21 change the pool projection carries two interest figures: survivors'
 scheduled interest `Int[m]` (spec 01 §4) and `PoolInterest[m] = Int[m] + Σ Prepay × r` (spec

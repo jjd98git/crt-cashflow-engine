@@ -92,3 +92,11 @@ runs client-side under Pyodide (CPython 3.13 in WebAssembly), deployed by
 pricing-speed run in 0.6 s reproducing Table 1, stacked tranche charts, CSV/xlsx downloads,
 in-browser 96-scenario tie-out PASS. Repo is PUBLIC by Trey's instruction (GitHub Pages on the
 free plan needs a public repo); the brief's private-repo rule is overridden until further notice.
+
+## 2026-09-08 (night)
+
+**Decisions.** Trey confirmed the whole register (186 rows) and Q18-Q20, Q22 in one batch;
+v1 definition-of-done item 2 is met. Direction: test a second STACR deal from the Freddie
+Mac site next, then the AI shell (Phase 8) as the priority; keep scenario inputs pluggable
+for external prepayment/write-down vector sources (low priority). Q4 remains open (the
+statements, not the date); Manager to try sourcing them.
