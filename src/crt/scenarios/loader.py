@@ -385,13 +385,16 @@ def scenario_from_values(
 
 def scenario_as_dict(scenario: Scenario) -> dict[str, Any]:
     """JSON-ready view of a ``Scenario`` for the run manifest.  Rates are written as
-    exact percentage strings; nothing is converted to float."""
+    exact percentage strings in plain positional notation (``format(x, "f")``: a zero
+    RM built from ``Decimal("0")`` prints ``0``, not ``0E+2``, so the same scenario has
+    the same manifest -- and run id -- whether it came from a file or from the editor);
+    nothing is converted to float."""
     distressed = scenario.distressed_principal_balance_by_payment_date
     return {
-        "cpr_pct": str(scenario.cpr.scaleb(2)),
-        "cer_pct": str(scenario.cer.scaleb(2)),
-        "rm_pct": str(scenario.rm.scaleb(2)),
-        "sofr_pct": str(scenario.sofr_rate.scaleb(2)),
+        "cpr_pct": format(scenario.cpr.scaleb(2), "f"),
+        "cer_pct": format(scenario.cer.scaleb(2), "f"),
+        "rm_pct": format(scenario.rm.scaleb(2), "f"),
+        "sofr_pct": format(scenario.sofr_rate.scaleb(2), "f"),
         "early_redemption": scenario.early_redemption,
         "delinquency_test_satisfied": scenario.delinquency_test_satisfied,
         "distressed_principal_balance_usd_by_payment_date": (

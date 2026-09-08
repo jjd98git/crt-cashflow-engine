@@ -75,7 +75,9 @@ def git_commit(root: Path) -> str:
             text=True,
             check=True,
         )
-    except (OSError, subprocess.CalledProcessError) as error:
+    except (OSError, subprocess.CalledProcessError, NotImplementedError) as error:
+        # OSError: no git executable (or, under Pyodide, no process support at all);
+        # NotImplementedError is what some restricted runtimes raise instead.
         raise ManifestError(f"git rev-parse HEAD failed in {root}: {error}") from None
     return completed.stdout.strip()
 

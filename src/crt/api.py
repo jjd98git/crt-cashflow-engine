@@ -19,9 +19,7 @@ from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal, getcontext
 from pathlib import Path
-from typing import Any, Literal
-
-import polars as pl
+from typing import TYPE_CHECKING, Any, Literal
 
 from crt.io.deal_terms import NOTE_CLASSES, TRANCHE_ORDER, DealTerms
 from crt.money import ZERO, round7
@@ -48,6 +46,9 @@ from crt.tieout.run import (
 from crt.tieout.wal import principal_window, weighted_average_life
 from crt.waterfall.engine import PaymentDateRecord, WaterfallResult, run_waterfall
 from crt.waterfall.interest import payment_date
+
+if TYPE_CHECKING:  # polars is display-only and imported lazily in ``to_frames``
+    import polars as pl
 
 # Inputs hashed into every scenario-run manifest, relative to the project root.
 SCENARIO_RUN_INPUT_FILES: tuple[Path, ...] = (
@@ -306,6 +307,10 @@ class RunResult:
         ``Decimal`` is converted here and nowhere else: ``"str"`` keeps the exact digits
         (``format(x, "f")``), ``"float"`` is for charts and is lossy.  Nothing returned
         from here may be fed back into a calculation."""
+        # Imported here, not at module level, so that ``crt.api`` (and the engine
+        # behind it) loads where polars is absent, e.g. in the browser under Pyodide.
+        import polars as pl
+
         return {
             # infer_schema_length=None: scan every row, because a column such as
             # maturity_reason is None on every Payment Date but the last.
