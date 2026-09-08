@@ -1,0 +1,496 @@
+source:
+  file: data/raw/stacr-2026-dna2-ppm.txt
+  deal: STACR REMIC 2026-DNA2
+  memorandum_date: March 13, 2026
+  section: Prepayment and Yield Considerations - Assumptions Relating to Weighted Average Life Tables, Declining
+    Balances Tables, Credit Event Sensitivity Tables, Cumulative Note Write-down Amount Tables and Yield Tables
+  pages: 138-139
+  preamble_verbatim: 'The tables on the following pages have been prepared on the basis of the following Modeling
+    Assumptions:'
+  transcribed_by: ppm-analyst
+  note: Text is verbatim from the pdftotext -layout extract (cp1252), with line breaks and the page-break folio
+    '116' collapsed to single spaces. Nothing paraphrased. Page numbers are PDF page numbers (1 + form feeds before
+    the line); printed folio = PDF page - 22 in this region.
+modeling_assumptions:
+- id: a
+  page: '138'
+  text: (a) The Reference Obligations consist of the assumed mortgage loans having the characteristics shown in
+    Appendix C;
+- id: b
+  page: '138'
+  text: (b) the original Class Principal Balances for the Original Notes are as set forth or described in Table
+    1, the maximum Class Principal Balances or Notional Principal Amounts, as applicable, for the MACR Notes are
+    as set forth or described in Table 1 and the Class Coupons for each of the Classes of Notes and the Class B-2H
+    Reference Tranche are as set forth or described in Table 1;
+- id: c
+  page: '138'
+  text: (c) the scheduled monthly payment for each Reference Obligation is based on its outstanding principal balance,
+    per annum interest rate and remaining term to maturity so that it will fully amortize in amounts sufficient
+    for the repayment thereof over its remaining term to maturity;
+- id: d
+  page: '138'
+  text: (d) (i) other than with respect to the Declining Balances Tables, the Reference Obligations experience Credit
+    Events at the indicated CER percentages, there is no lag between the related Credit Event Amounts and the application
+    of any related Recovery Principal, the Preliminary Principal Loss Amount is equal to 25% of the Credit Event
+    Amount; and (ii) with respect to the Declining Balances Tables, the Reference Obligations do not experience
+    any Credit Events;
+- id: e
+  page: '138'
+  text: (e) the Delinquency Test is satisfied for each Payment Date;
+- id: f
+  page: '138'
+  text: (f) each monthly payment of scheduled principal and interest on the Reference Obligations is timely received
+    on the last day of each month beginning in February 2026;
+- id: g
+  page: '138'
+  text: (g) principal prepayments in full on the Reference Obligations are received, together with 30 days' interest
+    thereon, on the last day of each month beginning in February 2026;
+- id: h
+  page: '138'
+  text: (h) there are no partial principal prepayments on the Reference Obligations;
+- id: i
+  page: '138'
+  text: (i) the Reference Obligations prepay at the indicated CPR percentages;
+- id: j
+  page: '138'
+  text: (j) no Reference Obligations are purchased or removed from, or reinstated to, the Reference Pool and no
+    mortgage loans are substituted for the Reference Obligations included in the Reference Pool on the Closing Date;
+- id: k
+  page: 138-139
+  text: '(k) (i) with respect to the Declining Balances Tables and the Credit Event Sensitivity Tables, the Reference
+    Obligations do not experience Modification Events; and (ii) with respect to the Weighted Average Life Tables,
+    the Cumulative Note Write-down Amount Tables and the Yield Tables that have RM percentages greater than zero:
+    (x) all Modification Events are effective as of the first day of the first month corresponding to the Reporting
+    Period for all principal collections, other than full prepayments, for the first Payment Date and continue through
+    the Scheduled Maturity Date; (y) RM are applied to all Reference Obligations at the indicated RM percentages;
+    and (z) Modification Loss Amounts for the Payment Date in April 2026 will be the sum of (I) the Modification
+    Loss Amounts calculated as of February 1, 2026 based on the UPB of the Reference Obligations as of the Cut-off
+    Date and (II) the Modification Loss Amounts calculated as of March 1, 2026 based on the UPB of the Reference
+    Obligations as of February 28, 2026;'
+- id: l
+  page: '139'
+  text: (l) there are no data corrections in connection with the Reference Obligations;
+- id: m
+  page: '139'
+  text: '(m) there is no early redemption (except as specified in the tables, occurring, if applicable, on the earlier
+    of: (i) the Payment Date occurring in March 2031 and (ii) the first Payment Date in which the aggregate UPB
+    of the Reference Obligations is less than or equal to 10% of the Cut-off Date Balance of the Reference Pool,
+    otherwise no early redemption occurs);'
+- id: n
+  page: '139'
+  text: (n) there are no Reversed Credit Event Reference Obligations, Modification Gain Amounts or Origination Rep
+    and Warranty/Servicing Breach Settlement Amounts;
+- id: o
+  page: '139'
+  text: (o) the Projected Recovery Amount is equal to zero;
+- id: p
+  page: '139'
+  text: (p) the Original Notes are issued on March 17, 2026;
+- id: q
+  page: '139'
+  text: (q) cash payments on the Notes are received on the 25th day of each month beginning in April 2026 as described
+    under "Description of The Notes";
+- id: r
+  page: '139'
+  text: (r) the SOFR Rate is assumed to remain constant at 3.67223% per annum; and
+- id: s
+  page: '139'
+  text: (s) each Class of Notes is outstanding from the Closing Date to retirement, no exchanges occur and Freddie
+    Mac does not exercise its option to cause any Notes it owns to be retired by the Trust.
+definitions_stated_with_the_tables:
+- term: CPR
+  page: '139'
+  text: CPR assumes that the outstanding principal balance of a pool of mortgage loans prepays at a specified constant
+    annual rate. In projecting monthly cashflows, this rate is converted to an equivalent monthly rate.
+- term: CER
+  page: '140'
+  text: The Weighted Average Life Tables, Credit Event Sensitivity Tables, Cumulative Note Write-down Amount Tables
+    and Yield Tables below assume a constant rate of Reference Obligations becoming Credit Event Reference Obligations
+    each month relative to the then-outstanding aggregate principal balance of the Reference Obligations. This assumed
+    Credit Event Rate (or "CER") does not purport to be either a historical description of the default experience
+    of the Reference Obligations or a prediction of the anticipated rate of defaults on the Reference Obligations.
+    [...] A Credit Event Rate of 1% assumes Reference Obligations become Credit Event Reference Obligations at an
+    annual rate of 1% which remains constant through the remaining lives of such Reference Obligations.
+- term: RM
+  page: '140'
+  text: A Modification Event with a RM percentage of 2% assumes the gross coupon of the Reference Obligations is
+    reduced by 2% and such Modification Event remains in effect through the remaining lives of such Reference Obligations.
+- term: Weighted Average Life of Interest Only MACR Notes
+  page: '139'
+  text: We have calculated the Weighted Average Lives for each Class of Interest Only MACR Notes assuming that a
+    reduction in its Notional Principal Amount is a reduction in Class Principal Balance.
+table_families:
+- name: Weighted Average Life Tables
+  pages: 141-143
+  transcribed_to: wal_tables.csv
+  class_groups:
+  - Class M-1
+  - Class M-2, M-2R, M-2S, M-2T, M-2U and M-2I
+  - Class M-2A, M-2AR, M-2AS, M-2AT, M-2AU and M-2AI
+  - Class M-2B, M-2BR, M-2BS, M-2BT, M-2BU, M-2BI, M-2RB*, M-2SB*, M-2TB* and M-2UB*
+  - Class B-1, B-1R, B-1S, B-1T, B-1U and B-1I
+  - Class B-1A, B-1AR and B-1AI
+  - Class B-1B
+  grid:
+    cpr_pct: &id001
+    - '0'
+    - '5'
+    - '10'
+    - '15'
+    - '25'
+    - '35'
+    cer_rm_pairs_pct:
+    - - '0.00'
+      - '0.00'
+    - - '0.25'
+      - '0.00'
+    - - '0.50'
+      - '0.00'
+    - - '1.00'
+      - '0.00'
+    - - '1.50'
+      - '0.00'
+    - - '2.50'
+      - '0.00'
+    - - '3.00'
+      - '0.00'
+    - - '5.00'
+      - '0.00'
+    - - '0.00'
+      - '0.01'
+    - - '0.50'
+      - '0.03'
+    - - '1.00'
+      - '0.10'
+    bases:
+    - To Scheduled Maturity Date
+    - To Early Redemption Date
+  credit_events: yes - at the indicated CER percentages; no lag between Credit Event Amounts and Recovery Principal
+    (assumption (d)(i))
+  preliminary_principal_loss_amount: 25% of the Credit Event Amount (assumption (d)(i))
+  modification_events: only in rows with RM > 0.00%, per assumption (k)(ii); rows with RM 0.00% have none
+  early_redemption: 'both: the ''To Scheduled Maturity Date'' columns assume none; the ''To Early Redemption Date''
+    columns assume redemption on the earlier of the March 2031 Payment Date and the 10% clean-up (assumption (m))'
+  sofr_rate_pct: 3.67223 constant (assumption (r))
+  delinquency_test: satisfied on every Payment Date (assumption (e))
+  footnotes:
+  - '* Based on Class Principal Balance. (p142, applies to M-2RB, M-2SB, M-2TB, M-2UB)'
+  extraction_caveat: pdftotext printed each table's first (0% CPR, to Scheduled Maturity) and last (35% CPR, to
+    Early Redemption) columns on the CER/RM label lines and the ten middle columns on separate lines (six on label
+    lines, five trailing). Decoded by taking the middle-column lines in printed order as rows 1-11; validated by
+    ER <= SM at every cell, by row 1 equalling the Declining Balances WAL rows, and by Table 1. See README.md.
+- name: Declining Balances Tables
+  pages: 144-150
+  transcribed_to: declining_balances.csv
+  class_groups:
+  - Class M-1
+  - Class M-2, M-2R, M-2S, M-2T, M-2U and M-2I
+  - Class M-2A, M-2AR, M-2AS, M-2AT, M-2AU and M-2AI
+  - Class M-2B, M-2BR, M-2BS, M-2BT, M-2BU, M-2BI, M-2RB*, M-2SB*, M-2TB* and M-2UB*
+  - Class B-1, B-1R, B-1S, B-1T, B-1U and B-1I
+  - Class B-1A, B-1AR and B-1AI
+  - Class B-1B
+  grid:
+    cpr_pct: *id001
+    periods: Closing Date, then March 25 of each year 2027 onward until the class is retired (table-specific; last
+      label is 'March 25, 2043 and thereafter' for M-1, 'March 25, 2045 and thereafter' for the M-2A group, 'March
+      25, 2046' otherwise), plus two WAL rows
+  credit_events: no (assumption (d)(ii))
+  preliminary_principal_loss_amount: not applicable - no Credit Events
+  modification_events: no (assumption (k)(i))
+  cer_pct: not applicable
+  rm_pct: not applicable
+  early_redemption: 'balance percentages: none assumed (balances continue past March 2031 in the 0% and 5% CPR columns);
+    WAL rows: one ''to Scheduled Maturity Date'' (none) and one ''to Early Redemption Date**'' (** Based on the
+    assumption that the Early Redemption Date occurs on the first eligible Payment Date)'
+  sofr_rate_pct: 3.67223 constant (assumption (r))
+  delinquency_test: satisfied on every Payment Date (assumption (e))
+  footnotes:
+  - Rounded to the nearest whole percentage. (p144; the dagger glyph attached to 'Percentages of Original Balances
+    Outstanding' and to this footnote was not captured by the text extractor - the footnote line begins with a blank
+    where the marker sits)
+  - '** Based on the assumption that the Early Redemption Date occurs on the first eligible Payment Date. (p144-150)'
+  - '* Based on Class Principal Balance. (p147, applies to M-2RB, M-2SB, M-2TB, M-2UB)'
+  extraction_caveat: pdftotext printed the value block several lines below the date labels (and ran zero columns
+    together, e.g. '500000'). Decoded by pairing the k-th value line with the k-th date label; validated by row
+    count = label count, first row = 100 x 6, every CPR column non-increasing, run-together digit strings split
+    uniquely into six whole-percent values, and the two WAL lines equalling the WAL tables' CER 0.00%/RM 0.00% row.
+    See README.md.
+- name: Credit Event Sensitivity Tables
+  pages: '151'
+  transcribed_to: credit_event_sensitivity.csv
+  measure: Cumulative Credit Event Amount (as % of Reference Pool Cut-off Date Balance)
+  grid:
+    cpr_pct: *id001
+    cer_pct:
+    - '0.00'
+    - '0.25'
+    - '0.50'
+    - '1.00'
+    - '1.50'
+    - '2.50'
+    - '3.00'
+    - '5.00'
+    bases:
+    - to Scheduled Maturity Date
+    - to Early Redemption Date
+  credit_events: yes - at the indicated CER percentages (assumption (d)(i))
+  preliminary_principal_loss_amount: 25% of the Credit Event Amount (assumption (d)(i)); does not affect the measure
+    shown, which is the Credit Event Amount itself
+  modification_events: no (assumption (k)(i))
+  rm_pct: not applicable - no RM axis printed
+  early_redemption: 'both: one table to Scheduled Maturity Date (none), one to Early Redemption Date (assumption
+    (m))'
+  sofr_rate_pct: 3.67223 constant (assumption (r))
+  extraction_caveat: none - this page extracted cleanly (8 rows x 6 columns per table)
+- name: Cumulative Note Write-down Amount Tables
+  pages: 152-154
+  transcribed_to: NOT transcribed (out of scope for the tie-out)
+  exists: true
+  class_groups:
+  - Class M-1
+  - Class M-2, M-2R, M-2S, M-2T and M-2U
+  - Class M-2A, M-2AR, M-2AS, M-2AT and M-2AU
+  - Class M-2B, M-2BR, M-2BS, M-2BT, M-2BU, M-2RB, M-2SB, M-2TB and M-2UB
+  - Class B-1, B-1R, B-1S, B-1T and B-1U
+  - Class B-1A and B-1AR
+  - Class B-1B
+  measure: cumulative write-down of the Class Principal Balance of a Note due to allocation of Tranche Write-down
+    Amounts as a percentage of the Note's original Class Principal Balance
+  grid: same CPR x (CER, RM) x basis grid as the Weighted Average Life Tables
+  credit_events: yes (assumption (d)(i))
+  preliminary_principal_loss_amount: 25% of the Credit Event Amount (assumption (d)(i))
+  modification_events: in rows with RM > 0.00% (assumption (k)(ii))
+  early_redemption: both bases
+  sofr_rate_pct: 3.67223 constant (assumption (r))
+- name: Yield Tables
+  pages: 155-165
+  transcribed_to: NOT transcribed (out of scope for the tie-out)
+  exists: true
+  measure: pre-tax yields to maturity (corporate bond equivalent) at the assumed price in each table caption
+  classes_and_assumed_prices:
+    M-1: 100.00000%
+    M-2A: 101.00000%
+    M-2B: 99.00000%
+    B-1A: 102.00000%
+    B-1B: 98.00000%
+    M-2: 100.00000%
+    M-2AR: 98.93750%
+    M-2AS: 99.35000%
+    M-2AT: 99.76250%
+    M-2AU: 100.17500%
+    M-2AI: 2.06250%
+    M-2BR: 96.56250%
+    M-2BS: 97.05000%
+    M-2BT: 97.53750%
+    M-2BU: 98.02500%
+    M-2BI: 2.43750%
+    M-2R: 97.75000%
+    M-2S: 98.20000%
+    M-2T: 98.65000%
+    M-2U: 99.10000%
+    M-2I: 2.25000%
+    M-2RB: 101.06250%
+    M-2SB: 100.65000%
+    M-2TB: 100.23750%
+    M-2UB: 99.82500%
+    B-1: 100.00000%
+    B-1R: 97.00000%
+    B-1S: 97.60000%
+    B-1T: 98.20000%
+    B-1U: 98.80000%
+    B-1I: 3.00000%
+    B-1AR: 97.00000%
+    B-1AI: 3.00000%
+  grid: same CPR x (CER, RM) x basis grid as the Weighted Average Life Tables
+  credit_events: yes (assumption (d)(i))
+  preliminary_principal_loss_amount: 25% of the Credit Event Amount (assumption (d)(i))
+  modification_events: in rows with RM > 0.00% (assumption (k)(ii))
+  early_redemption: both bases
+  sofr_rate_pct: 3.67223 constant (assumption (r))
+table_1_basis:
+  page: 10-11
+  footnote_1_verbatim: The Class Principal Balances and Notional Principal Amounts presented in this Memorandum
+    are approximate. Expected weighted average lives and principal windows, as applicable, with respect to the Notes
+    above are based on (i) the assumption that the Notes are redeemed on the Early Redemption Date occurring in
+    March 2031 and (ii) certain Modeling Assumptions, including that prepayments occur at the Pricing Speed of 10%
+    CPR, calculated from the Closing Date, no Credit Events occur, no Modification Events occur and the Notes pay
+    on the 25th day of each calendar month beginning in April 2026. The balances shown for the MACR Notes represent
+    the maximum original Class Principal Balances or Notional Principal Amounts of such Classes, as applicable.
+  footnote_2_excerpt: For the first Accrual Period, the SOFR Rate is 3.67223%.
+  pricing_speed: 10% CPR
+  matching_wal_table_cell: CER 0.00%, RM 0.00%, 10% CPR, To Early Redemption Date
+  check_result: all Table 1 expected WALs equal that cell and the Declining Balances 'to Early Redemption Date**'
+    WAL row at 10% CPR
+  per_class:
+  - class: M-1
+    table_1_wal: '1.59'
+    wal_table_early_redemption_10cpr: '1.59'
+    wal_table_scheduled_maturity_10cpr: '1.59'
+    declining_balances_early_redemption_10cpr: '1.59'
+  - class: M-2A
+    table_1_wal: '3.90'
+    wal_table_early_redemption_10cpr: '3.90'
+    wal_table_scheduled_maturity_10cpr: '3.90'
+    declining_balances_early_redemption_10cpr: '3.90'
+  - class: M-2B
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: B-1A
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '6.29'
+    declining_balances_early_redemption_10cpr: '5.02'
+  - class: B-1B
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '8.03'
+    declining_balances_early_redemption_10cpr: '5.02'
+  - class: M-2
+    table_1_wal: '4.38'
+    wal_table_early_redemption_10cpr: '4.38'
+    wal_table_scheduled_maturity_10cpr: '4.43'
+    declining_balances_early_redemption_10cpr: '4.38'
+  - class: M-2R
+    table_1_wal: '4.38'
+    wal_table_early_redemption_10cpr: '4.38'
+    wal_table_scheduled_maturity_10cpr: '4.43'
+    declining_balances_early_redemption_10cpr: '4.38'
+  - class: M-2S
+    table_1_wal: '4.38'
+    wal_table_early_redemption_10cpr: '4.38'
+    wal_table_scheduled_maturity_10cpr: '4.43'
+    declining_balances_early_redemption_10cpr: '4.38'
+  - class: M-2T
+    table_1_wal: '4.38'
+    wal_table_early_redemption_10cpr: '4.38'
+    wal_table_scheduled_maturity_10cpr: '4.43'
+    declining_balances_early_redemption_10cpr: '4.38'
+  - class: M-2U
+    table_1_wal: '4.38'
+    wal_table_early_redemption_10cpr: '4.38'
+    wal_table_scheduled_maturity_10cpr: '4.43'
+    declining_balances_early_redemption_10cpr: '4.38'
+  - class: M-2I
+    table_1_wal: '4.38'
+    wal_table_early_redemption_10cpr: '4.38'
+    wal_table_scheduled_maturity_10cpr: '4.43'
+    declining_balances_early_redemption_10cpr: '4.38'
+  - class: M-2AR
+    table_1_wal: '3.90'
+    wal_table_early_redemption_10cpr: '3.90'
+    wal_table_scheduled_maturity_10cpr: '3.90'
+    declining_balances_early_redemption_10cpr: '3.90'
+  - class: M-2AS
+    table_1_wal: '3.90'
+    wal_table_early_redemption_10cpr: '3.90'
+    wal_table_scheduled_maturity_10cpr: '3.90'
+    declining_balances_early_redemption_10cpr: '3.90'
+  - class: M-2AT
+    table_1_wal: '3.90'
+    wal_table_early_redemption_10cpr: '3.90'
+    wal_table_scheduled_maturity_10cpr: '3.90'
+    declining_balances_early_redemption_10cpr: '3.90'
+  - class: M-2AU
+    table_1_wal: '3.90'
+    wal_table_early_redemption_10cpr: '3.90'
+    wal_table_scheduled_maturity_10cpr: '3.90'
+    declining_balances_early_redemption_10cpr: '3.90'
+  - class: M-2AI
+    table_1_wal: '3.90'
+    wal_table_early_redemption_10cpr: '3.90'
+    wal_table_scheduled_maturity_10cpr: '3.90'
+    declining_balances_early_redemption_10cpr: '3.90'
+  - class: M-2BR
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: M-2BS
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: M-2BT
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: M-2BU
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: M-2BI
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: M-2RB
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: M-2SB
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: M-2TB
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: M-2UB
+    table_1_wal: '4.85'
+    wal_table_early_redemption_10cpr: '4.85'
+    wal_table_scheduled_maturity_10cpr: '4.96'
+    declining_balances_early_redemption_10cpr: '4.85'
+  - class: B-1
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '7.16'
+    declining_balances_early_redemption_10cpr: '5.02'
+  - class: B-1R
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '7.16'
+    declining_balances_early_redemption_10cpr: '5.02'
+  - class: B-1S
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '7.16'
+    declining_balances_early_redemption_10cpr: '5.02'
+  - class: B-1T
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '7.16'
+    declining_balances_early_redemption_10cpr: '5.02'
+  - class: B-1U
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '7.16'
+    declining_balances_early_redemption_10cpr: '5.02'
+  - class: B-1I
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '7.16'
+    declining_balances_early_redemption_10cpr: '5.02'
+  - class: B-1AR
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '6.29'
+    declining_balances_early_redemption_10cpr: '5.02'
+  - class: B-1AI
+    table_1_wal: '5.02'
+    wal_table_early_redemption_10cpr: '5.02'
+    wal_table_scheduled_maturity_10cpr: '6.29'
+    declining_balances_early_redemption_10cpr: '5.02'
+scheduled_reduction_schedule:
+  exists: false
+  note: This deal has no Class A-1 Notes and no Appendix G. The Table of Contents (p9) lists Appendices A-F only;
+    Appendix F (CUSIP Numbers) starts on p293 and runs to the end of the document (p294 is blank). 'Class A-1',
+    'Appendix G', 'Reduction Schedule', 'Scheduled Reduction' and 'Payment Period' do not occur anywhere in the
+    extract. See appendix_g_absent.md.
