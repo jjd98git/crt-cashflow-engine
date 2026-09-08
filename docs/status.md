@@ -7,7 +7,7 @@
 | 2 — Pool engine | **built** (rep-line, spec 01) | 2026-09-07 |
 | 3 — Waterfall engine | **built** (spec 02) | 2026-09-07 |
 | 4 — Tie-out | **PASS 2026-09-07** | all 5 families, 850 cells; Q21 resolved (credit events and prepayments both on the beginning balance) |
-| 5 — Excel export | blocked | Excel is installed on this machine; LibreOffice is not |
+| 5 — Excel export | **values workbook built 2026-09-08** | `python -m crt.excel`; 10 sheets, 10 charts (stacked tranche views); live-formula workbook + recalculation test still to do |
 | 6 — Scenario input | partial | flat YAML scenarios + run API + CSV export built 2026-09-07; ramps/steps validated but rejected by the engine; actual-pool mode needs Q4 |
 | 7 — GUI | **v1 built** (Streamlit) | `streamlit run src/crt/gui/app.py`; single run, compare, CSV download; Excel button disabled until Phase 5 |
 | 8 — AI shell | blocked | |
@@ -73,3 +73,13 @@ and a Streamlit GUI (single run, compare, downloads) built and verified in the b
 Q22 (pool interest columns); Q4 (payment date statements, deferred). Next: Phase 5 Excel
 export with live formulas and the workbook recalculation test; GUI compare-chart x-axis
 cosmetic fix; MACR classes; RM>0 tables.
+
+## 2026-09-08
+
+**Shipped.** GitHub repo https://github.com/jjd98git/crt-cashflow-engine (private) with CI
+(ruff, mypy, tests, tie-out, gitleaks; first run green in 1m35s) and a Codespaces
+devcontainer (`./gui.sh`). Values Excel workbook export with stacked tranche charts,
+verified by rendering in Excel via COM; per-tranche allocation columns in the API and CSV.
+
+**Next.** Phase 5 proper: live-formula workbook and the Excel-COM recalculation test;
+Q22 pool interest columns; GUI compare-chart axis; MACR classes; RM>0 tables.
