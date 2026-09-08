@@ -25,14 +25,16 @@
   <section id="boot" aria-live="polite">
     <h2>Starting the engine</h2>
     <p class="hint">
-      Everything comes from this site and nowhere else: the Python runtime (Pyodide, about 12 MB),
-      the engine wheel, its two pure-Python dependencies (openpyxl, et_xmlfile) and the deal data,
-      each checked against the SHA-256 in the build manifest before it is used. First load takes
+      The engine wheel, its two pure-Python dependencies (openpyxl, et_xmlfile) and the deal data
+      travel inside one JavaScript file from this site, each checked against the SHA-256 in the
+      build manifest before it is used. The Python runtime (Pyodide, about 12 MB) comes from this
+      site, or from the jsdelivr release CDN if this site's copy cannot be reached. First load takes
       10-30 seconds depending on the connection; later loads are faster because the browser caches
       the runtime. If a file fails to load, the message below names its exact URL;
       <a href="diag.html">diag.html</a> tests every file one at a time.
     </p>
     <ul id="boot-list"></ul>
+    <ul id="boot-log" class="diag" hidden></ul>
     <p id="boot-error" class="error" hidden></p>
     <p id="boot-diag" class="diag" hidden></p>
     <button id="boot-retry" type="button" hidden>Try again</button>
@@ -195,7 +197,23 @@
     </p>
   </footer>
 
-  <script src="vendor/chart.umd.min.js"></script>
+  <script>
+    // Chart.js: this site's copy first; if that script fails to load (offline copy missing,
+    // or a filter that blocks scripts from this site), the same pinned release from cdnjs.
+    // window.CRT_CHART resolves to the name of the source that loaded, or rejects.
+    window.CRT_CHART = new Promise((resolve, reject) => {
+      const cdn = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js";
+      window.crtChartLoaded = () => resolve("this site");
+      window.crtChartFailed = () => {
+        const script = document.createElement("script");
+        script.src = cdn;
+        script.onload = () => resolve("cdnjs");
+        script.onerror = () => reject(new Error(`Chart.js failed to load from this site and from ${cdn}`));
+        document.head.append(script);
+      };
+    });
+  </script>
+  <script src="vendor/chart.umd.min.js" onload="crtChartLoaded()" onerror="crtChartFailed()"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -5,8 +5,10 @@ What these prove: the bridge returns engine values as strings that agree with a 
 workbook; ``crt.api`` imports without polars (the browser has none); the run manifest
 degrades to ``git_commit = None`` when git is unavailable; and ``scripts/build_web.py``
 ships every input file, the vendored dependency wheels, the self-hosted Pyodide runtime and
-Chart.js with matching SHA-256 hashes, under neutral ``.bin`` names for project files and
-wheels, with pages that refer to no third-party origin and no package index.
+Chart.js with matching SHA-256 hashes, packs the manifest, every project file and every
+wheel into ``data/bundle.js`` (what the worker loads with importScripts, so that no data
+file is ever fetched), lists both runtime candidates (this site, then jsdelivr), and gives
+index.html a Chart.js fallback; no page refers to a package index.
 """
 
 from __future__ import annotations
@@ -66,7 +68,8 @@ def offline_wheels(build_web: ModuleType, monkeypatch: pytest.MonkeyPatch) -> di
         for requirement in requirements:
             name, version = requirement.split("==", 1)
             wheel = out_dir / f"{name}-{version}-py3-none-any.whl"
-            wheel.write_bytes(f"fake wheel {requirement}\n".encode() * 7)
+            # Real wheels are zip files (not UTF-8 text): start with bytes that are not.
+            wheel.write_bytes(b"PK\x03\x04\xff\xfe" + f"fake wheel {requirement}\n".encode() * 7)
             contents[wheel.name] = wheel.read_bytes()
             wheels.append(wheel)
         return wheels
@@ -331,29 +334,130 @@ def test_build_web_vendors_dependency_wheels(
         assert shipped.read_bytes() == offline_wheels[str(entry["file_name"])]
 
 
-def test_build_web_pages_reference_no_third_party_origin(built_dist: Path) -> None:
-    """Zero third-party origins at runtime: nothing the page loads names a CDN or a
-    package index.  (``manifest.json`` records the build-time *source* of each download;
-    it is not code and the worker never follows those URLs.)"""
+def test_build_web_worker_loads_data_as_script_and_never_fetches_it(built_dist: Path) -> None:
+    """The worker imports data/bundle.js and fetches no manifest, project file or wheel:
+    the only fetch() is the runtime probe (pyodide-lock.json).  No page names a package
+    index.  (``manifest.json`` records the build-time *source* of each download; it is
+    not code.)"""
     for name in ("worker.js", "index.html", "app.js", "diag.html"):
         text = (built_dist / name).read_text(encoding="utf-8").lower()
-        for host in ("jsdelivr", "cdnjs", "pypi", "pythonhosted", "cloudflare"):
+        for host in ("pypi", "pythonhosted"):
             assert host not in text, f"{name} mentions {host}"
     worker = (built_dist / "worker.js").read_text(encoding="utf-8")
+    assert "importScripts(url)" in worker
+    assert 'const BUNDLE_SCRIPT = "data/bundle.js"' in worker
+    assert "self.CRT_BUNDLE" in worker
+    for forbidden in ("manifest.bin", "manifest.json", "files/", ".whl", "entry.served"):
+        assert forbidden not in worker, f"worker.js still refers to {forbidden}"
+    code_lines = [
+        line for line in worker.splitlines() if not line.strip().startswith(("*", "//", "/*"))
+    ]
+    fetch_lines = [line for line in code_lines if "fetch(" in line]
+    assert len(fetch_lines) == 1, fetch_lines  # the probe, and nothing else
+    assert "controller.signal" in fetch_lines[0]
+    assert 'const LOCK_FILE = "pyodide-lock.json"' in worker
+    assert "PROBE_TIMEOUT_MS = 10000" in worker
+    assert "LOAD_PYODIDE_TIMEOUT_MS = 90000" in worker
+    assert '"runtime-failed"' in worker
+    # Integrity survives the packing: decode, hash, compare against the manifest entry.
+    assert "crypto.subtle.digest" in worker and "does not match the manifest" in worker
+    assert "atob(" in worker and "TextEncoder" in worker
     assert "deps=False" in worker
     assert "emfs:" in worker
     assert "manifest.wheels" in worker
-    assert "importScripts" in worker
-    assert "manifest.bin" in worker
-    assert 'cache: "no-cache"' not in worker  # plain fetch first, "reload" only on the retry
-    assert 'cache: "reload"' in worker
     # Pyodide 0.29.3 hangs when instantiateStreaming refuses a mislabelled .wasm; the
     # worker wraps it, compiles from an ArrayBuffer and reports the URL instead.
     assert "WebAssembly.instantiateStreaming = " in worker
     assert '"application/wasm"' in worker and "arrayBuffer()" in worker
+    app = (built_dist / "app.js").read_text(encoding="utf-8")
+    assert '"runtime-failed"' in app and '"start"' in app  # restart at the next candidate
+    assert "WARNING: origins" not in app  # the origins line is informational now
+
+
+def test_build_web_index_has_chartjs_fallback(built_dist: Path) -> None:
+    """Chart.js comes from this site, with an onerror fallback to the same pinned release
+    on cdnjs; app.js reports which one loaded."""
     index = (built_dist / "index.html").read_text(encoding="utf-8")
     assert 'src="vendor/chart.umd.min.js"' in index
-    assert "https://" not in index.split("<script")[1]  # no external script tag
+    assert 'onerror="crtChartFailed()"' in index and 'onload="crtChartLoaded()"' in index
+    assert "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js" in index
+    assert "window.CRT_CHART" in index
+    app = (built_dist / "app.js").read_text(encoding="utf-8")
+    assert "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js" in app
+    assert "chartSource" in app
+
+
+def test_build_web_bundle_holds_every_file_with_matching_hashes(
+    build_web: ModuleType, built_dist: Path
+) -> None:
+    """``data/bundle.js`` parses to CRT_BUNDLE holding the manifest, both runtime
+    candidates and one entry per manifest file / wheel whose decoded bytes have the
+    manifest's SHA-256 and byte count (and equal the served .bin file)."""
+    manifest = _manifest(built_dist)
+    bundle = build_web.read_bundle(built_dist / "data")
+    assert bundle["format"] == build_web.BUNDLE_FORMAT == 1
+    assert bundle["parts"] == []
+    assert bundle["manifest"] == manifest
+    assert manifest["bundle"] == "data/bundle.js"
+    assert bundle["runtime"] == [
+        {"name": "this site", "indexURL": "pyodide/"},
+        {"name": "jsdelivr", "indexURL": "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/"},
+    ]
+    assert manifest["runtime"]["candidates"] == bundle["runtime"]  # type: ignore[index]
+    entries = bundle["entries"]
+    assert isinstance(entries, dict)
+    expected = list(manifest["files"]) + list(manifest["wheels"])  # type: ignore[call-overload]
+    if manifest["wheel"]:
+        expected.append(manifest["wheel"])
+    assert set(entries) == {str(item["path"]) for item in expected}
+    for item in expected:
+        entry = entries[str(item["path"])]
+        if entry["encoding"] == "utf-8":
+            data = str(entry["data"]).encode("utf-8")
+        else:
+            assert entry["encoding"] == "base64"
+            data = base64.b64decode(entry["data"], validate=True)
+        assert len(data) == entry["bytes"] == item["bytes"], item["path"]
+        digest = hashlib.sha256(data).hexdigest()
+        assert digest == entry["sha256"] == item["sha256"], item["path"]
+        assert data == (built_dist / str(item["served"])).read_bytes()
+    # Text stays text (a YAML file), wheels are base64.
+    assert entries["data/deal_terms/stacr_2026_dna1.yaml"]["encoding"] == "utf-8"
+    assert all(entries[str(w["path"])]["encoding"] == "base64" for w in manifest["wheels"])  # type: ignore[index]
+    text = (built_dist / "data" / "bundle.js").read_text(encoding="ascii")  # ASCII-only JS
+    assert text.startswith("self.CRT_BUNDLE = {") and text.endswith("};\n")
+
+
+def test_bundle_entry_decides_by_content(build_web: ModuleType) -> None:
+    text = build_web.bundle_entry("a.md", "caf\u00e9\r\n".encode())
+    assert text["encoding"] == "utf-8" and text["data"] == "caf\u00e9\r\n" and text["bytes"] == 7
+    binary = build_web.bundle_entry("w.whl", b"PK\x03\x04\xff\xfe")
+    assert binary["encoding"] == "base64"
+    assert base64.b64decode(str(binary["data"])) == b"PK\x03\x04\xff\xfe"
+    assert binary["sha256"] == hashlib.sha256(b"PK\x03\x04\xff\xfe").hexdigest()
+
+
+def test_write_bundle_splits_into_parts_over_the_limit(
+    build_web: ModuleType, tmp_path: Path
+) -> None:
+    """Over the part limit, bundle.js keeps the header and lists the part scripts, each
+    part Object.assigns its entries; read_bundle reassembles the same entries."""
+    entries = [build_web.bundle_entry(f"f{i}.txt", (f"line {i}\n" * 40).encode()) for i in range(6)]
+    header = {"manifest": {"generated_utc": "x"}, "runtime": []}
+    names = build_web.write_bundle(tmp_path / "data", header, entries, part_limit=1000)
+    assert names[0] == "bundle.js" and len(names) > 2
+    assert names[1:] == [f"bundle-{i}.js" for i in range(1, len(names))]
+    head = (tmp_path / "data" / "bundle.js").read_text(encoding="ascii")
+    assert '"entries":{}' in head and '"parts":["bundle-1.js"' in head
+    part = (tmp_path / "data" / "bundle-1.js").read_text(encoding="ascii")
+    assert part.startswith("Object.assign(self.CRT_BUNDLE.entries, {") and part.endswith("});\n")
+    bundle = build_web.read_bundle(tmp_path / "data")
+    assert bundle["parts"] == names[1:]
+    assert bundle["entries"] == {str(e["path"]): e for e in entries}
+    # Under the limit: one file, entries inline.
+    single = build_web.write_bundle(tmp_path / "one", header, entries, part_limit=10**9)
+    assert single == ["bundle.js"]
+    assert build_web.read_bundle(tmp_path / "one")["entries"] == bundle["entries"]
 
 
 def test_build_web_manifest_runtime_and_vendor_sections(
@@ -417,6 +521,7 @@ def test_build_web_serves_neutral_names(build_web: ModuleType, built_dist: Path)
         if relative.startswith(f"{build_web.PYODIDE_SUBDIR}/") or relative == "manifest.json":
             continue
         assert path.suffix not in filtered, relative
+    assert sorted(p.name for p in (built_dist / "data").iterdir()) == ["bundle.js"]
 
 
 def test_fetch_pinned_caches_and_verifies(build_web: ModuleType, tmp_path: Path) -> None:

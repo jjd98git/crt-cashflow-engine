@@ -34,22 +34,28 @@
     <section class="panel">
       <h2>Files</h2>
       <p class="hint">
-        Every URL below is on this site; the page contacts no other origin. The manifest is
-        fetched first (with a cache-busting query) and every file it lists is then added.
-        "Test" fetches one URL and reports the HTTP status, byte count, the SHA-256 against the
-        manifest, the content type and the time taken. A thrown error is shown with the browser's
-        own name and message.
+        What the engine page actually loads: the data bundle <code>data/bundle.js</code> (a
+        script, loaded with <code>importScripts</code>: the manifest, every project file and the
+        three wheels, verified by SHA-256 after decoding) and the Python runtime from the first
+        runtime candidate whose <code>pyodide-lock.json</code> answers: this site's
+        <code>pyodide/</code>, then the jsdelivr release CDN. The first row loads the bundle the
+        same way (a script tag) and says whether it parsed; the next rows fetch each candidate's
+        lock file. If the bundle row passes and one runtime candidate passes, the engine page
+        can start.
       </p>
       <p class="hint">
-        File names: project files and wheels are served under neutral names,
-        <code>files/&lt;hash&gt;.bin</code>, so no <code>.yaml</code>, <code>.csv</code>,
-        <code>.json</code> or <code>.whl</code> appears in those URLs; the "What" column gives the
-        real name. The Python runtime under <code>pyodide/</code> is the exception: Pyodide fetches
-        its own files by name, so that directory keeps <code>pyodide.asm.wasm</code>,
-        <code>python_stdlib.zip</code>, <code>pyodide-lock.json</code> and two <code>.whl</code>
-        files. If only the <code>pyodide/</code> rows fail, something between this browser and the
-        site is filtering by file extension or content type (a <code>.wasm</code> block looks
-        exactly like that).
+        The remaining rows fetch, one at a time, every file the site serves (the manifest is
+        fetched with a cache-busting query and every file it lists is then added; when the manifest
+        itself cannot be fetched, the copy inside the bundle is used to list them). "Test" fetches
+        one URL and reports the HTTP status, byte count, the SHA-256 against the manifest, the
+        content type and the time taken. A thrown error is shown with the browser's own name and
+        message. Project files and wheels are served under neutral names,
+        <code>files/&lt;hash&gt;.bin</code> (the "What" column gives the real name); the runtime
+        under <code>pyodide/</code> keeps Pyodide's own names (<code>pyodide.asm.wasm</code>,
+        <code>python_stdlib.zip</code>, <code>pyodide-lock.json</code>, two <code>.whl</code>).
+        A proxy that filters by file type shows up as: script rows pass, <code>.json</code>,
+        <code>.bin</code>, <code>.whl</code> or <code>.wasm</code> rows fail with
+        <code>TypeError: Failed to fetch</code>.
       </p>
       <div class="buttons">
         <button id="test-all" type="button" class="primary">Test all</button>
@@ -77,8 +83,10 @@
   <script>
     "use strict";
     (() => {
-      const MANIFEST_SERVED = "manifest.bin"; // what worker.js fetches (scripts/build_web.py MANIFEST_SERVED)
+      const MANIFEST_SERVED = "manifest.bin"; // the manifest as a file (scripts/build_web.py MANIFEST_SERVED)
       const MANIFEST_JSON = "manifest.json"; // byte-identical readable copy
+      const BUNDLE_SCRIPT = "data/bundle.js"; // what worker.js loads with importScripts
+      const LOCK_FILE = "pyodide-lock.json"; // what worker.js probes each runtime candidate with
       const $ = (id) => document.getElementById(id);
       const rowsBody = $("rows");
       const results = new Map(); // url -> result text
@@ -114,12 +122,12 @@
       }
 
       function originsText() {
-        // Assert, from the rows themselves, that every tested URL is on this site.
+        // Informational: the origins the rows cover (this site, plus the CDN runtime candidate).
         const site = window.location.origin;
-        const foreign = Array.from(new Set(rows.map((row) => new URL(row.url).origin))).filter((o) => o !== site);
+        const origins = Array.from(new Set(rows.map((row) => new URL(row.url).origin)));
         if (rows.length === 0) return "Origins: (no URLs listed yet)";
-        if (foreign.length === 0) return `Origins: all ${rows.length} URLs are on ${site}; no other origin is contacted.`;
-        return `WARNING: URLs on other origins than ${site}: ${foreign.join(", ")}`;
+        const named = origins.map((o) => (o === site ? `${o} (this site)` : o));
+        return `Origins covered by the ${rows.length} rows: ${named.join(", ")}.`;
       }
 
       async function sha256Hex(bytes) {
@@ -170,6 +178,45 @@
         return { ok, text: parts.join(", "), bytes };
       }
 
+      function loadBundleScript(bust) {
+        // The way worker.js loads the bundle: a script element (no fetch), then a look at
+        // what it defined.  Size is the serialized length (the script tag exposes no byte
+        // count); the "data bundle (fetched)" row gives the bytes on the wire.
+        const started = performance.now();
+        const target = new URL(siteUrl(BUNDLE_SCRIPT));
+        if (bust) target.searchParams.set("v", String(Date.now()));
+        delete window.CRT_BUNDLE;
+        return new Promise((resolve) => {
+          const script = document.createElement("script");
+          script.src = target.toString();
+          script.onload = () => {
+            const ms = Math.round(performance.now() - started);
+            const bundle = window.CRT_BUNDLE;
+            if (!bundle || typeof bundle !== "object") {
+              resolve({ ok: false, text: `script loaded in ${ms} ms but did not define CRT_BUNDLE` });
+              return;
+            }
+            const entries = bundle.entries && typeof bundle.entries === "object" ? Object.keys(bundle.entries).length : 0;
+            const parts = Array.isArray(bundle.parts) ? bundle.parts.length : 0;
+            const size = JSON.stringify(bundle).length;
+            const manifest = bundle.manifest || {};
+            resolve({
+              ok: entries > 0 && Boolean(bundle.manifest),
+              text: `script loaded, CRT_BUNDLE parsed: format ${bundle.format}, ${entries} entries` +
+                `${parts ? ` (+ ${parts} part scripts, not loaded here)` : ""}, ` +
+                `about ${size.toLocaleString("en-US")} bytes serialized, manifest built ${manifest.generated_utc || "?"}, ` +
+                `${(bundle.runtime || []).length} runtime candidates, ${ms} ms`,
+              bundle,
+            });
+          };
+          script.onerror = () => {
+            const ms = Math.round(performance.now() - started);
+            resolve({ ok: false, text: `script ${target} failed to load (${ms} ms; the browser gives no reason for a script error)` });
+          };
+          document.head.append(script);
+        });
+      }
+
       function setResult(row, result) {
         row.cell.textContent = result.text;
         row.cell.className = `result ${result.ok ? "ok" : "bad"}`;
@@ -182,13 +229,13 @@
         row.cell.textContent = "testing";
         row.cell.className = "result";
         try {
-          setResult(row, await testUrl(row.url, row.entry, bust));
+          setResult(row, await (row.tester ? row.tester(bust) : testUrl(row.url, row.entry, bust)));
         } finally {
           row.button.disabled = false;
         }
       }
 
-      function addRow(label, url, entry) {
+      function addRow(label, url, entry, tester) {
         const tr = document.createElement("tr");
         const what = document.createElement("td");
         what.textContent = label;
@@ -205,7 +252,7 @@
         cell.textContent = "not tested";
         tr.append(what, where, action, cell);
         rowsBody.append(tr);
-        const row = { label, url, entry, button, cell };
+        const row = { label, url, entry, button, cell, tester: tester || null };
         button.addEventListener("click", () => runRow(row, true));
         rows.push(row);
         $("origins").textContent = originsText();
@@ -222,24 +269,44 @@
         rowsBody.replaceChildren();
         rows = [];
         results.clear();
-        const manifestRow = addRow("build manifest (what the worker fetches)", siteUrl(MANIFEST_SERVED), null);
+        // What the engine page loads: the bundle as a script, then the runtime candidates.
+        const bundleRow = addRow("data bundle, loaded as a script (what the worker does)", siteUrl(BUNDLE_SCRIPT), null, loadBundleScript);
+        $("manifest-status").textContent = `Loading ${bundleRow.url} as a script`;
+        const bundleResult = await loadBundleScript(true);
+        setResult(bundleRow, bundleResult);
+        const manifestRow = addRow("build manifest, as a file", siteUrl(MANIFEST_SERVED), null);
         addRow("build manifest, readable copy", siteUrl(MANIFEST_JSON), null);
         $("manifest-status").textContent = `Fetching ${manifestRow.url}`;
         const result = await testUrl(manifestRow.url, null, true);
         setResult(manifestRow, result);
-        if (!result.ok) {
-          $("manifest-status").textContent = `The manifest could not be read: ${result.text}`;
+        let manifest = null;
+        let manifestFrom = MANIFEST_SERVED;
+        if (result.ok) {
+          try {
+            manifest = JSON.parse(new TextDecoder().decode(result.bytes));
+          } catch (error) {
+            $("manifest-status").textContent = `${MANIFEST_SERVED} is not valid JSON: ${error.name}: ${error.message}`;
+          }
+        }
+        if (!manifest && bundleResult.ok && bundleResult.bundle.manifest) {
+          manifest = bundleResult.bundle.manifest;
+          manifestFrom = `the copy inside ${BUNDLE_SCRIPT} (${MANIFEST_SERVED} could not be fetched: ${result.text})`;
+        }
+        if (!manifest) {
+          $("manifest-status").textContent = `No manifest: ${result.text}; bundle: ${bundleResult.text}`;
+          renderReport();
           return;
         }
-        let manifest;
-        try {
-          manifest = JSON.parse(new TextDecoder().decode(result.bytes));
-        } catch (error) {
-          $("manifest-status").textContent = `${MANIFEST_SERVED} is not valid JSON: ${error.name}: ${error.message}`;
-          return;
-        }
-        const entries = []; // [label, served path, entry]
+        const entries = []; // [label, served path or absolute URL, entry]
         const runtime = manifest.runtime || {};
+        const lockEntry = (runtime.files || []).find((entry) => entry.file_name === LOCK_FILE) || null;
+        (runtime.candidates || []).forEach((candidate, index) => {
+          // The same pinned release from every candidate: the site's lock-file entry (hash,
+          // bytes) applies to the CDN's copy too.
+          const indexUrl = new URL(String(candidate.indexURL), baseUrl()).href;
+          entries.push([`runtime candidate ${index + 1} (${candidate.name}): ${LOCK_FILE}`, `${indexUrl}${LOCK_FILE}`, lockEntry]);
+        });
+        entries.push(["data bundle, fetched (bytes on the wire)", manifest.bundle || BUNDLE_SCRIPT, null]);
         for (const entry of runtime.files || []) {
           entries.push([`Pyodide ${runtime.pyodide_version || ""} runtime: ${entry.file_name}`, entry.path, entry]);
         }
@@ -251,8 +318,8 @@
         for (const entry of manifest.files || []) entries.push([`project file ${entry.path}`, entry.served, entry]);
         for (const [label, served, entry] of entries) addRow(label, siteUrl(served), entry);
         $("manifest-status").textContent =
-          `Manifest built ${manifest.generated_utc || "(undated)"}, engine ${manifest.engine_version || "?"}, ` +
-          `commit ${manifest.git_commit || "none"}: ${entries.length} files listed ` +
+          `Manifest from ${manifestFrom}: built ${manifest.generated_utc || "(undated)"}, engine ${manifest.engine_version || "?"}, ` +
+          `commit ${manifest.git_commit || "none"}: ${entries.length} URLs listed ` +
           `(${(runtime.files || []).length} runtime, ${(manifest.vendor || []).length} vendor, ` +
           `${(manifest.wheels || []).length + (manifest.wheel ? 1 : 0)} wheels, ${(manifest.files || []).length} project).`;
         renderReport();

@@ -397,6 +397,16 @@ a {
   color: var(--accent);
 }
 
+#boot-log {
+  list-style: disc inside;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+#boot-log li {
+  margin: 0.15rem 0;
+}
+
 #boot-diag,
 .diag {
   white-space: pre-line;

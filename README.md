@@ -38,21 +38,38 @@ write-downs and the pool balance, open the full tables, download the CSV bundle 
 workbook, and run the 96-scenario PPM tie-out on demand. Every number on the page is a string the
 engine produced; the page does no arithmetic.
 
-- **Single origin.** The page contacts the GitHub Pages site and nothing else: the Pyodide
-  runtime (about 12 MB), Chart.js, the engine wheel, its two pure-Python dependencies
-  (openpyxl, et_xmlfile) and the deal data are all copied into the site at build time, each
-  with its SHA-256 in `manifest.json`, and the worker verifies every file before using it.
-  No CDN and no package index is contacted at runtime; the engine line under the title says
-  which origins were actually seen.
-- **File names.** Project files and wheels are served under neutral, content-addressed names
-  (`files/<hash>.bin`; the manifest maps each logical path to its served path) so `.yaml`,
-  `.csv`, `.json` and `.whl` never appear in a fetched URL. The runtime under `pyodide/` is the
-  exception: Pyodide fetches its own files by name, so that directory keeps `pyodide.asm.wasm`,
-  `python_stdlib.zip`, `pyodide-lock.json` and two `.whl` files. A proxy that blocks `.wasm` or
-  `application/wasm` blocks exactly those and nothing else.
+- **Data travels as JavaScript.** The engine wheel, its two pure-Python dependencies
+  (openpyxl, et_xmlfile), the deal data and the build manifest are packed at build time into
+  one script, `data/bundle.js` (`self.CRT_BUNDLE = {...}`; text files as strings, wheels as
+  base64, each with its SHA-256 and byte count). The worker loads it with `importScripts` and
+  never fetches a data file; it decodes each file, hashes it and compares against the manifest
+  before writing it into Pyodide's file system. Field evidence behind this: a corporate proxy
+  that filters by file type let the site's scripts and the CDN's runtime through but dropped a
+  same-site `manifest.json` with `TypeError: Failed to fetch`. The same files are still served
+  as `manifest.json` / `manifest.bin` and `files/<hash>.bin` for diag.html and `curl` checks;
+  the app does not depend on them.
+- **Runtime: this site, then the CDN.** Pyodide fetches its own files by name
+  (`pyodide.asm.wasm`, `python_stdlib.zip`, `pyodide-lock.json`, two `.whl`) from an
+  `indexURL`, so it cannot travel inside a script. The worker tries the candidates in
+  `scripts/build_web.py` `RUNTIME_CANDIDATES` in order: the self-hosted copy under `pyodide/`
+  on this site, then the same pinned release on `cdn.jsdelivr.net`. Each candidate is probed
+  with a GET of its small `pyodide-lock.json` (10-second timeout); a candidate whose probe
+  fails is logged in the boot panel with the exact URL and reason and skipped. If
+  `loadPyodide` fails or hangs beyond 90 seconds after a candidate's `pyodide.js` was
+  imported, the page terminates the worker and restarts it at the next candidate. Chart.js
+  loads from `vendor/` on this site with an `onerror` fallback to the same release on cdnjs.
+  The engine line under the title says where the runtime, Chart.js and the data came from and
+  which origins were contacted (informational). `?runtime=site-only` or `?runtime=cdn-only`
+  on the page URL restricts the candidates, for diagnosis.
+- **What a proxy would have to block for the page to fail:** JavaScript itself (the page's
+  own scripts, or `data/bundle.js`, from this site *and* Chart.js from cdnjs), or the Pyodide
+  runtime (WebAssembly, `.zip`, `.json`, `.whl`) from *both* this site and cdn.jsdelivr.net.
+  Blocking any one of those file types on one host is not enough.
 - **Diagnostics.** If the page cannot start, it names the exact URL that failed;
-  [diag.html](https://jjd98git.github.io/crt-cashflow-engine/diag.html) lists every URL the
-  page fetches and tests them one at a time (status, bytes, SHA-256, content type).
+  [diag.html](https://jjd98git.github.io/crt-cashflow-engine/diag.html) loads the bundle the
+  way the worker does (a script tag) and reports whether it parsed, fetches both runtime
+  candidates' `pyodide-lock.json`, and then tests every served file one at a time (status,
+  bytes, SHA-256, content type).
 
 The site is built by `scripts/build_web.py` (pinned SHA-256 for every downloaded runtime and
 vendor file, cached under `web/.cache/`) and deployed by `.github/workflows/pages.yml` on every

@@ -1,27 +1,33 @@
 """Build ``web/dist/``: the static site that runs the engine in the browser.
 
-The page contacts ONE origin at runtime (the site itself).  Everything it needs is copied
-into ``web/dist/`` at build time, hashed, and listed in the manifest, which the Web Worker
-checks (SHA-256, byte count) before using any file::
+Everything the page needs is copied into ``web/dist/`` at build time, hashed, and listed in
+the manifest.  The deal data and the wheels travel as JavaScript: ``data/bundle.js`` defines
+``self.CRT_BUNDLE`` (the manifest, every project file, the three wheels, the runtime
+candidate list) and the Web Worker loads it with ``importScripts`` and never fetches a data
+file.  The worker still checks every file (SHA-256, byte count) after decoding it::
 
     web/dist/
       index.html, app.js, app.css, worker.js      the page (copied from web/)
-      diag.html                                   per-file fetch test page (copied from web/)
-      manifest.bin                                the manifest the worker fetches
-      manifest.json                               byte-identical copy, for people and diag.html
+      diag.html                                   per-file load test page (copied from web/)
+      data/bundle.js                              self.CRT_BUNDLE = {...}: what the worker loads
+      data/bundle-<n>.js                          only when the bundle would exceed BUNDLE_PART_LIMIT
+      manifest.json, manifest.bin                 the same manifest as a file, for people, diag.html
+                                                  and curl checks (the app does not fetch them)
       pyodide/                                    the Pyodide runtime, self-hosted, ORIGINAL names
         pyodide.js, pyodide.asm.js, pyodide.asm.wasm, python_stdlib.zip, pyodide-lock.json
         micropip-*.whl, pyyaml-*.whl              what loadPackage(["micropip", "pyyaml"]) fetches
-      vendor/chart.umd.min.js                     Chart.js, self-hosted
-      files/<sha256 prefix>.bin                   every project file and every wheel
+      vendor/chart.umd.min.js                     Chart.js, self-hosted (index.html falls back to cdnjs)
+      files/<sha256 prefix>.bin                   every project file and every wheel, as files
+                                                  (diag.html and curl checks; the app does not fetch them)
 
-Neutral names: project files (``.yaml``, ``.csv``, ``.json``, ``.md``, ``.py``, ``.toml``) and
-wheels (``.whl``) are served as ``files/<first 16 hex of sha256>.bin`` so no extension a
-corporate proxy might filter appears in a fetched URL; the manifest keeps the logical path
-(``path``) next to the served one (``served``) and the worker writes each file under its
-logical path in Pyodide's file system.  The Pyodide runtime is the one exception: Pyodide
-fetches its own files by name from ``indexURL``, so ``pyodide/`` keeps ``.wasm``, ``.zip``,
-``.json`` and two ``.whl`` names (README and diag.html say so).
+Why JavaScript: a corporate proxy that filters by file type lets a site's ``.js`` through
+while dropping its ``.json``, ``.bin``, ``.whl`` or ``.wasm`` (field evidence: same-site
+``manifest.json`` failed with ``TypeError: Failed to fetch`` where the page's scripts and
+the CDN's runtime loaded).  Script loads are what such a proxy allows, so the data goes in a
+script.  The Pyodide runtime cannot travel that way (Pyodide fetches its own ``.wasm``,
+``.zip`` and ``.json`` by name from ``indexURL``), so the worker tries each entry of
+``RUNTIME_CANDIDATES`` in order: this site's ``pyodide/`` first, then the jsdelivr release
+CDN.  Text project files are stored as strings (UTF-8), binary files and wheels as base64.
 
 Downloads (the Pyodide runtime from its release CDN, Chart.js from cdnjs, the openpyxl and
 et_xmlfile wheels with ``pip download``) happen at build time only.  Each runtime and vendor
@@ -35,6 +41,7 @@ them.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import shutil
@@ -52,11 +59,16 @@ WEB_DIR = ROOT / "web"
 DIST_DIR = WEB_DIR / "dist"
 CACHE_DIR = WEB_DIR / ".cache"  # gitignored; verified downloads, reused across builds
 
-FILES_SUBDIR = "files"  # project files and wheels, as <sha256[:16]>.bin
+FILES_SUBDIR = "files"  # project files and wheels, as <sha256[:16]>.bin (not fetched by the app)
 PYODIDE_SUBDIR = "pyodide"  # the runtime, original file names (Pyodide fetches them itself)
 VENDOR_SUBDIR = "vendor"
-MANIFEST_JSON = "manifest.json"  # readable copy
-MANIFEST_SERVED = "manifest.bin"  # what the worker fetches; identical bytes
+DATA_SUBDIR = "data"  # the JavaScript bundle the worker loads with importScripts
+BUNDLE_FILE = "bundle.js"  # data/bundle.js: self.CRT_BUNDLE = {...}
+BUNDLE_PART_PREFIX = "bundle-"  # data/bundle-<n>.js when the entries do not fit in one file
+BUNDLE_PART_LIMIT = 4_000_000  # bytes of serialized entries per script file
+BUNDLE_FORMAT = 1  # bumped when the shape of CRT_BUNDLE changes; worker.js checks it
+MANIFEST_JSON = "manifest.json"  # readable copy (diag.html, curl); the worker does not fetch it
+MANIFEST_SERVED = "manifest.bin"  # identical bytes under a neutral name; same status
 
 # Static page files, copied as-is into web/dist/ (not loaded into the Pyodide FS).
 PAGE_FILES: tuple[str, ...] = ("index.html", "app.js", "app.css", "worker.js", "diag.html")
@@ -81,11 +93,23 @@ PYODIDE_CORE_SHA256: dict[str, str] = {
 # Packages the worker loads with pyodide.loadPackage(); their files, dependencies and
 # hashes come from the pinned lock file above, never from a guess.
 PYODIDE_PACKAGES: tuple[str, ...] = ("micropip", "pyyaml")
+# Where the worker looks for the runtime, in order.  A relative indexURL is resolved
+# against the site (the worker's own directory); the worker probes each candidate's
+# pyodide-lock.json and moves on when it cannot be fetched.  Both serve the same pinned
+# release, so a runtime from either candidate is the one PYODIDE_CORE_SHA256 describes.
+RUNTIME_CANDIDATES: tuple[dict[str, str], ...] = (
+    {"name": "this site", "indexURL": f"{PYODIDE_SUBDIR}/"},
+    {"name": "jsdelivr", "indexURL": PYODIDE_SOURCE},
+)
 
 CHARTJS_VERSION = "4.5.1"
 CHARTJS_FILE = "chart.umd.min.js"
 CHARTJS_SOURCE = f"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/{CHARTJS_VERSION}/{CHARTJS_FILE}"
 CHARTJS_SHA256 = "48444a82d4edcb5bec0f1965faacdde18d9c17db3063d042abada2f705c9f54a"
+# Text files go into the bundle as strings when they are valid UTF-8; anything else (and
+# every wheel) as base64.  Deciding by content, not by extension, keeps the hash honest.
+TEXT_ENCODING = "utf-8"
+BASE64_ENCODING = "base64"
 
 # Files written to /project/<path> in the browser; globs are relative to the repo root.
 PROJECT_FILE_GLOBS: tuple[str, ...] = (
@@ -326,6 +350,92 @@ def _shipped_entry(shipped: Path, extra: dict[str, str] | None = None) -> dict[s
     return entry
 
 
+def bundle_entry(path: str, data: bytes) -> dict[str, str | int]:
+    """One CRT_BUNDLE entry: the logical path, the bytes as a UTF-8 string or base64, and
+    the SHA-256 and byte count the worker checks after decoding."""
+    entry: dict[str, str | int] = {
+        "path": path,
+        "sha256": hashlib.sha256(data).hexdigest(),
+        "bytes": len(data),
+    }
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        text = None
+    if text is not None and text.encode("utf-8") == data:
+        entry["encoding"] = TEXT_ENCODING
+        entry["data"] = text
+    else:
+        entry["encoding"] = BASE64_ENCODING
+        entry["data"] = base64.b64encode(data).decode("ascii")
+    return entry
+
+
+def _js_json(value: object) -> str:
+    # ASCII-only JSON is a valid JavaScript object literal and survives a proxy or server
+    # that mislabels the charset; U+2028/2029 are escaped as a side effect.
+    return json.dumps(value, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+
+
+BUNDLE_PREFIX = "self.CRT_BUNDLE = "
+PART_PREFIX = "Object.assign(self.CRT_BUNDLE.entries, "
+
+
+def write_bundle(
+    data_dir: Path,
+    header: dict[str, object],
+    entries: list[dict[str, str | int]],
+    *,
+    part_limit: int = BUNDLE_PART_LIMIT,
+) -> list[str]:
+    """Write ``data/bundle.js`` (``self.CRT_BUNDLE = {...};``) and, when the serialized
+    entries exceed ``part_limit`` bytes, ``data/bundle-<n>.js`` parts that each
+    ``Object.assign`` their share into ``CRT_BUNDLE.entries``.  Returns the file names
+    written, ``bundle.js`` first, in load order."""
+    data_dir.mkdir(parents=True, exist_ok=True)
+    serialized = [(entry, len(_js_json(entry))) for entry in entries]  # ASCII: len == bytes
+    parts: list[list[dict[str, str | int]]] = []
+    if sum(size for _, size in serialized) > part_limit:
+        current: list[dict[str, str | int]] = []
+        current_size = 0
+        for entry, size in serialized:
+            if current and current_size + size > part_limit:
+                parts.append(current)
+                current, current_size = [], 0
+            current.append(entry)
+            current_size += size
+        if current:
+            parts.append(current)
+    part_names = [f"{BUNDLE_PART_PREFIX}{index}.js" for index in range(1, len(parts) + 1)]
+    inline = {} if parts else {str(entry["path"]): entry for entry in entries}
+    bundle = {**header, "format": BUNDLE_FORMAT, "parts": part_names, "entries": inline}
+    (data_dir / BUNDLE_FILE).write_text(f"{BUNDLE_PREFIX}{_js_json(bundle)};\n", encoding="ascii")
+    for name, part in zip(part_names, parts, strict=True):
+        chunk = {str(entry["path"]): entry for entry in part}
+        (data_dir / name).write_text(f"{PART_PREFIX}{_js_json(chunk)});\n", encoding="ascii")
+    return [BUNDLE_FILE, *part_names]
+
+
+def read_bundle(data_dir: Path) -> dict[str, object]:
+    """Parse ``data/bundle.js`` (and its parts) back into the CRT_BUNDLE object, the way
+    the worker sees it; for tests and checks, no JavaScript engine needed."""
+    text = (data_dir / BUNDLE_FILE).read_text(encoding="ascii")
+    suffix = ";\n"
+    if not (text.startswith(BUNDLE_PREFIX) and text.endswith(suffix)):
+        raise ValueError(f"{data_dir / BUNDLE_FILE}: not of the form {BUNDLE_PREFIX!r}...;")
+    bundle: dict[str, object] = json.loads(text[len(BUNDLE_PREFIX) : -len(suffix)])
+    entries = bundle["entries"]
+    parts = bundle["parts"]
+    assert isinstance(entries, dict) and isinstance(parts, list)
+    part_suffix = ");\n"
+    for name in parts:
+        part_text = (data_dir / str(name)).read_text(encoding="ascii")
+        if not (part_text.startswith(PART_PREFIX) and part_text.endswith(part_suffix)):
+            raise ValueError(f"{data_dir / str(name)}: not a bundle part")
+        entries.update(json.loads(part_text[len(PART_PREFIX) : -len(part_suffix)]))
+    return bundle
+
+
 def _empty_directory(directory: Path) -> None:
     """Remove the contents, not the directory itself: a local ``http.server`` started
     inside ``web/dist`` holds it open on Windows, and keeping the directory lets a rebuild
@@ -366,6 +476,7 @@ def build(
         return {"served": served, "sha256": digest, "bytes": source.stat().st_size}
 
     entries: list[FileEntry] = []
+    bundle_entries: list[dict[str, str | int]] = []  # every project file and wheel, in order
 
     def ship_project_file(source: Path, logical: str) -> None:
         shipped = ship(source)
@@ -374,6 +485,7 @@ def build(
                 logical, str(shipped["served"]), str(shipped["sha256"]), int(shipped["bytes"])
             )
         )
+        bundle_entries.append(bundle_entry(logical, source.read_bytes()))
 
     for source in collect_project_files(root):
         ship_project_file(source, source.relative_to(root).as_posix())
@@ -395,6 +507,7 @@ def build(
         if requirement is not None:
             entry["requirement"] = requirement
         entry.update(ship(wheel))
+        bundle_entries.append(bundle_entry(str(entry["path"]), wheel.read_bytes()))
         return entry
 
     vendored: list[dict[str, str | int]] = []
@@ -453,6 +566,7 @@ def build(
         "runtime": {
             "pyodide_version": PYODIDE_VERSION,
             "index_url": f"{PYODIDE_SUBDIR}/",  # relative to the site; original file names
+            "candidates": [dict(candidate) for candidate in RUNTIME_CANDIDATES],
             "packages": list(PYODIDE_PACKAGES),
             "source": PYODIDE_SOURCE,
             "files": runtime_files,
@@ -461,10 +575,19 @@ def build(
         "wheel": wheel_entry,
         "wheels": vendored,  # installed before the engine wheel, in this order
         "files": [entry.to_dict() for entry in entries],
+        "bundle": f"{DATA_SUBDIR}/{BUNDLE_FILE}",  # what the worker actually loads
     }
     text = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
     (dist / MANIFEST_JSON).write_text(text, encoding="utf-8")
     (dist / MANIFEST_SERVED).write_text(text, encoding="utf-8")
+
+    # The bundle: the same manifest object, the runtime candidates and every file the
+    # manifest lists under files, wheels and wheel, keyed by logical path.
+    header: dict[str, object] = {
+        "manifest": manifest,
+        "runtime": [dict(candidate) for candidate in RUNTIME_CANDIDATES],
+    }
+    write_bundle(dist / DATA_SUBDIR, header, bundle_entries)
     return dist
 
 
@@ -478,8 +601,14 @@ def main(argv: list[str] | None = None) -> int:
     vendored = ", ".join(entry["file_name"] for entry in manifest["wheels"])
     runtime_bytes = sum(int(entry["bytes"]) for entry in manifest["runtime"]["files"])
     total_bytes = sum(p.stat().st_size for p in dist.rglob("*") if p.is_file())
+    bundle_files = sorted((dist / DATA_SUBDIR).glob("*.js"))
+    bundle_bytes = sum(p.stat().st_size for p in bundle_files)
     print(f"{dist}: {len(manifest['files'])} project files, wheel {wheel}")
     print(f"vendored wheels: {vendored}")
+    print(
+        f"data bundle: {', '.join(p.name for p in bundle_files)} under {DATA_SUBDIR}/, "
+        f"{bundle_bytes / 1e6:.2f} MB (loaded with importScripts; no data file is fetched)"
+    )
     print(
         f"Pyodide {PYODIDE_VERSION} runtime: {len(manifest['runtime']['files'])} files, "
         f"{runtime_bytes / 1e6:.1f} MB; Chart.js {CHARTJS_VERSION}; site total {total_bytes / 1e6:.1f} MB"

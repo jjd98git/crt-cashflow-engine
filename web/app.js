@@ -29,13 +29,15 @@
   const WRITE_DOWN_COLOUR = "#C00000";
   const POOL_COLOUR = "#1F3864";
   const CUSTOM = "__custom__";
-  const BOOT_PHASES = ["runtime", "packages", "manifest", "data", "engine", "deal"];
+  const BOOT_PHASES = ["bundle", "runtime", "packages", "data", "engine", "deal"];
+  const CHARTJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js";
 
   const $ = (id) => document.getElementById(id);
   const el = {
     boot: $("boot"),
     bootList: $("boot-list"),
     bootError: $("boot-error"),
+    bootLog: $("boot-log"),
     bootDiag: $("boot-diag"),
     bootRetry: $("boot-retry"),
     app: $("app"),
@@ -77,6 +79,9 @@
   let info = null;
   let workerBaseUrl = null; // reported by the worker: the directory it resolves files from
   let bootAttempt = 0;
+  let runtimeStart = 0; // index of the runtime candidate the next worker starts probing from
+  let runtimeTried = []; // {name, indexURL, reason} for every candidate that failed so far
+  let chartSource = null; // "this site" or "cdnjs", whichever served Chart.js
   let current = null; // the payload on screen
   const charts = {};
   const pending = new Map(); // requestId -> {resolve, reject}
@@ -196,6 +201,12 @@
         workerBaseUrl = message.base_url;
         showDiagnostics();
         break;
+      case "note":
+        addBootNote(message.text);
+        break;
+      case "runtime-failed":
+        onRuntimeFailed(message);
+        break;
       case "result":
       case "file":
       case "tieout":
@@ -222,6 +233,24 @@
     }
   }
 
+  function addBootNote(text) {
+    // The boot log keeps every note across worker restarts: which runtime candidate was
+    // skipped or failed and why, which one was used.
+    const item = document.createElement("li");
+    item.textContent = text;
+    el.bootLog.append(item);
+    el.bootLog.hidden = false;
+  }
+
+  function onRuntimeFailed(message) {
+    // The worker imported a candidate's pyodide.js and loadPyodide failed or hung; it
+    // cannot unload that, so start a fresh worker at the next candidate.
+    runtimeTried = runtimeTried.concat(Array.isArray(message.tried) ? message.tried : []);
+    runtimeStart = typeof message.next === "number" ? message.next : runtimeStart + 1;
+    addBootNote(`Restarting the engine with runtime candidate ${runtimeStart + 1} of ${message.total || "?"}`);
+    restartBoot(false);
+  }
+
   // ------------------------------------------------------------------ diagnostics
 
   function featureReport() {
@@ -246,7 +275,8 @@
       `Network: ${online}. Page: ${window.location.href}`,
       `Worker base URL: ${workerBaseUrl || "(worker not started)"}`,
       `Features: ${flags}`,
-      `Boot attempt ${bootAttempt}`,
+      `Chart.js: ${chartSource || "not loaded"}`,
+      `Boot attempt ${bootAttempt}; runtime candidates tried and failed: ${runtimeTried.length}`,
     ].join("\n");
   }
 
@@ -276,15 +306,21 @@
   }
 
   function originsLine(message) {
-    // The worker reports every origin it (and Pyodide) fetched from.  The site is built
-    // to contact one origin only, so anything else is named as a warning.
+    // Informational: the worker reports every origin it (and Pyodide) loaded from.  The
+    // runtime may legitimately come from the CDN when the site's copy is unreachable.
     const site = window.location.origin;
     const origins = Array.isArray(message.origins) ? message.origins : [];
     const count = typeof message.fetched_urls === "number" ? ` (${message.fetched_urls} requests)` : "";
     if (origins.length === 0) return "Origins contacted: unknown (no resource timing in this browser).";
-    const foreign = origins.filter((origin) => origin !== site);
-    if (foreign.length === 0) return `Origins contacted: ${site} only, this site${count}.`;
-    return `WARNING: origins contacted besides this site (${site}): ${foreign.join(", ")}${count}.`;
+    const named = origins.map((origin) => (origin === site ? `${origin} (this site)` : origin));
+    return `Origins contacted: ${named.join(", ")}${count}.`;
+  }
+
+  function sourcesLine(message) {
+    const runtime = message.runtime_source || {};
+    const where = runtime.name ? `${runtime.name}, ${runtime.indexURL}` : "unknown";
+    const chart = chartSource === "cdnjs" ? `cdnjs (${CHARTJS_CDN})` : chartSource || "unknown";
+    return `Python runtime from ${where}. Chart.js from ${chart}. Deal data and wheels from ${message.data_source || "the bundle"}.`;
   }
 
   function onReady(message) {
@@ -295,7 +331,7 @@
     el.engineLine.textContent =
       `Engine ${info.engine_version}, commit ${shortCommit(build.git_commit)}${built}. ` +
       `Runs on Pyodide ${runtime.pyodide} (CPython ${runtime.python}) with ${runtime.openpyxl}. ` +
-      originsLine(message);
+      `${sourcesLine(message)} ${originsLine(message)}`;
     renderDeal(info.deal);
     renderShippedTieout(info.tieout_status);
     populateForm();
@@ -823,15 +859,20 @@
     }
     if (typeof Chart === "undefined") {
       showBootError(
-        `Chart.js did not load from ${new URL("vendor/chart.umd.min.js", window.location.href)} (this site; offline, or a script filter blocked it).`
+        `Chart.js did not load from ${new URL("vendor/chart.umd.min.js", window.location.href)} (this site) nor from ${CHARTJS_CDN} (offline, or a script filter blocked both).`
       );
       return;
     }
-    // A retry fetches the worker script itself afresh (cache-busting query); the worker
-    // resolves every project file against its own URL, so the query is harmless.
-    const workerUrl = bootAttempt === 1 ? "worker.js" : `worker.js?v=${Date.now()}`;
+    // The worker resolves every URL against its own; the query only carries the runtime
+    // candidate to start from (?start=), the page's ?runtime=site-only / cdn-only filter
+    // (?only=) and, on a retry, a cache-busting value so the script itself is fetched afresh.
+    const workerUrl = new URL("worker.js", window.location.href);
+    if (runtimeStart > 0) workerUrl.searchParams.set("start", String(runtimeStart));
+    const only = runtimeFilter();
+    if (only) workerUrl.searchParams.set("only", only);
+    if (bootAttempt > 1) workerUrl.searchParams.set("v", String(Date.now()));
     try {
-      worker = new Worker(new URL(workerUrl, window.location.href));
+      worker = new Worker(workerUrl);
     } catch (error) {
       showBootError(`new Worker(${workerUrl}) failed: ${error.name}: ${error.message}`);
       return;
@@ -843,7 +884,18 @@
     });
   }
 
-  function restartBoot() {
+  function runtimeFilter() {
+    // ?runtime=site-only or ?runtime=cdn-only on the page URL restricts which runtime
+    // candidates the worker may use (diagnosis only; the default tries all in order).
+    const flag = new URLSearchParams(window.location.search).get("runtime");
+    if (flag === "site-only") return "site";
+    if (flag === "cdn-only") return "cdn";
+    return null;
+  }
+
+  function restartBoot(fromScratch) {
+    // fromScratch (the Try again button): probe the candidates from the first one again;
+    // otherwise (runtime-failed) keep runtimeStart as set by onRuntimeFailed.
     el.bootRetry.disabled = true;
     if (worker) {
       worker.terminate();
@@ -853,12 +905,31 @@
       entry.reject(new Error("the engine was restarted"));
       pending.delete(requestId);
     }
+    if (fromScratch) {
+      runtimeStart = 0;
+      runtimeTried = [];
+    }
     startWorker();
   }
 
-  function start() {
+  async function chartReady() {
+    // index.html loads Chart.js from this site and, if that script fails, from cdnjs;
+    // it exposes the outcome as window.CRT_CHART (a promise of the source name).
+    if (!window.CRT_CHART || typeof window.CRT_CHART.then !== "function") {
+      chartSource = typeof Chart === "undefined" ? null : "this site";
+      return;
+    }
+    try {
+      chartSource = await window.CRT_CHART;
+    } catch (error) {
+      chartSource = null;
+    }
+  }
+
+  async function start() {
+    el.bootRetry.addEventListener("click", () => restartBoot(true));
+    await chartReady();
     startWorker();
-    el.bootRetry.addEventListener("click", restartBoot);
     el.form.addEventListener("submit", runScenario);
     el.noteSelect.addEventListener("change", () => current && noteFlows(current, el.noteSelect.value));
     el.downloadCsv.addEventListener("click", () => download("csv"));
