@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    name: lint, types, tests, tie-out
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Create venv and install
+        run: |
+          uv venv .venv
+          uv pip install --python .venv/bin/python -e ".[dev,gui]"
+
+      - name: ruff
+        run: .venv/bin/ruff check src tests
+
+      - name: mypy (strict on src/crt)
+        run: .venv/bin/mypy src/crt
+
+      - name: Unit and GUI tests
+        run: .venv/bin/python -m pytest -q -m "fast or gui"
+
+      - name: PPM tie-out regression
+        run: .venv/bin/python -m pytest -q -m tieout
+
+      - name: Regenerate tie-out report
+        run: .venv/bin/python -m crt.tieout
+
+      - name: Upload tie-out report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tieout-report
+          path: |
+            docs/validation/tieout.md
+            docs/validation/tieout-manifest.json

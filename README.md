@@ -1,5 +1,7 @@
 # CRT Cashflow Engine
 
+[![CI](https://github.com/jjd98git/crt-cashflow-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/jjd98git/crt-cashflow-engine/actions/workflows/ci.yml)
+
 Intex-adjacent cashflow engine for Freddie Mac STACR credit risk transfer transactions.
 Given a CRT loan-level disclosure dataset and the deal's offering memorandum, it projects
 reference-pool and reference-tranche cashflows under user-supplied prepayment, default and
@@ -18,7 +20,16 @@ uv pip install -e ".[dev]"
 pytest -q
 ```
 
-## Run
+## Run on GitHub (no local setup)
+- **Codespaces**: on the repo page click *Code → Codespaces → Create codespace on main*. The
+  devcontainer installs everything and runs the fast tests. Then in the Codespace terminal run
+  `./gui.sh`; the forwarded port 8501 opens the GUI in your browser. Run the tie-out with
+  `.venv/bin/python -m crt.tieout`.
+- **CI**: every push runs ruff, mypy, the unit and GUI tests, the full PPM tie-out, and a
+  secret scan; the regenerated tie-out report is attached to each run as an artifact
+  (*Actions → the run → Artifacts → tieout-report*).
+
+## Run locally
 - GUI: double-click `gui.cmd`. From PowerShell run two separate lines (PowerShell 5.1 has
   no `&&`): `cd "C:\Users\jjdeg\OneDrive\Desktop\crt-cashflow-engine"` then
   `.venv\Scripts\python -m streamlit run src\crt\gui\app.py`.
