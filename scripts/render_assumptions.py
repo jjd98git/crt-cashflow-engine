@@ -18,6 +18,7 @@ GROUPS = {
     "T": "PPM tables and Table 1 values",
     "D": "Dataset facts",
     "U": "Decisions by Trey",
+    "DNA2": "STACR 2026-DNA2 (second deal; PPM-sourced, unconfirmed)",
 }
 
 
@@ -52,7 +53,8 @@ def main() -> None:
     out += [row_line(r) for r in open_rows]
     by = defaultdict(list)
     for r in rows:
-        by[r["id"][0]].append(r)
+        key = "DNA2" if r["id"].startswith("DNA2-") else r["id"][0]
+        by[key].append(r)
     for key, title in GROUPS.items():
         if key not in by:
             continue

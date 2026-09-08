@@ -1,0 +1,2098 @@
+# STACR REMIC 2026-DNA2 - deal terms extracted from the Private Placement Memorandum.
+#
+# Source: data/raw/stacr-2026-dna2-ppm.txt (pdftotext -layout extract of the PPM dated
+# March 13, 2026; Closing Date March 17, 2026). "page" is the PDF page of the extract = 1 +
+# number of form-feed characters before the line (NOT the printed folio; printed folio =
+# PDF page - 22 in the body, e.g. printed p.174 "Glossary" is PDF page 196; front matter
+# Table 1 is PDF page 10 = printed x).
+# Every leaf field is a mapping with keys value / page / section / quote. quote is verbatim
+# PPM language (the extract uses straight ASCII quotation marks, reproduced as such). The
+# optional key "note" carries the extractor remark and is never source text.
+# Dollar amounts are strings so that consumers load them as Decimal, never float.
+# Schema: identical key set to data/deal_terms/stacr_2026_dna1.yaml, section by section.
+# Where DNA1 has a term this PPM lacks, the key is kept with value: null and a note quoting
+# the nearest language. Where this PPM has a term DNA1 lacks, the key is added under the
+# matching section and marked "NEW vs DNA1" in its note.
+# Layout warning: pages 10 (Table 1), 24 (Table 3), 229 (Appendix A summary) and 264
+# (Appendix C) are column-shifted by one row in the text extract. Every number taken from
+# those pages was reconciled arithmetically (footnotes, Table 2, SOFR + margin, the
+# Cut-off Date Balance). See data/deals/stacr_2026_dna2/open-questions.md DNA2-Q1.
+# Extracted by ppm-analyst, 2026-09-08. Register: data/deals/stacr_2026_dna2/register_rows.csv
+# rows DNA2-P1 onward.
+
+meta:
+  source_file:
+    value: data/raw/stacr-2026-dna2-ppm.txt
+    page: 1
+    section: front page
+    quote: |
+      The date of this Private Placement Memorandum is March 13, 2026
+    note: The task brief described the memorandum as "dated 2026-03-17"; 2026-03-17 is the Closing Date (p1 "Closing Date March 17, 2026"). The memorandum date printed on p1 is March 13, 2026.
+  page_convention:
+    value: PDF page = 1 + count of form-feed characters before the line; printed folio = PDF page - 22 for the body
+    page: 196
+    section: Glossary of Significant Terms (printed 174)
+    quote: |
+      GLOSSARY OF SIGNIFICANT TERMS ... 174
+
+deal:
+  name:
+    value: Freddie Mac Structured Agency Credit Risk (STACR) REMIC 2026-DNA2 Notes
+    page: 1
+    section: front page
+    quote: |
+      STRUCTURED AGENCY CREDIT RISK (STACR) REMIC 2026-DNA2 NOTES, FREDDIE MAC STACR REMIC TRUST 2026-DNA2
+  trust:
+    value: Freddie Mac STACR REMIC Trust 2026-DNA2 (Delaware statutory trust)
+    page: 225
+    section: Glossary - Trust
+    quote: |
+      "Trust" means Freddie Mac STACR REMIC Trust 2026-DNA2, a Delaware statutory trust.
+  closing_date:
+    value: 2026-03-17
+    page: 200
+    section: Glossary - Closing Date
+    quote: |
+      "Closing Date" means March 17, 2026.
+  cut_off_date:
+    value: 2026-01-31
+    page: 203
+    section: Glossary - Cut-off Date
+    quote: |
+      "Cut-off Date" means the close of business on January 31, 2026.
+  cut_off_date_balance_usd:
+    value: "26703800234.86"
+    page: 203
+    section: Glossary - Cut-off Date Balance
+    quote: |
+      "Cut-off Date Balance" means $26,703,800,234.86, which is the aggregate UPB of the Reference Obligations as of the Cut-off Date.
+  total_offered_usd:
+    value: "507200000"
+    page: 1
+    section: front page
+    quote: |
+      $507,200,000 Freddie Mac STRUCTURED AGENCY CREDIT RISK (STACR) REMIC 2026-DNA2 NOTES
+    note: Equals the sum of the five Original Note balances (253,600,000 + 57,050,000 + 57,050,000 + 69,750,000 + 69,750,000 = 507,200,000; verified).
+  scheduled_maturity_date:
+    value: Payment Date in March 2046
+    page: 222
+    section: Glossary - Scheduled Maturity Date
+    quote: |
+      "Scheduled Maturity Date" means the Payment Date in March 2046.
+  scheduled_termination_date:
+    value: Payment Date in March 2046
+    page: 222
+    section: Glossary - Scheduled Termination Date
+    quote: |
+      "Scheduled Termination Date" means the Payment Date in March 2046.
+  first_payment_date:
+    value: 2026-04-27
+    page: 216
+    section: Glossary - Payment Date
+    quote: |
+      "Payment Date" means the 25th day of each calendar month (or, if such date is not a Business Day, the following Business Day), commencing in April 2026.
+    note: April 25, 2026 is a Saturday, so under the definition the first Payment Date is Monday April 27, 2026 (the PPM never prints the calendar date). The unadjusted 25th remains the reference day for the Table 1 assumption "the Notes pay on the 25th day of each calendar month beginning in April 2026" (p11 fn (1)). If the roll also governs the Accrual Period, the first Accrual Period runs 2026-03-17 through 2026-04-26 inclusive (41 days); see DNA2-Q3.
+  quality_control_cut_off_date:
+    value: 2026-02-03
+    page: 219
+    section: Glossary - Quality Control Cut-off Date
+    quote: |
+      "Quality Control Cut-off Date" means the close of business on February 3, 2026.
+  rounding_convention:
+    value: percentages to nearest 1/100,000 of a percentage point (5 millionths rounded up); dollar amounts to nearest cent (half cent rounded up)
+    page: 101
+    section: Description of the Notes - Payment Procedures; Withholding Requirements - General Payment Procedures
+    quote: |
+      All percentages resulting from any calculation on the Notes will be rounded to the nearest one hundred-thousandth of a percentage point, five millionths of a percentage point rounded up and all dollar amounts used in or resulting from that calculation on the Note will be rounded to the nearest cent (with one-half cent being rounded up).
+
+# ---------------------------------------------------------------------------
+# Hypothetical structure: all thirteen Reference Tranches (Table 3, PDF p24).
+# Initial Class Notional Amounts sum to the Cut-off Date Balance (verified by the extractor:
+# 25,902,685,229.86 + 267,038,002 + 60,083,550 + 60,083,550 + 73,435,450 + 73,435,450
+# + 200,278,501 + 66,760,502 = 26,703,800,234.86, difference 0.00).
+# There is NO Class A-1 / A-1H and NO Class B-1H tranche in this deal. The "Class B-1H"
+# in the transaction diagram is a drawing of B-1AH + B-1BH combined (p23).
+# Table 3 in the extract is shifted by one row (the A-H amount appears on the M-1 line,
+# etc.); the alignment below is fixed by the footnote markers (3),(5),(7),(9),(11) that stay
+# attached to the percentages and by the footnote dollar amounts (2),(4),(6),(8),(10).
+# ---------------------------------------------------------------------------
+reference_tranches:
+  structure_note:
+    value: 13 Reference Tranches; M-1/M-1H, M-2A/M-2AH, M-2B/M-2BH, B-1A/B-1AH, B-1B/B-1BH pairs are pro rata with each other; the H tranches and A-H, B-2H, B-3H are retained (no Notes issued); there is no A-1/A-1H pair and no B-1H tranche
+    page: 220
+    section: Glossary - Reference Tranche
+    quote: |
+      "Reference Tranche" means each Class of reference tranche deemed to be backed by the Reference Pool and comprising part of the hypothetical structure as described in "Description of the Notes -- Hypothetical Structure and Calculations with Respect to the Reference Tranches", i.e., the Class A-H, Class M-1, Class M-1H, Class M-2A, Class M-2AH, Class M-2B, Class M-2BH, Class B-1A, Class B-1AH, Class B-1B, Class B-1BH, Class B-2H and Class B-3H Reference Tranches.
+  diagram_b1h_is_a_combination:
+    value: the "Class B-1H" and "Class B-1" shown in the transaction diagram are combinations of B-1AH + B-1BH and of B-1A + B-1B; they are not tranches or Notes of their own
+    page: 23
+    section: Transaction Diagram footnote
+    quote: |
+      The Class B-1H Reference Tranche illustrated in the transaction diagram above represents the combination of the Class B-1AH and Class B-1BH Reference Tranches. The Class B-1 Notes and corresponding Reference Tranche illustrated in the transaction diagram above represent the combination of the Class B-1A and Class B-1B Notes and the corresponding Reference Tranches.
+    note: NEW vs DNA1 (DNA1 had a real B-1H retained tranche with its own coupon).
+  senior_reference_tranche:
+    value: A-H only
+    page: 223
+    section: Glossary - Senior Reference Tranche
+    quote: |
+      "Senior Reference Tranche" means the Class A-H Reference Tranche.
+    note: NEW defined term vs DNA1. In DNA1 the senior side of the Senior Percentage was A-H + A-1 + A-1H.
+  mezzanine_reference_tranches:
+    value: [M-1, M-1H, M-2A, M-2AH, M-2B, M-2BH]
+    page: 211
+    section: Glossary - Mezzanine Reference Tranche
+    quote: |
+      "Mezzanine Reference Tranche" means each of the Class M-1, Class M-1H, Class M-2A, Class M-2AH, Class M-2B and Class M-2BH Reference Tranches.
+    note: NEW defined term vs DNA1; used only in the Modification Loss narrative (p108).
+  junior_reference_tranches:
+    value: [B-1A, B-1AH, B-1B, B-1BH, B-2H, B-3H]
+    page: 210
+    section: Glossary - Junior Reference Tranche
+    quote: |
+      "Junior Reference Tranche" means each of the Class B-1A, Class B-1AH, Class B-1B, Class B-1BH, Class B-2H and Class B-3H Reference Tranches.
+    note: NEW defined term vs DNA1; used only in the Modification Loss narrative (p108).
+  sum_equals_cut_off_balance:
+    value: true
+    page: 25
+    section: Hypothetical Structure and Calculations with Respect to the Reference Tranches
+    quote: |
+      Each Class of Reference Tranche will have the initial Class Notional Amount set forth in Table 3 and the aggregate of the initial Class Notional Amounts of all Classes of Reference Tranches will equal the Cut-off Date Balance of the Reference Pool.
+    note: Verified by the extractor to the cent (sum 26,703,800,234.86 = Cut-off Date Balance).
+  initial_subordination_definition:
+    value: percentage of Cut-off Date Balance represented by aggregate initial Class Notional Amount of tranches subordinate to the subject tranche
+    page: 24
+    section: Table 3 footnote (1)
+    quote: |
+      Represents the initial subordination and initial credit enhancement available to such Class or Classes of Reference Tranches, which is equal to the percentage of the Cut-off Date Balance of the Reference Pool represented by the aggregate initial Class Notional Amount of the Class or Classes of Reference Tranches subordinate to the subject Class or Classes of Reference Tranches.
+  A-H:
+    initial_class_notional_amount_usd:
+      value: "25902685229.86"
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (row shifted in extract; A-H amount printed on the M-1 line)
+      quote: |
+        Class M-1 and Class M-1H(2) . . . $25,902,685,229.86 3.000%
+      note: Alignment fixed by arithmetic - Cut-off Date Balance minus the twelve footnoted/other tranches = 25,902,685,229.86; and 3.000% is the subordination below A-H (801,115,005 / 26,703,800,234.86 = 3.0000037%).
+    initial_subordination_pct:
+      value: 3.000
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (row shifted in extract)
+      quote: |
+        Class M-1 and Class M-1H(2) . . . $25,902,685,229.86 3.000%
+  A-1:
+    initial_class_notional_amount_usd:
+      value: null
+      page: 220
+      section: Glossary - Reference Tranche
+      quote: |
+        i.e., the Class A-H, Class M-1, Class M-1H, Class M-2A, Class M-2AH, Class M-2B, Class M-2BH, Class B-1A, Class B-1AH, Class B-1B, Class B-1BH, Class B-2H and Class B-3H Reference Tranches.
+      note: ABSENT. The PPM has no Class A-1 Reference Tranche or Class A-1 Notes; the string "Class A-1" does not occur anywhere in the 17,456-line extract (the only "A-1" hits are Appendix A folio numbers).
+    initial_subordination_pct:
+      value: null
+      page: 220
+      section: Glossary - Reference Tranche
+      quote: |
+        i.e., the Class A-H, Class M-1, Class M-1H, Class M-2A, Class M-2AH, Class M-2B, Class M-2BH, Class B-1A, Class B-1AH, Class B-1B, Class B-1BH, Class B-2H and Class B-3H Reference Tranches.
+      note: ABSENT (no Class A-1 in this deal).
+  A-1H:
+    initial_class_notional_amount_usd:
+      value: null
+      page: 220
+      section: Glossary - Reference Tranche
+      quote: |
+        i.e., the Class A-H, Class M-1, Class M-1H, Class M-2A, Class M-2AH, Class M-2B, Class M-2BH, Class B-1A, Class B-1AH, Class B-1B, Class B-1BH, Class B-2H and Class B-3H Reference Tranches.
+      note: ABSENT. The string "A-1H" does not occur in the extract.
+    initial_subordination_pct:
+      value: null
+      page: 220
+      section: Glossary - Reference Tranche
+      quote: |
+        i.e., the Class A-H, Class M-1, Class M-1H, Class M-2A, Class M-2AH, Class M-2B, Class M-2BH, Class B-1A, Class B-1AH, Class B-1B, Class B-1BH, Class B-2H and Class B-3H Reference Tranches.
+      note: ABSENT (no Class A-1H in this deal).
+  M-1:
+    initial_class_notional_amount_usd:
+      value: "253600000"
+      page: 24
+      section: Table 3 footnote (2)
+      quote: |
+        The initial Class Notional Amount of the Class M-1 Reference Tranche is $253,600,000 (which corresponds to the original Class Principal Balance of the Class M-1 Notes) and the initial Class Notional Amount for the Class M-1H Reference Tranche is $13,438,002.
+    initial_subordination_pct:
+      value: 2.000
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (M-1 and M-1H in aggregate; row shifted in extract, percentage carries footnote marker (3))
+      quote: |
+        Class M-2A and Class M-2AH(4) . . . $ 267,038,002.00 2.000%(3)
+      note: 253,600,000 + 13,438,002 = 267,038,002 (matches the aggregate printed with marker (3), which footnote (3) assigns to M-1/M-1H). Subordination below M-1/M-1H = 534,076,003 / CODB = 2.000% (verified).
+  M-1H:
+    initial_class_notional_amount_usd:
+      value: "13438002"
+      page: 24
+      section: Table 3 footnote (2)
+      quote: |
+        the initial Class Notional Amount for the Class M-1H Reference Tranche is $13,438,002.
+    initial_subordination_pct:
+      value: 2.000
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (M-1 and M-1H in aggregate; row shifted in extract)
+      quote: |
+        Class M-2A and Class M-2AH(4) . . . $ 267,038,002.00 2.000%(3)
+  M-2A:
+    initial_class_notional_amount_usd:
+      value: "57050000"
+      page: 24
+      section: Table 3 footnote (4)
+      quote: |
+        The initial Class Notional Amount of the Class M-2A Reference Tranche is $57,050,000 (which corresponds to the original Class Principal Balance of the Class M-2A Notes) and the initial Class Notional Amount for the Class M-2AH Reference Tranche is $3,033,550.
+    initial_subordination_pct:
+      value: 1.775
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (M-2A and M-2AH in aggregate; row shifted in extract, percentage carries footnote marker (5))
+      quote: |
+        Class M-2B and Class M-2BH(6) . . . $ 60,083,550.00 1.775%(5)
+      note: 57,050,000 + 3,033,550 = 60,083,550. Subordination below M-2A/M-2AH = 473,992,453 / CODB = 1.775% (verified).
+  M-2AH:
+    initial_class_notional_amount_usd:
+      value: "3033550"
+      page: 24
+      section: Table 3 footnote (4)
+      quote: |
+        the initial Class Notional Amount for the Class M-2AH Reference Tranche is $3,033,550.
+    initial_subordination_pct:
+      value: 1.775
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (M-2A and M-2AH in aggregate; row shifted in extract)
+      quote: |
+        Class M-2B and Class M-2BH(6) . . . $ 60,083,550.00 1.775%(5)
+  M-2B:
+    initial_class_notional_amount_usd:
+      value: "57050000"
+      page: 24
+      section: Table 3 footnote (6)
+      quote: |
+        The initial Class Notional Amount of the Class M-2B Reference Tranche is $57,050,000 (which corresponds to the original Class Principal Balance of the Class M-2B Notes) and the initial Class Notional Amount for the Class M-2BH Reference Tranche is $3,033,550.
+    initial_subordination_pct:
+      value: 1.550
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (M-2B and M-2BH in aggregate; row shifted in extract, percentage carries footnote marker (7))
+      quote: |
+        Class B-1A and Class B-1AH(8) . . . $ 60,083,550.00 1.550%(7)
+      note: Subordination below M-2B/M-2BH = 413,908,903 / CODB = 1.550% (verified).
+  M-2BH:
+    initial_class_notional_amount_usd:
+      value: "3033550"
+      page: 24
+      section: Table 3 footnote (6)
+      quote: |
+        the initial Class Notional Amount for the Class M-2BH Reference Tranche is $3,033,550.
+    initial_subordination_pct:
+      value: 1.550
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (M-2B and M-2BH in aggregate; row shifted in extract)
+      quote: |
+        Class B-1A and Class B-1AH(8) . . . $ 60,083,550.00 1.550%(7)
+  B-1A:
+    initial_class_notional_amount_usd:
+      value: "69750000"
+      page: 24
+      section: Table 3 footnote (8)
+      quote: |
+        The initial Class Notional Amount of the Class B-1A Reference Tranche is $69,750,000 (which corresponds to the original Class Principal Balance of the Class B-1A Notes) and the initial Class Notional Amount for the Class B-1AH Reference Tranche is $3,685,450.
+      note: NEW vs DNA1 (DNA1 had a single retained B-1H of 102,515,181 in this position).
+    initial_subordination_pct:
+      value: 1.275
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (B-1A and B-1AH in aggregate; row shifted in extract, percentage carries footnote marker (9))
+      quote: |
+        Class B-1B and Class B-1BH(10) . . . $ 73,435,450.00 1.275%(9)
+      note: 69,750,000 + 3,685,450 = 73,435,450. Subordination below B-1A/B-1AH = 340,473,453 / CODB = 1.275% (verified).
+  B-1AH:
+    initial_class_notional_amount_usd:
+      value: "3685450"
+      page: 24
+      section: Table 3 footnote (8)
+      quote: |
+        the initial Class Notional Amount for the Class B-1AH Reference Tranche is $3,685,450.
+      note: NEW vs DNA1.
+    initial_subordination_pct:
+      value: 1.275
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (B-1A and B-1AH in aggregate; row shifted in extract)
+      quote: |
+        Class B-1B and Class B-1BH(10) . . . $ 73,435,450.00 1.275%(9)
+  B-1B:
+    initial_class_notional_amount_usd:
+      value: "69750000"
+      page: 24
+      section: Table 3 footnote (10)
+      quote: |
+        The initial Class Notional Amount of the Class B-1B Reference Tranche is $69,750,000 (which corresponds to the original Class Principal Balance of the Class B-1B Notes) and the initial Class Notional Amount for the Class B-1BH Reference Tranche is $3,685,450.
+      note: NEW vs DNA1.
+    initial_subordination_pct:
+      value: 1.000
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (B-1B and B-1BH in aggregate; row shifted in extract, percentage carries footnote marker (11))
+      quote: |
+        Class B-2H . . . $ 73,435,450.00 1.000%(11)
+      note: Subordination below B-1B/B-1BH = 267,039,003 / CODB = 1.000% (verified).
+  B-1BH:
+    initial_class_notional_amount_usd:
+      value: "3685450"
+      page: 24
+      section: Table 3 footnote (10)
+      quote: |
+        the initial Class Notional Amount for the Class B-1BH Reference Tranche is $3,685,450.
+      note: NEW vs DNA1.
+    initial_subordination_pct:
+      value: 1.000
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (B-1B and B-1BH in aggregate; row shifted in extract)
+      quote: |
+        Class B-2H . . . $ 73,435,450.00 1.000%(11)
+  B-1H:
+    initial_class_notional_amount_usd:
+      value: null
+      page: 23
+      section: Transaction Diagram footnote
+      quote: |
+        The Class B-1H Reference Tranche illustrated in the transaction diagram above represents the combination of the Class B-1AH and Class B-1BH Reference Tranches.
+      note: ABSENT as a tranche. DNA1's B-1H (retained, SOFR + 1.80% deemed coupon) is replaced in DNA2 by the two Note/H pairs B-1A/B-1AH and B-1B/B-1BH. B-1AH + B-1BH = 7,370,900 is the only "B-1H" quantity in this deal and it is not used in any allocation.
+    initial_subordination_pct:
+      value: null
+      page: 23
+      section: Transaction Diagram footnote
+      quote: |
+        The Class B-1H Reference Tranche illustrated in the transaction diagram above represents the combination of the Class B-1AH and Class B-1BH Reference Tranches.
+      note: ABSENT.
+    class_coupon_formula:
+      value: null
+      page: 10
+      section: Table 1 - Class of Reference Tranche
+      quote: |
+        B-2H(10) . . . 8.67223% SOFR Rate + 5.00% 0%
+      note: ABSENT. Table 1 lists only B-2H under "Class of Reference Tranche"; no B-1H coupon exists. The B-1 layer's coupons are those of the B-1A and B-1B Notes.
+    initial_class_coupon_pct:
+      value: null
+      page: 10
+      section: Table 1 - Class of Reference Tranche
+      quote: |
+        B-2H(10) . . . 8.67223% SOFR Rate + 5.00% 0%
+      note: ABSENT.
+    class_coupon_minimum_rate_pct:
+      value: null
+      page: 10
+      section: Table 1 - Class of Reference Tranche
+      quote: |
+        B-2H(10) . . . 8.67223% SOFR Rate + 5.00% 0%
+      note: ABSENT.
+  B-2H:
+    initial_class_notional_amount_usd:
+      value: "200278501"
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (row shifted in extract; B-2H amount printed on the B-3H line)
+      quote: |
+        Class B-3H . . . $ 200,278,501.00 0.250%
+      note: 200,278,501 / CODB = 0.75000% of the pool; subordination below B-2H = 66,760,502 / CODB = 0.250% (verified).
+    initial_subordination_pct:
+      value: 0.250
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (row shifted in extract)
+      quote: |
+        Class B-3H . . . $ 200,278,501.00 0.250%
+    class_coupon_formula:
+      value: SOFR Rate + 5.00%
+      page: 10
+      section: Table 1 - Class of Reference Tranche
+      quote: |
+        B-2H(10) . . . 8.67223% SOFR Rate + 5.00% 0%
+      note: DIFFERENT vs DNA1 (SOFR Rate + 4.75%).
+    initial_class_coupon_pct:
+      value: 8.67223
+      page: 10
+      section: Table 1 - Class of Reference Tranche
+      quote: |
+        B-2H(10) . . . 8.67223% SOFR Rate + 5.00% 0%
+      note: 3.67223 + 5.00 = 8.67223 (consistent).
+    class_coupon_minimum_rate_pct:
+      value: 0
+      page: 10
+      section: Table 1 - Class of Reference Tranche
+      quote: |
+        B-2H(10) . . . 8.67223% SOFR Rate + 5.00% 0%
+  B-3H:
+    initial_class_notional_amount_usd:
+      value: "66760502"
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (row shifted in extract; B-3H amount printed on the unlabeled last line)
+      quote: |
+        $ 66,760,502.00 0.000%
+      note: 66,760,502 / CODB = 0.25000% (first-loss piece; verified).
+    initial_subordination_pct:
+      value: 0.000
+      page: 24
+      section: Table 3 - Classes of Reference Tranches (row shifted in extract)
+      quote: |
+        $ 66,760,502.00 0.000%
+  b1h_b2h_coupon_purpose:
+    value: only B-2H bears a deemed coupon, solely for Modification Loss/Gain allocation; it is not a Note (there is no B-1H)
+    page: 11
+    section: Table 1 footnote (10)
+    quote: |
+      The Class B-2H Reference Tranche is not a Note. It is deemed to bear interest at the Class Coupon shown solely for purposes of calculating allocations of any Modification Gain Amounts or Modification Loss Amounts.
+    note: DIFFERENT vs DNA1, where both B-1H and B-2H bore deemed coupons.
+  retained_h_minimum_share_pct:
+    value: 5
+    page: 26
+    section: Hypothetical Structure and Calculations with Respect to the Reference Tranches
+    quote: |
+      the Class M-1H Reference Tranche will represent no less than 5% of the combined initial Class Notional Amount of the Class M-1 and Class M-1H Reference Tranches, the Class M-2AH Reference Tranche will represent no less than 5% of the combined initial Class Notional Amount of the Class M-2A and Class M-2AH Reference Tranches, the Class M-2BH Reference Tranche will represent no less than 5% of the combined initial Class Notional Amount of the Class M-2B and Class M-2BH Reference Tranches, the Class B-1AH Reference Tranche will represent no less than 5% of the combined initial Class Notional Amount of the Class B-1A and Class B-1AH Reference Tranches, and the Class B-1BH Reference Tranche will represent no less than 5% of the combined initial Class Notional Amount of the Class B-1B and Class B-1BH Reference Tranches.
+    note: Verified - H shares are 5.0322% (M-1H), 5.0489% (M-2AH, M-2BH), 5.0186% (B-1AH, B-1BH).
+  class_notional_amount_definition:
+    value: initial amount minus Senior/Subordinate/Supplemental Reduction Amounts, minus Tranche Write-down Amounts, minus Notes Retirement Amounts, plus Tranche Write-up Amounts, plus (A-H only) Supplemental Senior Increase Amounts, plus (H tranches) Notes Retirement Amounts of the paired Note tranche
+    page: 199
+    section: Glossary - Class Notional Amount
+    quote: |
+      "Class Notional Amount" with respect to each Class of Reference Tranche as of any Payment Date, means the notional principal amount on such Payment Date which amount will equal the initial Class Notional Amount of such Class of Reference Tranche, minus the aggregate amount of Senior Reduction Amounts and/or Subordinate Reduction Amounts and Supplemental Reduction Amounts allocated to such Class of Reference Tranche on such Payment Date and all prior Payment Dates, minus the aggregate amount of Tranche Write-down Amounts allocated to reduce the Class Notional Amount of such Class of Reference Tranche on such Payment Date and on all prior Payment Dates, minus the aggregate amount of Notes Retirement Amounts paid, if any, by the Trust to Freddie Mac to retire any portion of the Corresponding Class of Notes on such Payment Date and on all dates prior to such Payment Date, plus the aggregate amount of Tranche Write-up Amounts allocated to increase the Class Notional Amount of such Class of Reference Tranche on such Payment Date and on all prior Payment Dates, plus, with respect to the Class A-H Reference Tranche, the aggregate amount of Supplemental Senior Increase Amounts allocated to increase the Class Notional Amount thereof on such Payment Date and on all prior Payment Dates, and plus, in the case of each of the Class M-1H, Class M-2AH, Class M-2BH, Class B-1AH and Class B-1BH Reference Tranches, the aggregate amount of Notes Retirement Amounts allocated to reduce the Class Notional Amount of the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Reference Tranches, respectively. For the avoidance of doubt, no Tranche Write-up Amount or Tranche Write-down Amount will be applied twice on the same Payment Date.
+
+# ---------------------------------------------------------------------------
+# Offered Original Notes (Table 1, PDF p10). Each Note corresponds one-to-one to the
+# Reference Tranche of the same name (p25). Class M-2 (MACR) = M-2A + M-2B; Class B-1
+# (MACR) = B-1A + B-1B; both deemed exchanged on the Closing Date (p1 fn (4),(5)).
+# Table 1 in the extract is column-shifted: the five Initial Class Coupons print in the
+# order 4.87223 / 5.27223 / 5.27223 / 5.77223 / 5.77223 on the wrong rows and the five
+# margins print as 1.20 / 1.60 / 1.60 / 2.10 / 2.10 on the M-1, M-2B, B-1B rows and two
+# trailing lines. They are assigned below by (a) SOFR 3.67223% + margin = coupon and
+# (b) Table 2, which prints M-2 = SOFR + 1.60% (5.27223%) and B-1 = SOFR + 2.10% (5.77223%).
+# ---------------------------------------------------------------------------
+original_notes:
+  classes:
+    value: [M-1, M-2A, M-2B, B-1A, B-1B]
+    page: 215
+    section: Glossary - Original Notes
+    quote: |
+      "Original Notes" means the Classes of Notes issued on the Closing Date, i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+    note: DIFFERENT vs DNA1 (A-1, M-1, M-2A, M-2B). No A-1 Note; B-1A and B-1B are NEW.
+  correspondence:
+    value: M-1 Note <-> M-1 Reference Tranche; M-2A <-> M-2A; M-2B <-> M-2B; B-1A <-> B-1A; B-1B <-> B-1B
+    page: 201
+    section: Glossary - Corresponding Class of Reference Tranche
+    quote: |
+      "Corresponding Class of Reference Tranche" means, with respect to (i) the Class M-1 Notes, the Class M-1 Reference Tranche, (ii) the Class M-2A Notes, the Class M-2A Reference Tranche, (iii) the Class M-2B Notes, the Class M-2B Reference Tranche, (iv) the Class B-1A Notes, the Class B-1A Reference Tranche and (v) the Class B-1B Notes, the Class B-1B Reference Tranche. There is no Corresponding Class of Reference Tranche for the X-IO Interest or the Residual Certificates.
+  table1_basis_note:
+    value: Table 1 WALs and windows assume redemption on the Early Redemption Date in March 2031, 10% CPR from the Closing Date, no Credit Events, no Modification Events, payments on the 25th beginning April 2026
+    page: 11
+    section: Table 1 footnote (1)
+    quote: |
+      Expected weighted average lives and principal windows, as applicable, with respect to the Notes above are based on (i) the assumption that the Notes are redeemed on the Early Redemption Date occurring in March 2031 and (ii) certain Modeling Assumptions, including that prepayments occur at the Pricing Speed of 10% CPR, calculated from the Closing Date, no Credit Events occur, no Modification Events occur and the Notes pay on the 25th day of each calendar month beginning in April 2026.
+  A-1:
+    original_class_principal_balance_usd:
+      value: null
+      page: 215
+      section: Glossary - Original Notes
+      quote: |
+        "Original Notes" means the Classes of Notes issued on the Closing Date, i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+      note: ABSENT. No Class A-1 Notes are issued in this deal.
+    initial_class_coupon_pct:
+      value: null
+      page: 215
+      section: Glossary - Original Notes
+      quote: |
+        i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+      note: ABSENT.
+    class_coupon_formula:
+      value: null
+      page: 215
+      section: Glossary - Original Notes
+      quote: |
+        i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+      note: ABSENT.
+    margin_pct:
+      value: null
+      page: 215
+      section: Glossary - Original Notes
+      quote: |
+        i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+      note: ABSENT.
+    class_coupon_minimum_rate_pct:
+      value: null
+      page: 215
+      section: Glossary - Original Notes
+      quote: |
+        i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+      note: ABSENT.
+    scheduled_maturity_date:
+      value: null
+      page: 215
+      section: Glossary - Original Notes
+      quote: |
+        i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+      note: ABSENT.
+    expected_wal_years_table1:
+      value: null
+      page: 215
+      section: Glossary - Original Notes
+      quote: |
+        i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+      note: ABSENT.
+    expected_principal_window_months_table1:
+      value: null
+      page: 215
+      section: Glossary - Original Notes
+      quote: |
+        i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+      note: ABSENT.
+    initial_credit_enhancement_pct:
+      value: null
+      page: 215
+      section: Glossary - Original Notes
+      quote: |
+        i.e., the Class M-1, Class M-2A, Class M-2B, Class B-1A and Class B-1B Notes.
+      note: ABSENT.
+  M-1:
+    original_class_principal_balance_usd:
+      value: "253600000"
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-1 . . . $253,600,000 5.77223% SOFR Rate + 1.20% 0% (14) March 2046 BB+ (sf) /BB (high) (sf) 1.59 1-41 2.000%
+      note: The balance, margin, WAL, window and CE on this line are on the correct row; the "5.77223%" and the rating text on this line belong to other rows (column shift). Balance confirmed by Table 3 fn (2).
+    initial_class_coupon_pct:
+      value: 4.87223
+      page: 10
+      section: Table 1 - Class of Original Notes (Initial Class Coupon column, shifted three lines up in the extract)
+      quote: |
+        4.87223%
+      note: 3.67223% (first Accrual Period SOFR Rate, p11 fn (2)) + 1.20% = 4.87223%. The extract prints 4.87223% on the first header line above the M-1 row. Confidence medium (arithmetic + position); see DNA2-Q1.
+    class_coupon_formula:
+      value: SOFR Rate + 1.20%
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-1 . . . $253,600,000 5.77223% SOFR Rate + 1.20% 0%
+    margin_pct:
+      value: 1.20
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-1 . . . $253,600,000 5.77223% SOFR Rate + 1.20% 0%
+    class_coupon_minimum_rate_pct:
+      value: 0
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-1 . . . $253,600,000 5.77223% SOFR Rate + 1.20% 0%
+    scheduled_maturity_date:
+      value: March 2046
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-1 . . . (14) March 2046 BB+ (sf) /BB (high) (sf) 1.59 1-41 2.000%
+    expected_wal_years_table1:
+      value: 1.59
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-1 . . . (14) March 2046 BB+ (sf) /BB (high) (sf) 1.59 1-41 2.000%
+    expected_principal_window_months_table1:
+      value: 1-41
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-1 . . . (14) March 2046 BB+ (sf) /BB (high) (sf) 1.59 1-41 2.000%
+    initial_credit_enhancement_pct:
+      value: 2.000
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-1 . . . (14) March 2046 BB+ (sf) /BB (high) (sf) 1.59 1-41 2.000%
+      note: Equals Table 3 subordination below M-1/M-1H (2.000%, verified).
+  M-2A:
+    original_class_principal_balance_usd:
+      value: "57050000"
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2A(4) . . . $57,050,000 5.77223% (14) March 2046 3.90 41-53 1.775%
+      note: Balance confirmed by Table 3 fn (4). The "5.77223%" on this line belongs to another row (column shift).
+    initial_class_coupon_pct:
+      value: 5.27223
+      page: 10
+      section: Table 1 - Class of Original Notes (Initial Class Coupon column, shifted in the extract)
+      quote: |
+        5.27223%
+      note: 3.67223% + 1.60% = 5.27223%; Table 2 Combination 1 (M-2A + M-2B -> M-2 at SOFR Rate + 1.60%) and the M-2 MACR row (5.27223%) confirm. Confidence medium; see DNA2-Q1.
+    class_coupon_formula:
+      value: SOFR Rate + 1.60%
+      page: 10
+      section: Table 1 - Class of Original Notes (margin column, shifted; M-2 MACR row and Table 2 Combination 1 print SOFR Rate + 1.60%)
+      quote: |
+        M-2(5) . . . $114,100,000 5.27223% SOFR Rate + 1.60% 0%
+      note: Table 2 Combination 1 exchanges M-2A and M-2B (50%/50%) into M-2 at "SOFR Rate + 1.60%"; the exchange constraint (p111) requires equal annual interest at all SOFR levels, so M-2A and M-2B each carry SOFR Rate + 1.60%.
+    margin_pct:
+      value: 1.60
+      page: 10
+      section: Table 1 - Class of Original Notes (margin column, shifted)
+      quote: |
+        M-2B(4) . . . $57,050,000 SOFR Rate + 1.60% 0%
+    class_coupon_minimum_rate_pct:
+      value: 0
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2B(4) . . . $57,050,000 SOFR Rate + 1.60% 0%
+    expected_wal_years_table1:
+      value: 3.90
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2A(4) . . . $57,050,000 5.77223% (14) March 2046 3.90 41-53 1.775%
+    expected_principal_window_months_table1:
+      value: 41-53
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2A(4) . . . $57,050,000 5.77223% (14) March 2046 3.90 41-53 1.775%
+    initial_credit_enhancement_pct:
+      value: 1.775
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2A(4) . . . $57,050,000 5.77223% (14) March 2046 3.90 41-53 1.775%
+  M-2B:
+    original_class_principal_balance_usd:
+      value: "57050000"
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2B(4) . . . $57,050,000 SOFR Rate + 1.60% 0% (14) March 2046 BB+ (sf)/BB (low) (sf) 4.85 53-60 1.550%
+      note: Balance confirmed by Table 3 fn (6).
+    initial_class_coupon_pct:
+      value: 5.27223
+      page: 10
+      section: Table 1 - Class of Original Notes (Initial Class Coupon column, shifted in the extract)
+      quote: |
+        5.27223%
+      note: 3.67223% + 1.60% = 5.27223%; the M-2BR..M-2BU MACR rows and Table 2 Combinations 10-13 confirm the M-2B layer at the M-2 coupon family. Confidence medium; see DNA2-Q1.
+    class_coupon_formula:
+      value: SOFR Rate + 1.60%
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2B(4) . . . $57,050,000 SOFR Rate + 1.60% 0%
+    margin_pct:
+      value: 1.60
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2B(4) . . . $57,050,000 SOFR Rate + 1.60% 0%
+    class_coupon_minimum_rate_pct:
+      value: 0
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2B(4) . . . $57,050,000 SOFR Rate + 1.60% 0%
+    expected_wal_years_table1:
+      value: 4.85
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2B(4) . . . (14) March 2046 BB+ (sf)/BB (low) (sf) 4.85 53-60 1.550%
+    expected_principal_window_months_table1:
+      value: 53-60
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2B(4) . . . (14) March 2046 BB+ (sf)/BB (low) (sf) 4.85 53-60 1.550%
+    initial_credit_enhancement_pct:
+      value: 1.550
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        M-2B(4) . . . (14) March 2046 BB+ (sf)/BB (low) (sf) 4.85 53-60 1.550%
+  B-1A:
+    original_class_principal_balance_usd:
+      value: "69750000"
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        B-1A(4) . . . $69,750,000 (14) March 2046 5.02 60-60 1.275%
+      note: NEW vs DNA1. Balance confirmed by Table 3 fn (8).
+    initial_class_coupon_pct:
+      value: 5.77223
+      page: 10
+      section: Table 1 - Class of Original Notes (Initial Class Coupon column, shifted in the extract)
+      quote: |
+        5.77223%
+      note: 3.67223% + 2.10% = 5.77223%; Table 2 Combination 18 (B-1A + B-1B -> B-1 at SOFR Rate + 2.10%) and the B-1 MACR row (5.77223%) confirm. Confidence medium; see DNA2-Q1.
+    class_coupon_formula:
+      value: SOFR Rate + 2.10%
+      page: 10
+      section: Table 1 - Class of Original Notes (margin column, shifted to a trailing line)
+      quote: |
+        SOFR Rate + 2.10% 0%
+    margin_pct:
+      value: 2.10
+      page: 10
+      section: Table 1 - Class of Original Notes (margin column, shifted to a trailing line)
+      quote: |
+        SOFR Rate + 2.10% 0%
+    class_coupon_minimum_rate_pct:
+      value: 0
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        SOFR Rate + 2.10% 0%
+    expected_wal_years_table1:
+      value: 5.02
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        B-1A(4) . . . $69,750,000 (14) March 2046 5.02 60-60 1.275%
+    expected_principal_window_months_table1:
+      value: 60-60
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        B-1A(4) . . . $69,750,000 (14) March 2046 5.02 60-60 1.275%
+      note: A 60-60 window with a 5.02-year WAL means B-1A is paid only at the March 2031 early redemption in the Table 1 scenario.
+    initial_credit_enhancement_pct:
+      value: 1.275
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        B-1A(4) . . . $69,750,000 (14) March 2046 5.02 60-60 1.275%
+  B-1B:
+    original_class_principal_balance_usd:
+      value: "69750000"
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        B-1B(4) . . . $69,750,000 SOFR Rate + 1.60% 0% (14) March 2046 5.02 60-60 1.000%
+      note: NEW vs DNA1. Balance confirmed by Table 3 fn (10). The "SOFR Rate + 1.60%" printed on this line is M-2A's margin displaced by the column shift; B-1B's margin is the trailing "SOFR Rate + 2.10%".
+    initial_class_coupon_pct:
+      value: 5.77223
+      page: 10
+      section: Table 1 - Class of Original Notes (Initial Class Coupon column, shifted in the extract)
+      quote: |
+        5.77223%
+      note: 3.67223% + 2.10% = 5.77223%; Table 2 Combination 18 confirms. Confidence medium; see DNA2-Q1.
+    class_coupon_formula:
+      value: SOFR Rate + 2.10%
+      page: 10
+      section: Table 1 - Class of Original Notes (margin column, shifted to a trailing line)
+      quote: |
+        SOFR Rate + 2.10% 0%
+    margin_pct:
+      value: 2.10
+      page: 10
+      section: Table 1 - Class of Original Notes (margin column, shifted to a trailing line)
+      quote: |
+        SOFR Rate + 2.10% 0%
+    class_coupon_minimum_rate_pct:
+      value: 0
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        SOFR Rate + 2.10% 0%
+    expected_wal_years_table1:
+      value: 5.02
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        B-1B(4) . . . $69,750,000 SOFR Rate + 1.60% 0% (14) March 2046 5.02 60-60 1.000%
+    expected_principal_window_months_table1:
+      value: 60-60
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        B-1B(4) . . . $69,750,000 SOFR Rate + 1.60% 0% (14) March 2046 5.02 60-60 1.000%
+    initial_credit_enhancement_pct:
+      value: 1.000
+      page: 10
+      section: Table 1 - Class of Original Notes
+      quote: |
+        B-1B(4) . . . $69,750,000 SOFR Rate + 1.60% 0% (14) March 2046 5.02 60-60 1.000%
+  minimum_denomination_usd:
+    value: "10000"
+    page: 96
+    section: Description of the Notes - Form of Notes
+    quote: |
+      The Original Notes will be issued and maintained in minimum denominations of $10,000 and additional increments of $1 in excess thereof.
+
+# ---------------------------------------------------------------------------
+# Coupon mechanics
+# ---------------------------------------------------------------------------
+coupon:
+  class_coupon_definition:
+    value: first Accrual Period = Initial Class Coupon in Table 1; thereafter SOFR Rate + Table 1 margin; Interest Only MACR fixed; M-2RB/SB/TB/UB per Table 1 footnote 9; all subject to Class Coupon minimum rate; applies to the Notes and to B-2H only
+    page: 199
+    section: Glossary - Class Coupon
+    quote: |
+      "Class Coupon" means the applicable per annum interest rate for each Class of Notes and the Class B-2H Reference Tranche, which will be equal to (i) in the case of each Class of Notes (other than the Interest Only MACR Notes and the Class M-2RB, Class M-2SB, Class M-2TB and Class M-2UB Notes) and the Class B-2H Reference Tranche: (x) for the first Accrual Period, the per annum interest rate shown for such Class under the column "Initial Class Coupon" in Table 1 and (y) for all other Accrual Periods, the sum of (a) the SOFR Rate plus (b) the margin shown for such Class in Table 1, (ii) in the case of each Class of Interest Only MACR Notes, the per annum interest rate shown for each such Class under the column "Initial Class Coupon" in Table 1 (subject to any adjustment as described in footnote 7 thereto) and (iii) in the case of each of the Class M-2RB, Class M-2SB, Class M-2TB and Class M-2UB Notes, the per annum interest rate shown for such Class under the column "Class Coupon Formula" in Table 1, in each case subject to any applicable Class Coupon minimum rate set forth in Table 1.
+  index:
+    value: SOFR Rate = 30-Day Average SOFR
+    page: 224
+    section: Glossary - SOFR Rate
+    quote: |
+      "SOFR Rate" means 30-Day Average SOFR as published on the applicable U.S. Government Securities Business Day at the SOFR Determination Time; provided, however, if 30-Day Average SOFR does not so appear, 30-Day Average SOFR as published in respect of the first preceding U.S. Government Securities Business Day for which such rate appeared on the FRBNY's Website; and provided further, however, if a Benchmark Transition Event and its related Benchmark Replacement Date have occurred, the Administrator will determine an alternative Benchmark in accordance with the Benchmark Replacement provisions described under "Description of the Notes -- Benchmark Replacement Provisions", and references to SOFR Rate in this Memorandum will be deemed to reference such Benchmark Replacement.
+  thirty_day_average_sofr:
+    value: compounded average of SOFR over a rolling 30-calendar-day period as published by FRBNY
+    page: 196
+    section: Glossary - 30-Day Average SOFR
+    quote: |
+      "30-Day Average SOFR" with respect to any U.S. Government Securities Business Day, means the compounded average of SOFR over a rolling 30-calendar day period as such rate appears on the FRBNY's Website (currently at https://www.newyorkfed.org/markets/reference-rates/sofr-averages-and-index) as "30-Day Average SOFR" on such U.S. Government Securities Business Day; provided, however, that if the FRBNY ceases to publish 30-Day Average SOFR, at such other source selected by Freddie Mac in its sole discretion.
+  sofr_definition:
+    value: secured overnight financing rate published by FRBNY
+    page: 223
+    section: Glossary - SOFR
+    quote: |
+      "SOFR" means, with respect to any day, the secured overnight financing rate published for such day by the FRBNY (or a successor administrator), as the administrator of the benchmark, on the FRBNY's Website (or such successor administrator's website).
+  sofr_adjustment_date:
+    value: second U.S. Government Securities Business Day before each Accrual Period begins
+    page: 224
+    section: Glossary - SOFR Adjustment Date
+    quote: |
+      "SOFR Adjustment Date" means the second U.S. Government Securities Business Day before each Accrual Period begins.
+  sofr_determination_time:
+    value: 3:00 p.m. New York time
+    page: 224
+    section: Glossary - SOFR Determination Time
+    quote: |
+      "SOFR Determination Time" means 3:00 p.m. (New York time).
+  first_accrual_period_sofr_rate_pct:
+    value: 3.67223
+    page: 103
+    section: Description of the Notes - Interest - Class Coupon
+    quote: |
+      For the first Accrual Period, the SOFR Rate is 3.67223%.
+    note: DIFFERENT vs DNA1 (3.65786%). Also stated on p11 fn (2) and p35 (Summary - Interest).
+  fallback_unavailable_benchmark:
+    value: use Benchmark from preceding Business Day (or most recent available) unless a Benchmark Replacement is notified within one Business Day
+    page: 103
+    section: Description of the Notes - Interest - Class Coupon
+    quote: |
+      In the event that the Benchmark is not available on the applicable date of determination, then unless the Indenture Trustee is notified of a Benchmark Replacement in accordance with the Indenture within one (1) Business Day, the Indenture Trustee will use the Benchmark from the preceding Business Day, or from the most recent Business Day on which the Benchmark is available.
+  benchmark_replacement_waterfall:
+    value: (1) Relevant Governmental Body selected rate + adjustment; (2) ISDA Fallback Rate + adjustment; (3) Freddie Mac selected rate + adjustment
+    page: 197
+    section: Glossary - Benchmark Replacement
+    quote: |
+      "Benchmark Replacement" means the first alternative set forth in the order below that can be determined by Freddie Mac as of the Benchmark Replacement Date: (1) the sum of: (a) the alternate rate of interest that has been selected or recommended by the Relevant Governmental Body as the replacement for the then-current Benchmark and (b) the Benchmark Replacement Adjustment; (2) the sum of: (a) the ISDA Fallback Rate and (b) the Benchmark Replacement Adjustment; or (3) the sum of: (a) the alternate rate of interest that has been selected by Freddie Mac as the replacement for the then-current Benchmark giving due consideration to any industry-accepted rate of interest as a replacement for the then-current Benchmark for U.S. dollar-denominated floating rate securities at such time and (b) the Benchmark Replacement Adjustment.
+  sofr_correction_window_days:
+    value: 30
+    page: 101
+    section: Description of the Notes - Payment Procedures - General Payment Procedures
+    quote: |
+      All SOFR Rate values used to determine interest payments are subject to correction within 30 days from the applicable payment.
+  day_count:
+    value: actual days in Accrual Period / 360
+    page: 203
+    section: Glossary - Day Count Fraction
+    quote: |
+      "Day Count Fraction" means the percentage equivalent of a fraction, the numerator of which is the actual number of days in the related Accrual Period and the denominator of which is 360.
+  interest_basis_statement:
+    value: actual/360, payable in arrears
+    page: 103
+    section: Description of the Notes - Interest - Interest Payment
+    quote: |
+      Interest will be calculated and payable on the basis of the actual number of days in the related Accrual Period and a 360-day year. Interest will be payable in arrears.
+  accrual_period:
+    value: from and including prior Payment Date (Closing Date for the first) to and including the day before the Payment Date
+    page: 196
+    section: Glossary - Accrual Period
+    quote: |
+      "Accrual Period" with respect to each Payment Date, means the period beginning on and including the prior Payment Date (or, in the case of the first Payment Date, the Closing Date) and ending on and including the day preceding such Payment Date.
+  payment_date:
+    value: 25th of each calendar month, or following Business Day; commencing April 2026
+    page: 216
+    section: Glossary - Payment Date
+    quote: |
+      "Payment Date" means the 25th day of each calendar month (or, if such date is not a Business Day, the following Business Day), commencing in April 2026.
+    note: DIFFERENT vs DNA1 (commencing March 2026).
+  business_day:
+    value: not Saturday/Sunday nor a day Freddie Mac, Owner Trustee, Indenture Trustee/Exchange Administrator, DTC or NYC banks are closed
+    page: 198
+    section: Glossary - Business Day
+    quote: |
+      "Business Day" means a day other than (i) a Saturday or Sunday; or (ii) a day on which the offices of Freddie Mac, the corporate trust offices of the Owner Trustee, the corporate trust offices of the Indenture Trustee or Exchange Administrator, DTC, or the banking institutions in the City of New York are authorized or obligated by law or executive order to be closed.
+  us_government_securities_business_day:
+    value: any day except Saturday, Sunday or SIFMA-recommended full closure
+    page: 227
+    section: Glossary - U.S. Government Securities Business Day
+    quote: |
+      "U.S. Government Securities Business Day" means any day except for a Saturday, a Sunday or a day on which SIFMA recommends that the fixed income departments of its members be closed for the entire day for purposes of trading in U.S. government securities.
+  record_date:
+    value: Book-Entry - Business Day before Payment Date; Definitive - last Business Day of preceding month
+    page: 219
+    section: Glossary - Record Date
+    quote: |
+      "Record Date" with respect to each Payment Date, means: (a) with respect to Book-Entry Notes, the close of business on the Business Day immediately preceding such Payment Date; and (b) with respect to Definitive Notes, the close of business on the last Business Day of the calendar month preceding such Payment Date.
+  negative_sofr_io_adjustment:
+    value: if SOFR Rate < 0, Interest Only MACR coupons may be adjusted down so combination interest does not exceed the Exchangeable Notes' Interest Payment Amount
+    page: 11
+    section: Table 1 footnote (7)
+    quote: |
+      The Interest Only MACR Notes will bear interest at fixed per annum rates. However, in the event that the SOFR Rate for any Accrual Period is less than zero, the Class Coupons of the Interest Only MACR Notes may be subject to downward adjustment such that the aggregate amount of interest payable to such MACR Notes and the other MACR Notes in the related Combinations would not exceed the aggregate Interest Payment Amount otherwise payable to the related Exchangeable Notes for which such Classes were exchanged (or related MACR Notes in the case of the related Combinations listed in Table 2).
+
+# ---------------------------------------------------------------------------
+# Interest on the Notes
+# ---------------------------------------------------------------------------
+interest:
+  interest_accrual_amount:
+    value: Class Coupon x balance (Class Principal Balance / Notional Principal Amount / Class Notional Amount) immediately prior to the Payment Date x Day Count Fraction
+    page: 209
+    section: Glossary - Interest Accrual Amount
+    quote: |
+      "Interest Accrual Amount" with respect to each outstanding Class of Notes (and, for purposes of calculating allocations of any Modification Gain Amounts or Modification Loss Amounts, the Class B-2H Reference Tranche) during each Accrual Period, means an amount equal to: (i) the Class Coupon for such Class of Notes or the Class B-2H Reference Tranche, as applicable, for such Accrual Period (calculated using the applicable Class Coupon formula described in Table 1, if applicable), multiplied by (ii) the Class Principal Balance, Notional Principal Amount or Class Notional Amount of such Class of Notes or the Class B-2H Reference Tranche, as applicable, immediately prior to such Payment Date, multiplied by (iii) the Day Count Fraction.
+  interest_payment_amount:
+    value: Interest Accrual Amount minus Modification Loss Amount allocated to interest plus Modification Gain Amount allocated to interest
+    page: 209
+    section: Glossary - Interest Payment Amount
+    quote: |
+      "Interest Payment Amount" with respect to each outstanding Class of Notes and any Payment Date, means an amount equal to the Interest Accrual Amount for such Class of Notes on such Payment Date, less any Modification Loss Amount for such Payment Date allocated to reduce the Interest Payment Amount for such Class of Notes for such Payment Date pursuant to the Modification Loss Priority, or plus any Modification Gain Amount for such Payment Date allocated to increase the Interest Payment Amount of such Class of Notes for such Payment Date pursuant to the Modification Gain Priority.
+  priority_of_payments:
+    value: first Return Amount to Freddie Mac, second interest on the Notes
+    page: 103
+    section: Description of the Notes - Interest - Interest Payment
+    quote: |
+      On each Payment Date through and including the Maturity Date, the Trust will use funds on deposit in the Distribution Account first, to pay the Return Amount, if any, due and payable to us, and second, to pay the applicable Interest Payment Amount on each outstanding Class of Notes.
+  interest_after_early_redemption:
+    value: Notes cease to bear interest from and after the Early Redemption Date
+    page: 103
+    section: Description of the Notes - Scheduled Maturity Date and Early Redemption Date
+    quote: |
+      Notice of redemption having been given as provided above, the Notes will, on the Early Redemption Date, become due and payable, and from and after the Early Redemption Date (unless an Indenture Event of Default with respect to the payment of the Notes and accrued interest) such Notes will cease to bear interest.
+  modification_loss_reduces_interest:
+    value: amounts allocated to M-1, M-2A, M-2B, B-1A, B-1B in the 12th, 9th, 8th, 5th, 4th Modification Loss priorities reduce the Interest Payment Amount of the corresponding Notes; B-2H allocations (2nd, 3rd) reduce nothing on the Notes
+    page: 108
+    section: Description of the Notes - Allocation of Modification Loss Amount
+    quote: |
+      Any amounts allocated to the Class M-1, Class M-2A, Class M-2B, Class B-1A or Class B-1B Reference Tranche in the twelfth, ninth, eighth, fifth or fourth priority above on any Payment Date will result in a corresponding reduction of the Interest Payment Amount of the Class M-1, Class M-2A, Class M-2B, Class B-1A or Class B-1B Notes, as applicable (in each case without regard to any exchanges of Exchangeable Notes for MACR Notes) for such Payment Date. The Class B-2H Reference Tranche is assigned a Class Coupon solely for the purposes of calculations in connection with the allocation of Modification Loss Amounts to the Mezzanine Reference Tranches and Junior Reference Tranches, and any such amounts allocated in the second or third priority above will not result in a corresponding reduction of the Interest Payment Amount or Class Principal Balance of any Class of Notes.
+    note: DIFFERENT vs DNA1 (interest priorities were 12th, 10th, 7th, 6th for A-1, M-1, M-2A, M-2B).
+
+# ---------------------------------------------------------------------------
+# Principal: Stated Principal, Recovery Principal, Senior / Subordinate / Supplemental
+# Reduction Amounts and their allocation orders.
+# ---------------------------------------------------------------------------
+principal:
+  principal_payment_rule:
+    value: on the Maturity Date 100% of Class Principal Balance; otherwise the portion of Senior, Subordinate and/or Supplemental Reduction Amount allocated to the Corresponding Reference Tranche
+    page: 104
+    section: Description of the Notes - Principal
+    quote: |
+      On the Maturity Date the Trust will pay 100% of the Class Principal Balance as of such date for each Class of Original Notes outstanding (without regard to any exchanges of Exchangeable Notes for MACR Notes). On all other Payment Dates, the Trust will pay principal on each Class of Original Notes (in each case without regard to any exchanges of Exchangeable Notes for MACR Notes) in an amount equal to the portion of the Senior Reduction Amount, Subordinate Reduction Amount and/or Supplemental Reduction Amount, as applicable, allocated to the Corresponding Class of Reference Tranche on such Payment Date pursuant to the terms of the hypothetical structure described under "-- Hypothetical Structure and Calculations with Respect to the Reference Tranches -- Allocation of Senior Reduction Amount", "-- Allocation of Subordinate Reduction Amount" and "-- Allocation of Supplemental Reduction Amount and Supplemental Senior Increase Amount" below.
+  collections_not_scheduled_basis:
+    value: principal to Notes is based on principal collected on the Reference Obligations, not on scheduled amounts due
+    page: 224
+    section: Glossary - Stated Principal
+    quote: |
+      (a) all monthly scheduled payments of principal due (whether with respect to the related Reporting Period or any prior Reporting Period) on the Reference Obligations in the Reference Pool and collected during the related Reporting Period
+  stated_principal:
+    value: (a) scheduled principal due and collected in the Reporting Period + (b) partial prepayments collected + (c) UPB of non-Credit-Event Reference Pool Removals + (d) negative UPB adjustments from modifications/data corrections - (e) positive UPB adjustments; floored at zero with excess added to A-H
+    page: 224
+    section: Glossary - Stated Principal
+    quote: |
+      "Stated Principal" with respect to any Payment Date, means the sum of: (a) all monthly scheduled payments of principal due (whether with respect to the related Reporting Period or any prior Reporting Period) on the Reference Obligations in the Reference Pool and collected during the related Reporting Period, plus (b) all partial principal prepayments on the Reference Obligations collected during the related Reporting Period, plus (c) the aggregate UPB of all Reference Obligations that became Reference Pool Removals during the related Reporting Period, other than Credit Event Reference Obligations or any Reversed Credit Event Reference Obligations, plus (d) negative adjustments in the UPB of all Reference Obligations as the result of loan modifications or data corrections, minus (e) positive adjustments in the aggregate UPB of all Reference Obligations as the result of loan modifications, reinstatements into the Reference Pool of Reference Obligations that were previously removed from the Reference Pool in error, or data corrections. In the event the amount in clause (e) above exceeds the sum of the amounts in clauses (a) through (d) above, the sum of the amounts in clauses (a) through (e) above for the applicable Payment Date will be deemed to be zero, and the Class Notional Amount for the Class A-H Reference Tranche will be increased by the amount that the amount in clause (e) above exceeds the sum of the amounts in clauses (a) through (d) above. In the event that we were ever to employ a policy that permitted or required principal forgiveness as a loss mitigation alternative that would be applicable to the Reference Obligations, any principal that may be forgiven with respect to a Reference Obligation will be treated as a negative adjustment in the UPB of such Reference Obligation pursuant to clause (d) above.
+  scheduled_vs_unscheduled_note:
+    value: the PPM does not define separate "scheduled" and "unscheduled" principal terms; scheduled principal collected = clause (a); partial prepayments = clause (b); full prepayments and removals enter through clause (c) (Reference Pool Removal includes payment in full)
+    page: 219
+    section: Glossary - Reference Pool Removal
+    quote: |
+      "Reference Pool Removal" means the removal of a Reference Obligation from the Reference Pool after the issuance of the Notes because (i) the Reference Obligation becomes a Credit Event Reference Obligation; (ii) the Reference Obligation is paid in full;
+  recovery_principal:
+    value: (a) excess of Credit Event Amount over Tranche Write-down Amount + (b) Tranche Write-up Amount
+    page: 219
+    section: Glossary - Recovery Principal
+    quote: |
+      "Recovery Principal" with respect to any Payment Date, means the sum of: (a) the excess, if any, of the Credit Event Amount for such Payment Date, over the Tranche Write-down Amount for such Payment Date; and (b) the Tranche Write-up Amount for such Payment Date.
+  senior_percentage:
+    value: A-H Class Notional Amount immediately prior to the Payment Date / aggregate UPB of Reference Obligations at end of previous Reporting Period
+    page: 223
+    section: Glossary - Senior Percentage
+    quote: |
+      "Senior Percentage" with respect to any Payment Date, means the percentage equivalent of a fraction, the numerator of which is the Class Notional Amount of the Class A-H Reference Tranche immediately prior to such Payment Date and the denominator of which is the aggregate UPB of the Reference Obligations in the Reference Pool at the end of the previous Reporting Period.
+    note: DIFFERENT vs DNA1 (numerator was A-H + A-1 + A-1H). Initial value 25,902,685,229.86 / 26,703,800,234.86 = 96.9999963% -> 97.00000% after the p101 rounding; initial Subordinate Percentage 3.00000% (unrounded 3.0000037%), exactly the Minimum Credit Enhancement threshold - same knife-edge as DNA1. For the first Payment Date there is no "previous Reporting Period"; see DNA2-Q2 (same issue as DNA1 Q8).
+  subordinate_percentage:
+    value: 100% minus Senior Percentage
+    page: 224
+    section: Glossary - Subordinate Percentage
+    quote: |
+      "Subordinate Percentage" with respect to any Payment Date, means the percentage equal to 100% minus the Senior Percentage for such Payment Date.
+  senior_reduction_amount:
+    value: tests failing -> 100% Stated Principal + 100% Recovery Principal; tests passing -> Senior Percentage x Stated Principal + 100% Recovery Principal
+    page: 223
+    section: Glossary - Senior Reduction Amount
+    quote: |
+      "Senior Reduction Amount" with respect to any Payment Date, means: (A) if any of the Minimum Credit Enhancement Test, the Cumulative Net Loss Test or the Delinquency Test is not satisfied, the sum of: (i) 100% of Stated Principal for such Payment Date; and (ii) 100% of Recovery Principal for such Payment Date; or (B) if the Minimum Credit Enhancement Test, the Cumulative Net Loss Test and the Delinquency Test are satisfied, the sum of: (i) the Senior Percentage of Stated Principal for such Payment Date; and (ii) 100% of Recovery Principal for such Payment Date.
+  subordinate_reduction_amount:
+    value: Stated Principal + Recovery Principal - Senior Reduction Amount (zero when any test fails)
+    page: 225
+    section: Glossary - Subordinate Reduction Amount
+    quote: |
+      "Subordinate Reduction Amount" with respect to any Payment Date, means the sum of the Stated Principal and Recovery Principal for such Payment Date, less the Senior Reduction Amount.
+  senior_reduction_allocation_order:
+    value:
+      - "first: A-H"
+      - "second: M-1 and M-1H pro rata by Class Notional Amounts immediately prior to the Payment Date"
+      - "third: M-2A and M-2AH pro rata"
+      - "fourth: M-2B and M-2BH pro rata"
+      - "fifth: B-1A and B-1AH pro rata"
+      - "sixth: B-1B and B-1BH pro rata"
+      - "seventh: B-2H"
+      - "eighth: B-3H"
+    page: 109
+    section: Description of the Notes - Allocation of Senior Reduction Amount
+    quote: |
+      On each Payment Date prior to the Maturity Date, after allocation of the Tranche Write-down Amount or Tranche Write-up Amount, if any, for such Payment Date as described under "-- Allocation of Tranche Write-down Amounts" and "-- Allocation of Tranche Write-up Amounts" above, the Senior Reduction Amount will be allocated to reduce the Class Notional Amount of each Class of Reference Tranche in the following order of priority, in each case until its Class Notional Amount is reduced to zero: first, to the Class A-H Reference Tranche; second, to the Class M-1 and Class M-1H Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; third, to the Class M-2A and Class M-2AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fourth, to the Class M-2B and Class M-2BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fifth, to the Class B-1A and Class B-1AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; sixth, to the Class B-1B and Class B-1BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; seventh, to the Class B-2H Reference Tranche; and eighth, to the Class B-3H Reference Tranche.
+    note: DIFFERENT vs DNA1 - there is no Class A-1 first priority gated by a Class A-1 Cumulative Net Loss Test; A-H is simply first. Eight priorities (DNA1 had nine).
+  subordinate_reduction_allocation_order:
+    value:
+      - "first: M-1 and M-1H pro rata by Class Notional Amounts immediately prior to the Payment Date"
+      - "second: M-2A and M-2AH pro rata"
+      - "third: M-2B and M-2BH pro rata"
+      - "fourth: B-1A and B-1AH pro rata"
+      - "fifth: B-1B and B-1BH pro rata"
+      - "sixth: B-2H"
+      - "seventh: B-3H"
+      - "eighth: A-H"
+    page: 110
+    section: Description of the Notes - Allocation of Subordinate Reduction Amount
+    quote: |
+      the Subordinate Reduction Amount will be allocated to reduce the Class Notional Amount of each Class of Reference Tranche in the following order of priority, in each case until its Class Notional Amount is reduced to zero: first, to the Class M-1 and Class M-1H Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; second, to the Class M-2A and Class M-2AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; third, to the Class M-2B and Class M-2BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fourth, to the Class B-1A and Class B-1AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fifth, to the Class B-1B and Class B-1BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; sixth, to the Class B-2H Reference Tranche; seventh, to the Class B-3H Reference Tranche; and eighth, to the Class A-H Reference Tranche.
+    note: DIFFERENT vs DNA1 (which had B-1H single and an A-1/A-1H pair before A-H).
+  sequencing_within_payment_date:
+    value: Tranche Write-down/Write-up first, then Senior Reduction Amount, then Subordinate Reduction Amount, then Supplemental Reduction Amount; Supplemental Senior Increase Amount to A-H simultaneously
+    page: 110
+    section: Description of the Notes - Allocation of Supplemental Reduction Amount and Supplemental Senior Increase Amount
+    quote: |
+      On each Payment Date prior to the Maturity Date, after allocation of the Tranche Write-down Amount or Tranche Write-up Amount, if any, for such Payment Date as described under "-- Allocation of Tranche Write-down Amounts" and "-- Allocation of Tranche Write-up Amounts" above, and after allocation of the Senior Reduction Amount and/or Subordinate Reduction Amount, if any, for such Payment Date as described under "-- Allocation of Senior Reduction Amount" and "-- Allocation of Subordinate Reduction Amount" above, the Supplemental Reduction Amount, if any, for such Payment Date will be allocated to reduce the Class Notional Amount of each Class of Reference Tranche in the following order of priority, in each case until its Class Notional Amount is reduced to zero:
+  class_a1_reduction_amount:
+    value: null
+    page: 109
+    section: Description of the Notes - Allocation of Senior Reduction Amount
+    quote: |
+      first, to the Class A-H Reference Tranche; second, to the Class M-1 and Class M-1H Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date;
+    note: ABSENT. The PPM has no "Class A-1 Reduction Amount" (the phrase does not occur) and no scheduled amount for any tranche; the Senior Reduction Amount goes first to A-H without any carve-out.
+  appendix_g_schedule:
+    value: null
+    page: 9
+    section: Table of Contents - Appendices
+    quote: |
+      APPENDIX A The Reference Obligations ... APPENDIX B Third-Party Diligence Providers' Data Integrity Review Discrepancies ... APPENDIX C Assumed Characteristics of the Reference Obligations (as of the Cut-off Date) ... APPENDIX D Selling Restrictions ... APPENDIX E General Mortgage Loan Purchase and Servicing ... APPENDIX F CUSIP Numbers
+    note: ABSENT. The PPM has Appendices A through F only; there is no Appendix G and no scheduled amortization table for any tranche ("Appendix G" does not occur in the extract).
+  class_a1_additional_reduction_amount:
+    value: null
+    page: 225
+    section: Glossary - Supplemental Reduction Amount
+    quote: |
+      "Supplemental Reduction Amount" with respect to each Payment Date, means the UPB of the Reference Obligations at the end of the related Reporting Period multiplied by the excess, if any, of (x) the Offered Reference Tranche Percentage for such Payment Date over (y) 5.50%.
+    note: ABSENT. The Supplemental Reduction Amount has only the 5.50% limb; there is no "Additional Reduction" term of any kind (the phrase does not occur in the extract).
+  supplemental_reduction_amount:
+    value: UPB at end of Reporting Period x max(0, Offered Reference Tranche Percentage - 5.50%)
+    page: 225
+    section: Glossary - Supplemental Reduction Amount
+    quote: |
+      "Supplemental Reduction Amount" with respect to each Payment Date, means the UPB of the Reference Obligations at the end of the related Reporting Period multiplied by the excess, if any, of (x) the Offered Reference Tranche Percentage for such Payment Date over (y) 5.50%.
+    note: DIFFERENT vs DNA1 only by the absence of the "+ Class A-1 Additional Reduction Amount" term.
+  supplemental_reduction_threshold_pct:
+    value: 5.50
+    page: 225
+    section: Glossary - Supplemental Reduction Amount
+    quote: |
+      the excess, if any, of (x) the Offered Reference Tranche Percentage for such Payment Date over (y) 5.50%.
+  offered_reference_tranche_percentage:
+    value: (M-1 + M-1H + M-2A + M-2AH + M-2B + M-2BH + B-1A + B-1AH + B-1B + B-1BH Class Notional Amounts after Senior/Subordinate Reduction and write-down/write-up) / UPB at end of Reporting Period
+    page: 214
+    section: Glossary - Offered Reference Tranche Percentage
+    quote: |
+      "Offered Reference Tranche Percentage" with respect to each Payment Date, means a fraction, expressed as a percentage, equal to the aggregate Class Notional Amount of the Class M-1, Class M-1H, Class M-2A, Class M-2AH, Class M-2B, Class M-2BH, Class B-1A, Class B-1AH, Class B-1B and Class B-1BH Reference Tranches (after allocation of the Senior Reduction Amount, the Subordinate Reduction Amount and any Tranche Write-down Amounts and Tranche Write-up Amounts for such Payment Date) divided by the UPB of the Reference Obligations at the end of the related Reporting Period.
+    note: DIFFERENT vs DNA1 - tranche set is the ten M/B-1 tranches (no A-1/A-1H; B-1A/B-1AH/B-1B/B-1BH added) and there is no "minus Class A-1 Additional Reduction Amount". Initial value 534,076,002 / 26,703,800,234.86 = 2.00000%.
+  supplemental_reduction_allocation_order:
+    value:
+      - "first: M-1 and M-1H pro rata by Class Notional Amounts immediately prior to the Payment Date"
+      - "second: M-2A and M-2AH pro rata"
+      - "third: M-2B and M-2BH pro rata"
+      - "fourth: B-1A and B-1AH pro rata"
+      - "fifth: B-1B and B-1BH pro rata"
+      - "sixth: B-2H"
+      - "seventh: B-3H"
+      - "eighth: A-H"
+    page: 110
+    section: Description of the Notes - Allocation of Supplemental Reduction Amount and Supplemental Senior Increase Amount (continues on p111)
+    quote: |
+      first, to the Class M-1 and Class M-1H Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; second, to the Class M-2A and Class M-2AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; third, to the Class M-2B and Class M-2BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fourth, to the Class B-1A and Class B-1AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fifth, to the Class B-1B and Class B-1BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; sixth, to the Class B-2H Reference Tranche; seventh, to the Class B-3H Reference Tranche; and eighth, to the Class A-H Reference Tranche.
+    note: DIFFERENT vs DNA1 (which had A-1 scheduled first, then M-1, M-2A, M-2B, A-1). Here the order is identical to the Subordinate Reduction order and continues through B-2H, B-3H and A-H.
+  supplemental_senior_increase_amount:
+    value: equals the Supplemental Reduction Amount; added to A-H Class Notional Amount
+    page: 225
+    section: Glossary - Supplemental Senior Increase Amount
+    quote: |
+      "Supplemental Senior Increase Amount" with respect to each Payment Date, means an amount equal to the Supplemental Reduction Amount for such Payment Date.
+  supplemental_senior_increase_allocation:
+    value: allocated to increase A-H after Senior/Subordinate Reduction and write-down/write-up
+    page: 111
+    section: Description of the Notes - Allocation of Supplemental Reduction Amount and Supplemental Senior Increase Amount
+    quote: |
+      Simultaneously, on each Payment Date on or prior to the Maturity Date, after allocation of the Senior Reduction Amount, the Subordinate Reduction Amount, any Tranche Write-down Amounts and any Tranche Write-up Amounts, the Supplemental Senior Increase Amount, if any, for such Payment Date will be allocated to increase the Class Notional Amount of the Class A-H Reference Tranche.
+  class_principal_balance_definition:
+    value: original balance minus principal paid minus Notes Retirement Amounts minus Tranche Write-down Amounts plus Tranche Write-up Amounts
+    page: 200
+    section: Glossary - Class Principal Balance
+    quote: |
+      (1) with respect to each Class of Original Notes, the maximum dollar amount of principal to which the Holders of such Class of Notes are then entitled, with such amount being equal to the original Class Principal Balance of such Class of Notes, minus the aggregate amount of principal paid by the Trust on such Class of Notes on such Payment Date and all prior Payment Dates, minus the aggregate amount of Notes Retirement Amounts paid, if any, by the Trust to Freddie Mac on such Payment Date and on all dates prior to such Payment Date to retire any portion of such Class of Notes, minus the aggregate amount of Tranche Write-down Amounts allocated to reduce the Class Principal Balance of such Class of Notes on such Payment Date and on all prior Payment Dates, and plus the aggregate amount of Tranche Write-up Amounts allocated to increase the Class Principal Balance of such Class of Notes on such Payment Date and on all prior Payment Dates (in each case, without regard to any exchanges of Exchangeable Notes for MACR Notes);
+
+# ---------------------------------------------------------------------------
+# Performance tests
+# ---------------------------------------------------------------------------
+performance_tests:
+  gating_summary:
+    value: Subordinate Reduction Amount requires Minimum Credit Enhancement, Cumulative Net Loss and Delinquency Tests all satisfied; there is no Class A-1 test and no test gates the Senior Reduction allocation to A-H
+    page: 223
+    section: Glossary - Senior Reduction Amount
+    quote: |
+      (A) if any of the Minimum Credit Enhancement Test, the Cumulative Net Loss Test or the Delinquency Test is not satisfied, the sum of: (i) 100% of Stated Principal for such Payment Date; and (ii) 100% of Recovery Principal for such Payment Date; or (B) if the Minimum Credit Enhancement Test, the Cumulative Net Loss Test and the Delinquency Test are satisfied, the sum of: (i) the Senior Percentage of Stated Principal for such Payment Date; and (ii) 100% of Recovery Principal for such Payment Date.
+  minimum_credit_enhancement_test:
+    value: Subordinate Percentage >= 3.000%
+    page: 211
+    section: Glossary - Minimum Credit Enhancement Test
+    quote: |
+      "Minimum Credit Enhancement Test" with respect to any Payment Date, means a test that will be satisfied if the Subordinate Percentage is greater than or equal to 3.000%.
+    note: DIFFERENT vs DNA1 (3.525%). Equals the initial Subordinate Percentage (knife-edge, see principal.senior_percentage note).
+  minimum_credit_enhancement_threshold_pct:
+    value: 3.000
+    page: 211
+    section: Glossary - Minimum Credit Enhancement Test
+    quote: |
+      satisfied if the Subordinate Percentage is greater than or equal to 3.000%.
+  delinquency_test:
+    value: 6-Payment-Date average Distressed Principal Balance (or average since Closing before the 6th) < 50% x (Subordinate Percentage x aggregate UPB as of preceding Payment Date - Principal Loss Amount for current Payment Date)
+    page: 203
+    section: Glossary - Delinquency Test
+    quote: |
+      "Delinquency Test" with respect to any Payment Date, means a test that will be satisfied if: (a) the sum of the Distressed Principal Balance for the current Payment Date and each of the preceding five Payment Dates, divided by six or, in the case of any Payment Date prior to the sixth Payment Date after the Closing Date, the sum of the Distressed Principal Balance for the current Payment Date and each of the preceding Payment Dates, divided by the number of Payment Dates since the Closing Date, is less than (b) 50% of the amount by which (i) the product of (x) the Subordinate Percentage and (y) the aggregate UPB of the Reference Obligations as of the preceding Payment Date; exceeds (ii) the Principal Loss Amount for the current Payment Date.
+    note: 'The phrase "aggregate UPB ... as of the preceding Payment Date" is not itself defined; same wording as DNA1 (Q8). See DNA2-Q2.'
+  delinquency_test_factor_pct:
+    value: 50
+    page: 203
+    section: Glossary - Delinquency Test
+    quote: |
+      (b) 50% of the amount by which (i) the product of (x) the Subordinate Percentage and (y) the aggregate UPB of the Reference Obligations as of the preceding Payment Date; exceeds (ii) the Principal Loss Amount for the current Payment Date.
+  delinquency_test_averaging_months:
+    value: 6
+    page: 203
+    section: Glossary - Delinquency Test
+    quote: |
+      the sum of the Distressed Principal Balance for the current Payment Date and each of the preceding five Payment Dates, divided by six
+  distressed_principal_balance:
+    value: UPB of loans 60+ days delinquent, or in foreclosure/bankruptcy/REO, or modified in the 12 months preceding the end of the Reporting Period, without duplication
+    page: 203
+    section: Glossary - Distressed Principal Balance
+    quote: |
+      "Distressed Principal Balance" with respect to any Payment Date, means the sum, without duplication, of the UPB of Reference Obligations that meet any of the following criteria: (a) Reference Obligations that are reported as 60 days or more delinquent; (b) Reference Obligations that are in foreclosure, bankruptcy, or REO status; or (c) Reference Obligations that were modified in the 12 months preceding the end of the related Reporting Period.
+  cumulative_net_loss_percentage:
+    value: (cumulative Principal Loss Amount - cumulative Principal Recovery Amount) / Cut-off Date aggregate UPB
+    page: 202
+    section: Glossary - Cumulative Net Loss Percentage
+    quote: |
+      "Cumulative Net Loss Percentage" with respect to each Payment Date, means a percentage equal to (i) the Principal Loss Amount for such Payment Date and all prior Payment Dates less the Principal Recovery Amount for such Payment Date and all prior Payment Dates; divided by (ii) the aggregate unpaid principal balance of the Reference Obligations in the Reference Pool as of the Cut-off Date.
+  cumulative_net_loss_test:
+    value: Cumulative Net Loss Percentage <= step-up schedule below
+    page: 202
+    section: Glossary - Cumulative Net Loss Test
+    quote: |
+      "Cumulative Net Loss Test" with respect to any Payment Date, means a test that will be satisfied if the Cumulative Net Loss Percentage does not exceed the applicable percentage indicated below:
+  cumulative_net_loss_test_schedule_pct:
+    value:
+      - {payment_dates: "April 2026 to March 2027", payment_date_numbers: "1-12", threshold_pct: 0.10}
+      - {payment_dates: "April 2027 to March 2028", payment_date_numbers: "13-24", threshold_pct: 0.20}
+      - {payment_dates: "April 2028 to March 2029", payment_date_numbers: "25-36", threshold_pct: 0.30}
+      - {payment_dates: "April 2029 to March 2030", payment_date_numbers: "37-48", threshold_pct: 0.40}
+      - {payment_dates: "April 2030 to March 2031", payment_date_numbers: "49-60", threshold_pct: 0.50}
+      - {payment_dates: "April 2031 to March 2032", payment_date_numbers: "61-72", threshold_pct: 0.60}
+      - {payment_dates: "April 2032 to March 2033", payment_date_numbers: "73-84", threshold_pct: 0.70}
+      - {payment_dates: "April 2033 to March 2034", payment_date_numbers: "85-96", threshold_pct: 0.80}
+      - {payment_dates: "April 2034 to March 2035", payment_date_numbers: "97-108", threshold_pct: 0.90}
+      - {payment_dates: "April 2035 to March 2036", payment_date_numbers: "109-120", threshold_pct: 1.00}
+      - {payment_dates: "April 2036 to March 2037", payment_date_numbers: "121-132", threshold_pct: 1.10}
+      - {payment_dates: "April 2037 to March 2038", payment_date_numbers: "133-144", threshold_pct: 1.20}
+      - {payment_dates: "April 2038 and thereafter", payment_date_numbers: "145 onward", threshold_pct: 1.30}
+    page: 202
+    section: Glossary - Cumulative Net Loss Test
+    quote: |
+      April 2026 to March 2027 . . . 0.10% April 2027 to March 2028 . . . 0.20% April 2028 to March 2029 . . . 0.30% April 2029 to March 2030 . . . 0.40% April 2030 to March 2031 . . . 0.50% April 2031 to March 2032 . . . 0.60% April 2032 to March 2033 . . . 0.70% April 2033 to March 2034 . . . 0.80% April 2034 to March 2035 . . . 0.90% April 2035 to March 2036 . . . 1.00% April 2036 to March 2037 . . . 1.10% April 2037 to March 2038 . . . 1.20% April 2038 and thereafter . . . 1.30%
+    note: Same percentages and same 12-Payment-Date bands as DNA1; calendar shifted one month (bands run April-March instead of March-February). "payment_date_numbers" is the extractor's mapping with the April 2026 Payment Date = 1.
+  class_a1_cumulative_net_loss_test:
+    value: null
+    page: 202
+    section: Glossary - Cumulative Net Loss Test
+    quote: |
+      "Cumulative Net Loss Test" with respect to any Payment Date, means a test that will be satisfied if the Cumulative Net Loss Percentage does not exceed the applicable percentage indicated below:
+    note: ABSENT. The only cumulative net loss test in this PPM is the Cumulative Net Loss Test above; "Class A-1 Cumulative Net Loss Test" does not occur in the extract and nothing in the Senior Reduction allocation is test-gated.
+  class_a1_cumulative_net_loss_threshold_pct:
+    value: null
+    page: 202
+    section: Glossary - Cumulative Net Loss Test
+    quote: |
+      "Cumulative Net Loss Test" with respect to any Payment Date, means a test that will be satisfied if the Cumulative Net Loss Percentage does not exceed the applicable percentage indicated below:
+    note: ABSENT.
+
+# ---------------------------------------------------------------------------
+# Credit events, losses, recoveries, write-down / write-up
+# ---------------------------------------------------------------------------
+credit_events:
+  credit_event:
+    value: first of (i) short sale settled, (ii) seriously delinquent note sold before foreclosure, (iii) third-party foreclosure sale, (iv) REO disposition, (v) charge-off; no delinquency-based trigger
+    page: 201
+    section: Glossary - Credit Event
+    quote: |
+      "Credit Event" with respect to any Payment Date on or before the Termination Date and any Reference Obligation, means the first to occur of any of the following events with respect to such Reference Obligation being reported by the applicable servicer to us during the related Reporting Period: (i) a short sale with respect to the related mortgaged property is settled, (ii) a related seriously delinquent mortgage note is sold prior to foreclosure, (iii) the mortgaged property that secured the related mortgage note is sold to a third party at a foreclosure sale, (iv) an REO disposition occurs or (v) the related mortgage note is charged off. With respect to any Credit Event Reference Obligation, there can only be one occurrence of a Credit Event; provided that one additional separate Credit Event can occur with respect to each instance of such Credit Event Reference Obligation becoming a Reversed Credit Event Reference Obligation.
+  credit_event_reference_obligation:
+    value: Reference Obligation with a Credit Event in the related Reporting Period
+    page: 202
+    section: Glossary - Credit Event Reference Obligation
+    quote: |
+      "Credit Event Reference Obligation" with respect to any Payment Date, means any Reference Obligation with respect to which a Credit Event has occurred during the related Reporting Period.
+  credit_event_upb:
+    value: UPB as of the end of the Reporting Period in which it became a Credit Event Reference Obligation
+    page: 202
+    section: Glossary - Credit Event UPB
+    quote: |
+      "Credit Event UPB" with respect to any Credit Event Reference Obligation, means the UPB thereof as of the end of the Reporting Period related to the Payment Date on which it became a Credit Event Reference Obligation.
+  credit_event_amount:
+    value: aggregate Credit Event UPBs for the Reporting Period
+    page: 201
+    section: Glossary - Credit Event Amount
+    quote: |
+      "Credit Event Amount" with respect to each Payment Date, means the aggregate amount of the Credit Event UPBs of all Credit Event Reference Obligations for the related Reporting Period.
+  credit_event_net_loss:
+    value: max(0, Credit Event UPB + prior principal forgiveness + delinquent interest at Current Accrual Rate from last paid interest date to Credit Event determination date - Net Liquidation Proceeds)
+    page: 202
+    section: Glossary - Credit Event Net Loss
+    quote: |
+      "Credit Event Net Loss" with respect to any Credit Event Reference Obligation, means an amount equal to the excess, if any, of: (a) the sum of: (i) the related Credit Event UPB; (ii) the total amount of prior principal forgiveness modifications, if any, on the related Credit Event Reference Obligation; and (iii) delinquent accrued interest thereon, calculated at the related Current Accrual Rate from the related last paid interest date through the date we determine such Reference Obligation has been reported as a Credit Event Reference Obligation, over (b) the related Net Liquidation Proceeds.
+  credit_event_net_gain:
+    value: max(0, Net Liquidation Proceeds - (Credit Event UPB + prior principal forgiveness + delinquent interest at Current Accrual Rate))
+    page: 201
+    section: Glossary - Credit Event Net Gain
+    quote: |
+      "Credit Event Net Gain" with respect to any Credit Event Reference Obligation, means an amount equal to the excess, if any, of: (a) the related Net Liquidation Proceeds; over (b) the sum of: (i) the related Credit Event UPB; (ii) the total amount of prior principal forgiveness modifications, if any, on the related Credit Event Reference Obligation; and (iii) delinquent accrued interest thereon, calculated at the related Current Accrual Rate from the related last paid interest date through the date Freddie Mac determines such Reference Obligation has been reported as a Credit Event Reference Obligation.
+  liquidation_proceeds:
+    value: all cash amounts received in connection with liquidation
+    page: 210
+    section: Glossary - Liquidation Proceeds
+    quote: |
+      "Liquidation Proceeds" with respect to any Credit Event Reference Obligation, means all cash amounts (including sales proceeds) received in connection with the liquidation of such Credit Event Reference Obligation.
+  net_liquidation_proceeds:
+    value: Liquidation Proceeds + MI proceeds + Minor Servicing Defect proceeds (not already in Modification Excess) - expenses, credits and reimbursement of advances
+    page: 213
+    section: Glossary - Net Liquidation Proceeds
+    quote: |
+      "Net Liquidation Proceeds" with respect to each Payment Date and any Credit Event Reference Obligation, means the sum of the related Liquidation Proceeds, any related mortgage insurance proceeds and any proceeds received from the related servicer in connection with a Minor Servicing Defect (except for those included in the Modification Excess for such Credit Event Reference Obligation), less related expenses, credits and reimbursement of advances; including but not limited to taxes and insurance, legal costs, maintenance and preservation costs.
+  reversed_credit_event_reference_obligation:
+    value: prior Credit Event Reference Obligation found to have an Underwriting Defect, Major Servicing Defect or invalidating data correction
+    page: 222
+    section: Glossary - Reversed Credit Event Reference Obligation
+    quote: |
+      "Reversed Credit Event Reference Obligation" with respect to each Payment Date, means a Reference Obligation formerly in the Reference Pool that became a Credit Event Reference Obligation in a prior Reporting Period that is found in the related Reporting Period to have an Underwriting Defect or a Major Servicing Defect or a data correction that invalidates the previously determined Credit Event.
+  principal_loss_amount:
+    value: (a) Credit Event Net Losses + (b) cramdowns + (c) subsequent losses on prior Credit Event Reference Obligations + (d) Modification Loss amounts allocated in priorities 1,3,6,7,10,11,13 + (e) Credit Event Net Gains on Reversed Credit Event Reference Obligations
+    page: 218
+    section: Glossary - Principal Loss Amount
+    quote: |
+      "Principal Loss Amount" with respect to each Payment Date, means the sum of: (a) the aggregate amount of Credit Event Net Losses for all Credit Event Reference Obligations for the related Reporting Period; (b) the aggregate amount of court-approved principal reductions ("cramdowns") on all Reference Obligations in the related Reporting Period; (c) subsequent losses in the related Reporting Period on any Reference Obligation that became a Credit Event Reference Obligation on a prior Payment Date; (d) amounts included in the first, third, sixth, seventh, tenth, eleventh or thirteenth priorities set forth in "-- Allocation of Modification Loss Amount"; and (e) the aggregate amount of Credit Event Net Gains for all Reversed Credit Event Reference Obligations for the related Reporting Period.
+    note: DIFFERENT vs DNA1 in clause (d) only - the principal priorities are 1,3,6,7,10,11,13 here (DNA1 - 1,3,5,8,9,11,13) because the B-1 layer is now two Note/H pairs.
+  principal_recovery_amount:
+    value: (a) Credit Event Net Losses on Reversed Credit Event Reference Obligations + (b) subsequent recoveries on prior Credit Event Reference Obligations + (c) Credit Event Net Gains + (d) Origination Rep and Warranty/Servicing Breach Settlement Amount + (e) on the Termination Date only, Projected Recovery Amount
+    page: 218
+    section: Glossary - Principal Recovery Amount
+    quote: |
+      "Principal Recovery Amount" with respect to each Payment Date, means the sum of: (a) the aggregate amount of Credit Event Net Losses for all Reversed Credit Event Reference Obligations for the related Reporting Period; (b) subsequent recoveries in the related Reporting Period on any Reference Obligation that became a Credit Event Reference Obligation on a prior Payment Date; (c) the aggregate amount of the Credit Event Net Gains of all Credit Event Reference Obligations for the related Reporting Period; (d) the Origination Rep and Warranty/Servicing Breach Settlement Amount for such Payment Date; and (e) solely with respect to the Payment Date that is the Termination Date, the Projected Recovery Amount.
+  projected_recovery_amount:
+    value: Sponsor-determined fair value of future subsequent recoveries on the Termination Date (assumed zero in PPM tables, assumption (o))
+    page: 218
+    section: Glossary - Projected Recovery Amount
+    quote: |
+      "Projected Recovery Amount" means the fair value of the estimated amount of future subsequent recoveries on the Termination Date, as determined by the Sponsor, at its sole discretion, on the Credit Event Reference Obligations.
+  preliminary_principal_loss_amount:
+    value: Principal Loss Amount without clause (d); computed before Modification Loss/Gain allocation
+    page: 217
+    section: Glossary - Preliminary Principal Loss Amount
+    quote: |
+      "Preliminary Principal Loss Amount" means an amount equal to the Principal Loss Amount computed without giving effect to clause (d) of the definition of "Principal Loss Amount". The Preliminary Principal Loss Amount for each Payment Date will be computed prior to the allocation of the Modification Loss Amount and the Modification Gain Amount pursuant to the Modification Loss Priority and Modification Gain Priority, respectively, for such Payment Date.
+  tranche_write_down_amount:
+    value: max(0, Principal Loss Amount - Principal Recovery Amount)
+    page: 225
+    section: Glossary - Tranche Write-down Amount
+    quote: |
+      "Tranche Write-down Amount" with respect to each Payment Date, means the excess, if any, of the Principal Loss Amount for such Payment Date over the Principal Recovery Amount for such Payment Date.
+  tranche_write_up_amount:
+    value: max(0, Principal Recovery Amount - Principal Loss Amount)
+    page: 225
+    section: Glossary - Tranche Write-up Amount
+    quote: |
+      "Tranche Write-up Amount" with respect to each Payment Date, means the excess, if any, of the Principal Recovery Amount for such Payment Date over the Principal Loss Amount for such Payment Date.
+  tranche_write_down_allocation_order:
+    value:
+      - "zeroth: reduce any Overcollateralization Amount to zero"
+      - "first: B-3H"
+      - "second: B-2H"
+      - "third: B-1B and B-1BH pro rata by Class Notional Amounts immediately prior to the Payment Date"
+      - "fourth: B-1A and B-1AH pro rata"
+      - "fifth: M-2B and M-2BH pro rata"
+      - "sixth: M-2A and M-2AH pro rata"
+      - "seventh: M-1 and M-1H pro rata"
+      - "eighth: A-H, only the excess of the remaining unallocated amount over the Principal Loss Amount attributable to clause (d)"
+    page: 105
+    section: Description of the Notes - Allocation of Tranche Write-down Amounts
+    quote: |
+      On each Payment Date on or prior to the Maturity Date, the Tranche Write-down Amount, if any, for such Payment Date, will be allocated, first, to reduce any Overcollateralization Amount for such Payment Date, until such Overcollateralization Amount is reduced to zero, and, second, to reduce the Class Notional Amount of each Class of Reference Tranche in the following order of priority, in each case until its Class Notional Amount is reduced to zero: first, to the Class B-3H Reference Tranche; second, to the Class B-2H Reference Tranche; third, to the Class B-1B and Class B-1BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fourth, to the Class B-1A and Class B-1AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fifth, to the Class M-2B and Class M-2BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; sixth, to the Class M-2A and Class M-2AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; seventh, to the Class M-1 and Class M-1H Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; and eighth, to the Class A-H Reference Tranche, but only in an amount equal to the excess, if any, of the remaining unallocated Tranche Write-down Amount for such Payment Date over the Principal Loss Amount for such Payment Date attributable to clause (d) of the definition of "Principal Loss Amount" in the "Glossary of Significant Terms".
+    note: DIFFERENT vs DNA1 (B-1H single replaced by the B-1B and B-1A pairs; no A-1 pair). Eight priorities plus the overcollateralization step in both deals.
+  a_h_increase_on_write_down:
+    value: A-H Class Notional Amount increased by the excess of Tranche Write-down Amount over Credit Event Amount
+    page: 106
+    section: Description of the Notes - Allocation of Tranche Write-down Amounts
+    quote: |
+      With respect to each Payment Date, the Class Notional Amount for the Class A-H Reference Tranche will be increased by the excess, if any, of the Tranche Write-down Amount for such Payment Date over the Credit Event Amount for such Payment Date.
+  tranche_write_up_allocation_order:
+    value:
+      - "first: A-H"
+      - "second: M-1 and M-1H pro rata by Class Notional Amounts immediately prior to the Payment Date"
+      - "third: M-2A and M-2AH pro rata"
+      - "fourth: M-2B and M-2BH pro rata"
+      - "fifth: B-1A and B-1AH pro rata"
+      - "sixth: B-1B and B-1BH pro rata"
+      - "seventh: B-2H"
+      - "eighth: B-3H"
+    page: 106
+    section: Description of the Notes - Allocation of Tranche Write-up Amounts
+    quote: |
+      On each Payment Date on or prior to the Maturity Date, the Tranche Write-up Amount, if any, for such Payment Date will be allocated to increase the Class Notional Amount of each Class of Reference Tranche in the following order of priority until the cumulative Tranche Write-up Amounts allocated to each such Class of Reference Tranche is equal to the cumulative Tranche Write-down Amounts previously allocated to such Class of Reference Tranche on or prior to such Payment Date: first, to the Class A-H Reference Tranche; second, to the Class M-1 and Class M-1H Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; third, to the Class M-2A and Class M-2AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fourth, to the Class M-2B and Class M-2BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; fifth, to the Class B-1A and Class B-1AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; sixth, to the Class B-1B and Class B-1BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date; seventh, to the Class B-2H Reference Tranche; and eighth, to the Class B-3H Reference Tranche.
+    note: DIFFERENT vs DNA1 (no A-1 pair; B-1A and B-1B pairs replace B-1H).
+  write_up_excess:
+    value: Tranche Write-up Amount not absorbed by priorities first through eighth; becomes overcollateralization
+    page: 228
+    section: Glossary - Write-up Excess
+    quote: |
+      "Write-up Excess" with respect to any Payment Date, means the amount by which the Tranche Write-up Amount on such Payment Date exceeds the Tranche Write-up Amount allocated on such Payment Date pursuant to clauses "first" through "eighth" under "Description of the Notes -- Hypothetical Structure and Calculations with Respect to the Reference Tranches -- Allocation of Tranche Write-up Amounts".
+  overcollateralization_amount:
+    value: cumulative Write-up Excesses minus those already used to offset Tranche Write-down Amounts
+    page: 216
+    section: Glossary - Overcollateralization Amount
+    quote: |
+      "Overcollateralization Amount" with respect to each Payment Date, means an amount equal to (a) the aggregate amount of Write-up Excesses for such Payment Date and all prior Payment Dates, minus (b) the aggregate amount of Write-up Excesses used to offset Tranche Write-down Amounts on all prior Payment Dates.
+  write_up_excess_use:
+    value: Write-up Excess offsets future Tranche Write-down Amounts before they hit the Reference Tranches
+    page: 106
+    section: Description of the Notes - Allocation of Tranche Write-up Amounts
+    quote: |
+      The Write-up Excess will be available as overcollateralization to offset any Tranche Write-down Amounts on future Payment Dates prior to such Tranche Write-down Amounts being allocated to reduce the Class Notional Amounts of the Reference Tranches.
+  note_write_down_no_payment:
+    value: Class Principal Balance reduced by the Tranche Write-down Amount allocated to the Corresponding Reference Tranche without any payment of principal
+    page: 104
+    section: Description of the Notes - Reductions in Class Principal Balances of the Notes Due to Allocation of Tranche Write-down Amounts
+    quote: |
+      On each Payment Date on or prior to the Maturity Date, the Class Principal Balance of each Class of Original Notes will be reduced (in each case without regard to any exchanges of Exchangeable Notes for MACR Notes) without any corresponding payment of principal, by the amount of the reduction, if any, in the Class Notional Amount of the Corresponding Class of Reference Tranche due to the allocation of the Tranche Write-down Amount to such Class of Reference Tranche on such Payment Date pursuant to the terms of the hypothetical structure described under "-- Hypothetical Structure and Calculations with Respect to the Reference Tranches" below.
+  return_amount:
+    value: aggregate Tranche Write-down Amounts allocated to reduce Class Principal Balances of the Notes (paid by the Trust to Freddie Mac)
+    page: 222
+    section: Glossary - Return Amount
+    quote: |
+      "Return Amount" with respect to any Payment Date, means the aggregate Tranche Write-down Amounts, if any, allocated to reduce the Class Principal Balance of each applicable outstanding Class of Notes on such Payment Date (without regard to any exchanges of Exchangeable Notes for MACR Notes).
+  cer_definition:
+    value: constant monthly rate of Reference Obligations becoming Credit Event Reference Obligations relative to then-outstanding aggregate principal balance (annual rate; monthly conversion not stated)
+    page: 199
+    section: Glossary - CER
+    quote: |
+      "CER" or "Credit Event Rate" means a rate based on an assumption that a constant rate of Reference Obligations become Credit Event Reference Obligations each month relative to the then-outstanding aggregate principal balance of the Reference Obligations.
+  cer_annual_rate_statement:
+    value: CER of 1% = Reference Obligations become Credit Event Reference Obligations at an annual rate of 1%, constant for the remaining life
+    page: 140
+    section: Prepayment and Yield Considerations - Weighted Average Lives of the Notes
+    quote: |
+      A Credit Event Rate of 1% assumes Reference Obligations become Credit Event Reference Obligations at an annual rate of 1% which remains constant through the remaining lives of such Reference Obligations.
+  cpr_definition:
+    value: constant annual prepayment rate converted to an equivalent monthly rate
+    page: 139
+    section: Prepayment and Yield Considerations - Weighted Average Lives of the Notes
+    quote: |
+      The model used in this Memorandum for the Reference Obligations is a CPR. CPR assumes that the outstanding principal balance of a pool of mortgage loans prepays at a specified constant annual rate. In projecting monthly cashflows, this rate is converted to an equivalent monthly rate.
+
+# ---------------------------------------------------------------------------
+# Modification events (interest-rate modifications, forbearance, payment deferral)
+# ---------------------------------------------------------------------------
+modification_events:
+  modification_event:
+    value: principal forbearance, mortgage rate modification, or Payment Deferral Event reported in the Reporting Period; Payment Deferral counts only while the non-interest-bearing forborne balance is outstanding
+    page: 211
+    section: Glossary - Modification Event
+    quote: |
+      "Modification Event" with respect to any Reference Obligation, means the occurrence of a principal forbearance, mortgage rate modification or Payment Deferral Event relating to such Reference Obligation, in each case as reported by the applicable servicer to us during the related Reporting Period; provided, however, that a Payment Deferral Event will be treated as a Modification Event only with respect to any Reporting Period during which the non-interest bearing forborne balance of the related Reference Obligation is reported as outstanding.
+  payment_deferral_event:
+    value: servicer-approved deferral of delinquent P&I and certain advances into a non-interest-bearing forborne balance
+    page: 216
+    section: Glossary - Payment Deferral Event
+    quote: |
+      "Payment Deferral Event" with respect to any Reference Obligation, occurs when the applicable servicer approves, pursuant to the Guide, the deferment of delinquent principal and interest, certain out-of-pocket escrow advances paid to third parties during the delinquency, and certain servicing advances paid to third parties during the delinquency and not retained by the applicable servicer to create a non-interest bearing forborne balance relating to such Reference Obligation with the intention of bringing the status of such Reference Obligation as current.
+  modification_excess:
+    value: max(0, Current Accrual Rate/12 x interest-bearing UPB - Original Accrual Rate/12 x UPB)
+    page: 211
+    section: Glossary - Modification Excess
+    quote: |
+      "Modification Excess" with respect to each Payment Date and any Reference Obligation that has experienced a Modification Event, means the excess, if any, of: (a) one-twelfth of the Current Accrual Rate of such Reference Obligation multiplied by the interest bearing UPB of such Reference Obligation; over (b) one-twelfth of the Original Accrual Rate of such Reference Obligation multiplied by the UPB of such Reference Obligation.
+  modification_shortfall:
+    value: max(0, Original Accrual Rate/12 x UPB - Current Accrual Rate/12 x interest-bearing UPB)
+    page: 212
+    section: Glossary - Modification Shortfall
+    quote: |
+      "Modification Shortfall" with respect to each Payment Date and any Reference Obligation that has experienced a Modification Event, means the excess, if any, of: (a) one-twelfth of the Original Accrual Rate of such Reference Obligation multiplied by the UPB of such Reference Obligation; over (b) one-twelfth of the Current Accrual Rate of such Reference Obligation multiplied by the interest bearing UPB of such Reference Obligation.
+  modification_loss_amount:
+    value: max(0, aggregate Modification Shortfall - aggregate Modification Excess)
+    page: 211
+    section: Glossary - Modification Loss Amount
+    quote: |
+      "Modification Loss Amount" with respect to each Payment Date, means the excess, if any, of the aggregate Modification Shortfall over the aggregate Modification Excess for such Payment Date.
+  modification_gain_amount:
+    value: max(0, aggregate Modification Excess - aggregate Modification Shortfall)
+    page: 211
+    section: Glossary - Modification Gain Amount
+    quote: |
+      "Modification Gain Amount" with respect to each Payment Date, means the excess, if any, of the aggregate Modification Excess over the aggregate Modification Shortfall for such Payment Date.
+  original_accrual_rate:
+    value: lesser of Accounting Net Yield as of the Cut-off Date and Cut-off Date mortgage rate minus 0.35%
+    page: 215
+    section: Glossary - Original Accrual Rate
+    quote: |
+      "Original Accrual Rate" with respect to each Payment Date and any Reference Obligation, means the lesser of (i) the related Accounting Net Yield as of the Cut-off Date and (ii) the related mortgage rate as of the Cut-off Date minus 0.35%.
+  current_accrual_rate:
+    value: lesser of current Accounting Net Yield and current (as-modified) mortgage rate minus 0.35%
+    page: 202
+    section: Glossary - Current Accrual Rate
+    quote: |
+      "Current Accrual Rate" with respect to each Payment Date and any Reference Obligation, means the lesser of (i) the related current Accounting Net Yield; and (ii) the related current mortgage rate thereon (as adjusted for any modifications) minus 0.35%.
+  accrual_rate_haircut_pct:
+    value: 0.35
+    page: 202
+    section: Glossary - Current Accrual Rate
+    quote: |
+      (ii) the related current mortgage rate thereon (as adjusted for any modifications) minus 0.35%.
+  accounting_net_yield:
+    value: mortgage rate less servicing fee rate
+    page: 196
+    section: Glossary - Accounting Net Yield
+    quote: |
+      "Accounting Net Yield" with respect to each Payment Date and any Reference Obligation, means the related mortgage rate less the related servicing fee rate.
+  assumed_accounting_net_yield_in_ppm:
+    value: NONE. The PPM states no assumed Accounting Net Yield, servicing fee rate or accrual-rate haircut anywhere, including Modeling Assumptions (a)-(s) on p138-139 and Appendix C. "servicing fee" occurs only at p196 (definition) and in Appendix E (p275-277, general Guide requirements). Same finding as DNA1 (Q5/Q7); Trey's DNA1 resolution (no ANY for tie-out; required servicing-fee input for actual runs) carries over unless overridden.
+    page: 138
+    section: Prepayment and Yield Considerations - Assumptions Relating to Weighted Average Life Tables ... (Modeling Assumptions (a)-(s), p138-139)
+    quote: |
+      The tables on the following pages have been prepared on the basis of the following Modeling Assumptions: (a) The Reference Obligations consist of the assumed mortgage loans having the characteristics shown in Appendix C; ... (s) each Class of Notes is outstanding from the Closing Date to retirement, no exchanges occur and Freddie Mac does not exercise its option to cause any Notes it owns to be retired by the Trust.
+  minimum_servicing_fee_pct:
+    value: 0.25 (a general Guide requirement stated in Appendix E, NOT a modeling assumption and not loan-level data)
+    page: 277
+    section: Appendix E - General Mortgage Loan Purchase and Servicing - Servicing Standards
+    quote: |
+      Servicers receive fees for their services. We generally require that servicers retain a minimum servicing fee of at least 0.25% per annum of the interest-bearing unpaid principal balance of each of the mortgage loans they service, which may only be retained upon receipt of a full mortgage payment from the related mortgagor that is posted to the mortgagor's account (such amount so determined on a monthly basis).
+  rm_definition:
+    value: RM = interest rate modification; RM of 2% = gross coupon reduced by 2% for remaining life
+    page: 140
+    section: Prepayment and Yield Considerations - Weighted Average Lives of the Notes
+    quote: |
+      A Modification Event with a RM percentage of 2% assumes the gross coupon of the Reference Obligations is reduced by 2% and such Modification Event remains in effect through the remaining lives of such Reference Obligations.
+    note: The Glossary (p222) defines only '"RM" means interest rate modification.'
+  modification_loss_allocation_order:
+    value:
+      - "first: B-3H, up to its Preliminary Class Notional Amount"
+      - "second: B-2H, up to its Interest Accrual Amount"
+      - "third: B-2H, up to its Preliminary Class Notional Amount"
+      - "fourth: B-1B and B-1BH pro rata (by Class Notional Amount), until B-1B receives its Interest Accrual Amount"
+      - "fifth: B-1A and B-1AH pro rata (by Class Notional Amount), until B-1A receives its Interest Accrual Amount"
+      - "sixth: B-1B and B-1BH pro rata (by Preliminary Class Notional Amount), up to their aggregate Preliminary Class Notional Amount"
+      - "seventh: B-1A and B-1AH pro rata (by Preliminary Class Notional Amount), up to their aggregate Preliminary Class Notional Amount"
+      - "eighth: M-2B and M-2BH pro rata (by Class Notional Amount), until M-2B receives its Interest Accrual Amount"
+      - "ninth: M-2A and M-2AH pro rata (by Class Notional Amount), until M-2A receives its Interest Accrual Amount"
+      - "tenth: M-2B and M-2BH pro rata (by Preliminary Class Notional Amount), up to their aggregate Preliminary Class Notional Amount"
+      - "eleventh: M-2A and M-2AH pro rata (by Preliminary Class Notional Amount), up to their aggregate Preliminary Class Notional Amount"
+      - "twelfth: M-1 and M-1H pro rata (by Class Notional Amount), until M-1 receives its Interest Accrual Amount"
+      - "thirteenth: M-1 and M-1H pro rata (by Preliminary Class Notional Amount), up to their aggregate Preliminary Class Notional Amount"
+    page: 107
+    section: Description of the Notes - Allocation of Modification Loss Amount (continues on p108)
+    quote: |
+      On each Payment Date on or prior to the Maturity Date, the Preliminary Principal Loss Amount, the Preliminary Tranche Write-down Amount, the Preliminary Tranche Write-up Amount and the Preliminary Class Notional Amount will be computed prior to the allocation of the Modification Loss Amount. The Modification Loss Amount, if any, for such Payment Date will be allocated to the Reference Tranches in the following order of priority: first, to the Class B-3H Reference Tranche, until the amount allocated to the Class B-3H Reference Tranche is equal to the Preliminary Class Notional Amount of the Class B-3H Reference Tranche for such Payment Date; second, to the Class B-2H Reference Tranche, until the amount allocated to the Class B-2H Reference Tranche is equal to the Class B-2H Reference Tranche Interest Accrual Amount for such Payment Date; third, to the Class B-2H Reference Tranche, until the amount allocated to the Class B-2H Reference Tranche is equal to the Preliminary Class Notional Amount of the Class B-2H Reference Tranche for such Payment Date; fourth, to the Class B-1B and Class B-1BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class B-1B Reference Tranche is equal to the Class B-1B Notes Interest Accrual Amount for such Payment Date; fifth, to the Class B-1A and Class B-1AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class B-1A Reference Tranche is equal to the Class B-1A Notes Interest Accrual Amount for such Payment Date; sixth, to the Class B-1B and Class B-1BH Reference Tranches, pro rata based on their Preliminary Class Notional Amounts for such Payment Date, until the aggregate amount allocated to the Class B-1B and Class B-1BH Reference Tranches is equal to the aggregate of the Preliminary Class Notional Amounts of the Class B-1B and Class B-1BH Reference Tranches for such Payment Date; seventh, to the Class B-1A and Class B-1AH Reference Tranches, pro rata based on their Preliminary Class Notional Amounts for such Payment Date, until the aggregate amount allocated to the Class B-1A and Class B-1AH Reference Tranches is equal to the aggregate of the Preliminary Class Notional Amounts of the Class B-1A and Class B-1AH Reference Tranches for such Payment Date; eighth, to the Class M-2B and Class M-2BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class M-2B Reference Tranche is equal to the Class M-2B Notes Interest Accrual Amount for such Payment Date; ninth, to the Class M-2A and Class M-2AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class M-2A Reference Tranche is equal to the Class M-2A Notes Interest Accrual Amount for such Payment Date; tenth, to the Class M-2B and Class M-2BH Reference Tranches, pro rata based on their Preliminary Class Notional Amounts for such Payment Date, until the aggregate amount allocated to the Class M-2B and Class M-2BH Reference Tranches is equal to the aggregate of the Preliminary Class Notional Amounts of the Class M-2B and Class M-2BH Reference Tranches for such Payment Date; eleventh, to the Class M-2A and Class M-2AH Reference Tranches, pro rata based on their Preliminary Class Notional Amounts for such Payment Date, until the aggregate amount allocated to the Class M-2A and Class M-2AH Reference Tranches is equal to the aggregate of the Preliminary Class Notional Amounts of the Class M-2A and Class M-2AH Reference Tranches for such Payment Date; twelfth, to the Class M-1 and Class M-1H Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class M-1 Reference Tranche is equal to the Class M-1 Notes Interest Accrual Amount for such Payment Date; and thirteenth, to the Class M-1 and Class M-1H Reference Tranches, pro rata based on their Preliminary Class Notional Amounts for such Payment Date, until the aggregate amount allocated to the Class M-1 and Class M-1H Reference Tranches is equal to the aggregate of the Preliminary Class Notional Amounts of the Class M-1 and Class M-1H Reference Tranches for such Payment Date.
+    note: DIFFERENT vs DNA1. Thirteen priorities in both deals, but DNA1's fourth/fifth were B-1H interest/principal and its twelfth/thirteenth were the A-1 pair; here fourth-seventh are the B-1B and B-1A pairs (interest, interest, principal, principal) and the M-1 pair is last.
+  modification_loss_principal_priorities:
+    value: priorities 1,3,6,7,10,11,13 are principal write-downs (included in Principal Loss Amount clause (d)) and also increase A-H; priorities 2,4,5,8,9,12 are interest reductions
+    page: 108
+    section: Description of the Notes - Allocation of Modification Loss Amount
+    quote: |
+      For the avoidance of doubt and without duplication of the allocation of Tranche Write-down Amounts, if any, for such Payment Date, with respect to each Payment Date the Class Notional Amount for the Class A-H Reference Tranche will be increased by the sum of amounts included in the first, third, sixth, seventh, tenth, eleventh and thirteenth priorities above. ... Any amounts allocated to any of the Reference Tranches in the first, third, sixth, seventh, tenth, eleventh or thirteenth priority above will be included in the Principal Loss Amount for the related Payment Date.
+    note: DIFFERENT vs DNA1 (principal 1,3,5,8,9,11,13; interest 2,4,6,7,10,12).
+  modification_loss_macr_allocation:
+    value: interest reductions allocable to exchanged Exchangeable Notes are spread across the related Exchangeable/MACR Notes pro rata by Interest Accrual Amount
+    page: 108
+    section: Description of the Notes - Allocation of Modification Loss Amount
+    quote: |
+      With respect to any Exchangeable Notes or MACR Notes that have been exchanged for the related MACR Notes, as applicable, any Modification Loss Amount that is allocable in the fourth, fifth, eighth or ninth priority above on any Payment Date to such related exchanged Exchangeable Notes will be allocated to reduce the Interest Payment Amounts, as applicable, of the related Exchangeable Notes or MACR Notes, as applicable, for such Payment Date, pro rata, based on their Interest Accrual Amounts.
+  modification_gain_allocation_order:
+    value:
+      - "first: M-1 and M-1H pro rata, up to cumulative unreimbursed Modification Loss Amounts that reduced M-1 interest"
+      - "second: M-2A and M-2AH pro rata, same cap for M-2A"
+      - "third: M-2B and M-2BH pro rata, same cap for M-2B"
+      - "fourth: B-1A and B-1AH pro rata, same cap for B-1A"
+      - "fifth: B-1B and B-1BH pro rata, same cap for B-1B"
+      - "sixth: B-2H, up to cumulative unreimbursed Modification Loss Amounts that reduced its Interest Accrual Amount"
+      - "seventh: most subordinate outstanding Reference Tranches pro rata by Class Notional Amount"
+    page: 108
+    section: Description of the Notes - Allocation of Modification Gain Amount (continues on p109)
+    quote: |
+      The Modification Gain Amount, if any, for such Payment Date will be allocated to the Reference Tranches in the following order of priority: first, to the Class M-1 and Class M-1H Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class M-1 Reference Tranche is equal to the cumulative amount of unreimbursed Modification Loss Amounts allocated to reduce the Interest Payment Amount on the Class M-1 Notes on all prior Payment Dates; second, to the Class M-2A and Class M-2AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class M-2A Reference Tranche is equal to the cumulative amount of unreimbursed Modification Loss Amounts allocated to reduce the Interest Payment Amount on the Class M-2A Notes on all prior Payment Dates; third, to the Class M-2B and Class M-2BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class M-2B Reference Tranche is equal to the cumulative amount of unreimbursed Modification Loss Amounts allocated to reduce the Interest Payment Amount on the Class M-2B Notes on all prior Payment Dates; fourth, to the Class B-1A and Class B-1AH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class B-1A Reference Tranche is equal to the cumulative amount of unreimbursed Modification Loss Amounts allocated to reduce the Interest Payment Amount on the Class B-1A Notes on all prior Payment Dates; fifth, to the Class B-1B and Class B-1BH Reference Tranches, pro rata based on their Class Notional Amounts immediately prior to such Payment Date, until the amount allocated to the Class B-1B Reference Tranche is equal to the cumulative amount of unreimbursed Modification Loss Amounts allocated to reduce the Interest Payment Amount on the Class B-1B Notes on all prior Payment Dates; sixth, to the Class B-2H Reference Tranche until the amount allocated to the Class B-2H Reference Tranche is equal to the cumulative amount of unreimbursed Modification Loss Amounts allocated to reduce the Interest Accrual Amount on the Class B-2H Reference Tranche on all prior Payment Dates; and seventh, to the most subordinate Classes of Reference Tranches outstanding, pro rata based on their Class Notional Amounts immediately prior to such Payment Date.
+    note: DIFFERENT vs DNA1 (which started with the A-1 pair and had B-1H fifth). Seven priorities in both deals.
+  modification_gain_increases_interest:
+    value: Modification Gain allocated to M-1, M-2A, M-2B, B-1A, B-1B increases the Interest Payment Amount of those Notes
+    page: 109
+    section: Description of the Notes - Allocation of Modification Gain Amount
+    quote: |
+      Any amounts allocated to the Class M-1, Class M-2A, Class M-2B, Class B-1A or Class B-1B Reference Tranches above on any Payment Date will result in a corresponding increase of the Interest Payment Amount of the Class M-1, Class M-2A, Class M-2B, Class B-1A or Class B-1B Notes, as applicable (in each case without regard to any exchanges of Exchangeable Notes for MACR Notes) for such Payment Date.
+  preliminary_class_notional_amount:
+    value: Class Notional Amount immediately prior to the Payment Date after applying the Preliminary Tranche Write-down/Write-up Amounts, before Modification Loss/Gain allocation
+    page: 217
+    section: Glossary - Preliminary Class Notional Amount
+    quote: |
+      "Preliminary Class Notional Amount" with respect to each Reference Tranche and any Payment Date, means an amount equal to the Class Notional Amount of such Reference Tranche immediately prior to such Payment Date, after the application of the Preliminary Tranche Write-down Amount in accordance with the same priorities set forth in "Description of the Notes -- Hypothetical Structure and Calculations with Respect to the Reference Tranches -- Allocation of Tranche Write-down Amounts", and after the application of the Preliminary Tranche Write-up Amount in accordance with the same priorities set forth in "-- Allocation of Tranche Write-up Amounts". The Preliminary Class Notional Amount for each Payment Date will be computed prior to the allocation of the Modification Loss Amount and the Modification Gain Amount pursuant to the Modification Loss Priority and Modification Gain Priority, respectively, for such Payment Date.
+
+# ---------------------------------------------------------------------------
+# Reporting Period. DNA1 keys "march_2026_payment_date" / "april_2026_onward_payment_dates"
+# are deal-calendar names; the DNA2 equivalents are "april_2026_payment_date" /
+# "may_2026_onward_payment_dates" (same structure, calendar shifted one month).
+# ---------------------------------------------------------------------------
+reporting_period:
+  april_2026_payment_date:
+    value:
+      principal_collections_and_modifications: 2026-02-01 through 2026-03-31 inclusive
+      full_prepayments_defects_and_credit_events: 2026-02-04 through 2026-04-02 inclusive
+      delinquency_status_as_of: 2026-03-31
+    page: 221
+    section: Glossary - Reporting Period (a)
+    quote: |
+      (a) with respect to the Payment Date in April 2026 and for purposes of making calculations with respect to the hypothetical structure and the Reference Tranches related to such Payment Date: (1) in the case of all principal collections, other than full prepayments, on the Reference Obligations, and for determining loan modifications the period from and including February 1, 2026 through and including March 31, 2026; (2) in the case of full principal prepayments on the Reference Obligations, and for determining Underwriting Defects or Major Servicing Defects, and in the case of determining Credit Events resulting from short sales being settled, from charge-offs, from a seriously delinquent mortgage note being sold prior to foreclosure, from the mortgaged property that secured the related mortgage note being sold to a third party at a foreclosure sale, or from an REO disposition, the period from and including February 4, 2026 through and including April 2, 2026; and (3) in the case of determining delinquency status with respect to each Reference Obligation, March 31, 2026;
+    note: Corresponds to DNA1 key march_2026_payment_date (there Jan 1 - Feb 28, 2026 / Jan 6 - Mar 3, 2026 / Feb 28, 2026). DIFFERENT dates, SAME structure.
+  may_2026_onward_payment_dates:
+    value:
+      principal_collections_and_modifications: calendar month immediately preceding the Payment Date month (first day through last day inclusive)
+      full_prepayments_defects_and_credit_events: from but excluding the 2nd Business Day of the preceding calendar month through and including the 2nd Business Day of the Payment Date month
+      delinquency_status_as_of: last day of the calendar month immediately preceding the Payment Date month
+    page: 221
+    section: Glossary - Reporting Period (b)
+    quote: |
+      (b) with respect to each Payment Date commencing with the Payment Date in May 2026 and thereafter, and for purposes of making calculations with respect to the hypothetical structure and the Reference Tranches related to any such Payment Date: (1) in the case of all principal collections, other than full prepayments, on the Reference Obligations, and for determining loan modifications, the period from and including the first day of the calendar month immediately preceding the month in which such Payment Date occurs through and including the last day of the calendar month immediately preceding the month in which such Payment Date occurs; (2) in the case of full principal prepayments on the Reference Obligations, and for determining Underwriting Defects or Major Servicing Defects, and in the case of determining Credit Events resulting from short sales being settled, from charge-offs, from a seriously delinquent mortgage note being sold prior to foreclosure, from the mortgaged property that secured the related mortgage note being sold to a third party at a foreclosure sale, or from an REO disposition, the period from but excluding the second Business Day of the calendar month immediately preceding the month in which such Payment Date occurs through and including the second Business Day of the calendar month in which such Payment Date occurs; and (3) in the case of determining delinquency status with respect to each Reference Obligation, the last day of the calendar month immediately preceding the month in which such Payment Date occurs; and
+    note: Corresponds to DNA1 key april_2026_onward_payment_dates. SAME rule.
+  freddie_mac_may_revise:
+    value: Freddie Mac may specify another period with two calendar months notice via Payment Date Statement
+    page: 221
+    section: Glossary - Reporting Period (c)
+    quote: |
+      (c) such other period as we may specify from time to time to conform to any updates to our operational processes or timelines for mortgage loans serviced in accordance with the Guide, provided that notice of such revision is included in a Payment Date Statement made available to the Noteholders at least two calendar months prior to the first Payment Date affected by such revision.
+  first_period_two_months_note:
+    value: the April 2026 Payment Date covers two months of scheduled collections (February and March 2026) and, under Modeling Assumptions (f) and (g), two month-end payment/prepayment dates (Feb 28 and Mar 31, 2026); the Table 1 "calculated from the Closing Date" wording raises the same question as DNA1 Q10 - see DNA2-Q4
+    page: 138
+    section: Prepayment and Yield Considerations - Modeling Assumptions (f), (g)
+    quote: |
+      (f) each monthly payment of scheduled principal and interest on the Reference Obligations is timely received on the last day of each month beginning in February 2026; (g) principal prepayments in full on the Reference Obligations are received, together with 30 days' interest thereon, on the last day of each month beginning in February 2026;
+
+# ---------------------------------------------------------------------------
+# Termination, maturity, early redemption
+# ---------------------------------------------------------------------------
+termination:
+  termination_date:
+    value: earlier of Scheduled Termination Date and Early Termination Date
+    page: 225
+    section: Glossary - Termination Date
+    quote: |
+      "Termination Date" means the earlier to occur of: (i) the Scheduled Termination Date; and (ii) the Early Termination Date.
+  maturity_date:
+    value: earliest of Scheduled Maturity Date, Early Redemption Date, Termination Date
+    page: 211
+    section: Glossary - Maturity Date
+    quote: |
+      "Maturity Date" means the earliest to occur of (i) the Scheduled Maturity Date, (ii) the Early Redemption Date and (iii) the Termination Date.
+  early_redemption_date:
+    value: Payment Date on which the Notes are redeemed; concurrent with the Early Termination Date
+    page: 203
+    section: Glossary - Early Redemption Date
+    quote: |
+      "Early Redemption Date" means the Payment Date on which the Notes will be redeemed, which date is concurrent with the Early Termination Date.
+  early_termination_date:
+    value: earliest of (i) Trust designation after Freddie Mac Default; (ii) Freddie Mac designation after Optional Termination Event; (iii) Payment Date for the Reporting Period of final liquidation of the last Reference Obligation; (iv) removal of the last Reference Obligation; (v) aggregate Class Principal Balance of Original Notes reduced to zero (ignoring write-downs/write-ups) with interest paid; (vi) acceleration or unassumed merger
+    page: 204
+    section: Glossary - Early Termination Date
+    quote: |
+      "Early Termination Date" means, prior to or on the Scheduled Maturity Date, the earliest to occur of: (i) the Payment Date so designated by the Trust following the occurrence of a Freddie Mac Default; (ii) the Payment Date so designated by us following the occurrence of an Optional Termination Event; (iii) the Payment Date related to the Reporting Period in which there occurs the final payment or other liquidation of the last Reference Obligation remaining in the Reference Pool or the disposition of any REO in respect thereof; (iv) the Payment Date related to the Reporting Period in which there occurs the removal of the last Reference Obligation remaining in the Reference Pool or any REO in respect thereof; (v) the Payment Date on which the aggregate Class Principal Balance of all outstanding Classes of Original Notes is reduced to zero (without giving effect to any allocations of Tranche Write-down Amounts or Tranche Write-up Amounts on such Payment Date and all prior Payment Dates) and accrued and unpaid interest due on the Original Notes has been paid in full; and (vi) the Payment Date so designated by the Trust or us: (a) in the event the maturity of the Notes has been accelerated in accordance with the Indenture; or (b) following a merger or analogous event by the Trust or us without a corresponding assumption of the Trust's or our respective obligations under the Basic Documents.
+  optional_termination_events:
+    value:
+      - "1: SEC final determination that the Trust must register as an investment company"
+      - "2: Freddie Mac or another Transaction Party must register as a CPO"
+      - "3: change in law/regulation/accounting materially adversely affecting Freddie Mac's return on capital, cost/benefit, or accounting treatment of the Collateral Administration Agreement"
+      - "4: financial accounting, tax, banking, insurance or regulatory requirement/event not contemplated on the Closing Date with a material adverse effect on Freddie Mac"
+      - "5: amendment/waiver of a Basic Document materially adverse to Freddie Mac without its written consent"
+      - "6: aggregate UPB of the Reference Obligations <= 10% of the Cut-off Date Balance"
+      - "7: Notes remain outstanding on or after the Payment Date in the calendar month prior to March 2031"
+      - "8: Trust fails to pay an amount due to Freddie Mac under the Collateral Administration Agreement, unremedied 30 days after notice"
+      - "9: Trust fails to perform any other covenant in the Collateral Administration Agreement, unremedied 60 days after notice"
+    page: 215
+    section: Glossary - Optional Termination Event
+    quote: |
+      "Optional Termination Event" means the occurrence of any of the following: 1. The SEC makes a final determination that the Trust must register as an investment company under the Investment Company Act. 2. We reasonably determine, after consultation with external counsel (which will be a nationally recognized and reputable law firm), that we or another Transaction Party must register as a CPO under the Commodity Exchange Act and the regulations promulgated thereunder. 3. We reasonably determine that after the Closing Date, the adoption of any applicable law, regulatory guideline or interpretation or other statement of or regarding financial or regulatory accounting standards or principles, including with respect to capital adequacy, or any change therein, or any change in the interpretation or administration thereof by any Official Body, or any request or directive regarding the foregoing (in each case, whether or not having the force of law) of any Official Body, (a) materially adversely affects or would have the effect of materially adversely affecting the rate of return on the capital of us or any affiliate thereof, (b) materially increases the cost or reduces the benefit or would have the effect of materially increasing the cost or reducing the benefit to us or any such affiliate, in any case with respect to the Collateral Administration Agreement or (c) has or would have a materially adverse effect on the treatment of the Collateral Administration Agreement by us or any affiliate thereof for financial accounting purposes. 4. We reasonably determine that a financial accounting, tax, banking, insurance or regulatory (including regulatory accounting) requirement or event not contemplated by us on the Closing Date has occurred, which requirement or event could have a material adverse effect upon us. 5. We reasonably determine after consultation with a nationally recognized and reputable law firm, that any amendment, supplement or other modification of any Basic Document or any waiver of any provision thereof would materially and adversely affect our interests, but only if we have not provided our written consent to such amendment, supplement, modification or waiver. 6. The aggregate UPB of the Reference Obligations is less than or equal to 10% of the Cut-off Date Balance of the Reference Pool. 7. The Notes remain outstanding on or after the Payment Date in the calendar month prior to March 2031. 8. Any failure by the Trust to pay any amount due and owing to us under the Collateral Administration Agreement, which failure continues unremedied for 30 days after the receipt of notice of such failure by the Trust from us. 9. Any failure by the Trust to perform in any material way any other covenant or agreement in the Collateral Administration Agreement, which failure continues unremedied for 60 days after the receipt of notice of such failure by the Trust from us.
+  clean_up_threshold_pct_of_cut_off_balance:
+    value: 10
+    page: 215
+    section: Glossary - Optional Termination Event (6)
+    quote: |
+      6. The aggregate UPB of the Reference Obligations is less than or equal to 10% of the Cut-off Date Balance of the Reference Pool.
+  earliest_time_based_call_option_date:
+    value: Payment Date in March 2031
+    page: 203
+    section: Glossary - Earliest Time-Based Call Option Date
+    quote: |
+      "Earliest Time-Based Call Option Date" means the Payment Date occurring in March 2031.
+    note: DIFFERENT vs DNA1 (February 2031) in calendar terms; SAME as Payment Date number 60 (April 2026 = 1). Optional Termination Event 7 arises one month earlier ("the Payment Date in the calendar month prior to March 2031") so that a designation then produces an Early Termination Date on the March 2031 Payment Date.
+  early_redemption_is_optional:
+    value: early termination on an Optional Termination Event requires Freddie Mac to designate an Early Termination Date; there is no mandatory clean-up call
+    page: 204
+    section: Glossary - Early Termination Date (ii)
+    quote: |
+      (ii) the Payment Date so designated by us following the occurrence of an Optional Termination Event;
+  early_termination_timing_after_notice:
+    value: first Payment Date after the notice becomes effective, or the second if notice is effective 5 or fewer Business Days before a Payment Date
+    page: 115
+    section: The Agreements - The Collateral Administration Agreement and the Capital Contribution Agreement - Termination Date, Scheduled Termination Date and Early Termination Date
+    quote: |
+      To the extent an Early Termination Date occurs as a result of a designation by the Trust or us, such Early Termination Date will occur on the first Payment Date following the date on which such notice becomes effective, unless such notice becomes effective five (5) Business Days or less prior to such Payment Date, in which case the Early Termination Date will occur on the second Payment Date following the date on which such notice becomes effective, in each case, whether or not the relevant Freddie Mac Default or Optional Termination Event is then continuing.
+  final_period_performance_disregarded:
+    value: Reference Pool performance between the end of the final Reporting Period and the Termination Date is disregarded
+    page: 115
+    section: The Agreements - Termination Date, Scheduled Termination Date and Early Termination Date
+    quote: |
+      The performance of the Reference Pool during the period commencing at the end of the final Reporting Period and continuing until the Termination Date will be disregarded under the Collateral Administration Agreement and Capital Contribution Agreement for purposes of calculating the final payment obligations.
+  maturity_date_principal:
+    value: on the Maturity Date the Trust pays 100% of each Class Principal Balance (after that date's write-downs/write-ups)
+    page: 104
+    section: Description of the Notes - Principal
+    quote: |
+      On the Maturity Date the Trust will pay 100% of the Class Principal Balance as of such date for each Class of Original Notes outstanding (without regard to any exchanges of Exchangeable Notes for MACR Notes).
+  mandatory_redemption_on_caa_termination:
+    value: Notes are mandatorily redeemed when the Collateral Administration Agreement (and Capital Contribution Agreement) terminates
+    page: 76
+    section: Risk Factors - The Notes May Be Redeemed Before the Scheduled Maturity Date
+    quote: |
+      The Notes will be subject to mandatory redemption prior to the Scheduled Maturity Date upon the termination of the Collateral Administration Agreement and the Capital Contribution Agreement as described under "Description of the Notes -- Scheduled Maturity Date and Early Redemption Date" and "The Agreements -- The Collateral Administration Agreement and the Capital Contribution Agreement -- Termination Date, Scheduled Termination Date and Early Termination Date".
+
+# ---------------------------------------------------------------------------
+# Reference Pool Removals
+# ---------------------------------------------------------------------------
+reference_pool_removal:
+  definition:
+    value: removal because (i) Credit Event, (ii) paid in full, (iii) Underwriting Defect or Major Servicing Defect, (iv) Eligibility Criteria violation, (v) eminent domain seizure, (vi) OFAC sanctions, (vii) Freddie Mac sale of a re-performing loan, (viii) pre-closing hurricane disaster forbearance; modifications alone do not remove
+    page: 219
+    section: Glossary - Reference Pool Removal (continues on p220)
+    quote: |
+      "Reference Pool Removal" means the removal of a Reference Obligation from the Reference Pool after the issuance of the Notes because (i) the Reference Obligation becomes a Credit Event Reference Obligation; (ii) the Reference Obligation is paid in full; (iii) of the identification and final determination, through our quality control process, of an Underwriting Defect or a Major Servicing Defect relating to such Reference Obligation; (iv) of the discovery of a violation of the Eligibility Criteria for such Reference Obligation; (v) the Reference Obligation is seized pursuant to any special eminent domain Proceeding brought by any federal, state or local government instrumentality with the intent to provide relief to financially-distressed mortgagors with negative equity in the underlying mortgage loan; (vi) the Reference Obligation becomes subject to sanctions violations under OFAC rules requiring the blocking of payments on, or restriction of transfers of, the underlying mortgage loan; (vii) Freddie Mac elects to sell a Reference Obligation that previously had been seriously delinquent and is current at the time it is offered for sale; or (viii) (a) the related mortgaged property is in an area impacted by a hurricane that makes landfall in the United States prior to the Closing Date, (b) the related mortgaged property is located in a presidentially-declared major disaster area as a result of such hurricane, (c) the related mortgaged property is located in an area for which FEMA authorizes individual assistance to homeowners as a result of such hurricane, (d) such Reference Obligation becomes delinquent and (e) at any time through the last day of the sixth full calendar month immediately following the first date that such hurricane makes landfall in the United States (i.e., excluding the month in which such landfall occurs), the related servicer reports that such Reference Obligation is in disaster forbearance as a result of such hurricane. A Reference Obligation will not be removed from the Reference Pool if it undergoes a temporary or permanent modification and it does not meet any other criteria in the prior sentence to be removed.
+  timing:
+    value: (i)/(ii) removed as of the Payment Date for the Reporting Period in which they occurred, after Return Amounts; (iii)-(viii) as of the date in the Reporting Period on which they occurred
+    page: 220
+    section: Glossary - Reference Pool Removal
+    quote: |
+      (a) in the case of any Reference Obligation required to be removed pursuant to clause (i) or (ii) above, as of the Payment Date related to the Reporting Period during which (i) or (ii) above occurred with respect to such Reference Obligation, after giving effect to the payment of all Return Amounts required to be paid on such Payment Date; or (b) in the case of any Reference Obligation required to be removed pursuant to clause (iii), (iv), (v), (vi), (vii) or (viii) above, as of the date in the related Reporting Period on which (iii), (iv), (v), (vi), (vii) or (viii) occurred with respect to such Reference Obligation.
+  cashflow_treatment:
+    value: non-Credit-Event removals are treated as a prepayment in full - their UPB enters Stated Principal clause (c)
+    page: 224
+    section: Glossary - Stated Principal (c)
+    quote: |
+      (c) the aggregate UPB of all Reference Obligations that became Reference Pool Removals during the related Reporting Period, other than Credit Event Reference Obligations or any Reversed Credit Event Reference Obligations,
+  reinstatement:
+    value: a loan removed in error is reinstated; enters Stated Principal clause (e) as a positive adjustment
+    page: 224
+    section: Glossary - Stated Principal (e)
+    quote: |
+      (e) positive adjustments in the aggregate UPB of all Reference Obligations as the result of loan modifications, reinstatements into the Reference Pool of Reference Obligations that were previously removed from the Reference Pool in error, or data corrections.
+  modeling_assumption:
+    value: no removals, reinstatements or substitutions assumed in the PPM tables
+    page: 138
+    section: Prepayment and Yield Considerations - Modeling Assumption (j)
+    quote: |
+      (j) no Reference Obligations are purchased or removed from, or reinstated to, the Reference Pool and no mortgage loans are substituted for the Reference Obligations included in the Reference Pool on the Closing Date;
+
+# ---------------------------------------------------------------------------
+# MACR (modifiable and combinable) Notes - Table 2 (PDF p12-13)
+# ---------------------------------------------------------------------------
+macr:
+  exchangeable_notes:
+    value: [M-2A, M-2B, B-1A, B-1B]
+    page: 206
+    section: Glossary - Exchangeable Notes
+    quote: |
+      "Exchangeable Notes" means the Classes of Original Notes that are modifiable and combinable with the MACR Notes and vice versa, i.e., the Class M-2A Notes, Class M-2B Notes, Class B-1A Notes and Class B-1B Notes.
+    note: DIFFERENT vs DNA1 ([M-2A, M-2B]); B-1A and B-1B are NEW Exchangeable Notes.
+  macr_classes:
+    value: [M-2, M-2R, M-2S, M-2T, M-2U, M-2I, M-2AR, M-2AS, M-2AT, M-2AU, M-2AI, M-2BR, M-2BS, M-2BT, M-2BU, M-2BI, M-2RB, M-2SB, M-2TB, M-2UB, B-1, B-1R, B-1S, B-1T, B-1U, B-1I, B-1AR, B-1AI]
+    page: 210
+    section: Glossary - MACR Notes
+    quote: |
+      "MACR Notes" means interests in the Exchangeable Notes represented by the modifiable and combinable STACR Notes identified on Table 2 to the Memorandum, i.e., the Class M-2, Class M-2R, Class M-2S, Class M-2T, Class M-2U, Class M-2I, Class M-2AR, Class M-2AS, Class M-2AT, Class M-2AU, Class M-2AI, Class M-2BR, Class M-2BS, Class M-2BT, Class M-2BU, Class M-2BI, Class M-2RB, Class M-2SB, Class M-2TB, Class M-2UB, Class B-1, Class B-1R, Class B-1S, Class B-1T, Class B-1U, Class B-1I, Class B-1AR and Class B-1AI Notes.
+    note: 28 MACR classes (DNA1 had 20). The B-1 family (8 classes) is NEW; there is no B-1B-only MACR class.
+  deemed_exchange_at_closing:
+    value: M-2A and M-2B deemed exchanged in whole or in part for M-2 (Combination 1) and B-1A and B-1B for B-1 (Combination 18) on the Closing Date
+    page: 1
+    section: front page footnotes (4) and (5)
+    quote: |
+      (4) The Class M-2A and Class M-2B Notes may be exchanged for the Class M-2 Notes, and vice versa, pursuant to Combination 1 described in Table 2. On the Closing Date, the Class M-2A and Class M-2B Notes will be deemed to have been exchanged in whole or in part, as applicable, for the Class M-2 Notes. The original Class Principal Balance shown for the Class M-2 Notes above is its Maximum Class Principal Balance. (5) The Class B-1A and Class B-1B Notes may be exchanged for the Class B-1 Notes, and vice versa, pursuant to Combination 18 described in Table 2. On the Closing Date, the Class B-1A and Class B-1B Notes will be deemed to have been exchanged in whole or in part, as applicable, for the Class B-1 Notes. The original Class Principal Balance shown for the Class B-1 Notes above is its Maximum Class Principal Balance.
+  exchange_proportions_basis:
+    value: constant proportions of ORIGINAL Class Principal Balances / Notional Principal Amounts
+    page: 111
+    section: MACR Notes - Exchanges
+    quote: |
+      We base "exchange proportions" on the original, rather than on the outstanding, Class Principal Balance or Notional Principal Amount of the Classes.
+  exchange_constraints:
+    value: aggregate Class Principal Balance and aggregate annual interest amount of Notes received must equal those surrendered (IO notional counts as $0 principal) at all SOFR levels
+    page: 111
+    section: MACR Notes - Exchanges
+    quote: |
+      The aggregate Class Principal Balance (rounded to whole dollars) of the Notes received in the exchange, immediately after the exchange, must equal that of the Notes surrendered for exchange immediately before the exchange (for this purpose, the Notional Principal Amount of any Interest Only MACR Note always equals $0). The aggregate "annual interest amount" (rounded to whole dollars) of the Notes received in the exchange must equal that of the Notes surrendered for exchange. The annual interest amount for any Note equals its outstanding Class Principal Balance or Notional Principal Amount times its Class Coupon. The annual interest amount for the Classes received and the Classes surrendered must be equal at all levels of the SOFR Rate.
+  exchange_fee_usd:
+    value: "5000"
+    page: 113
+    section: MACR Notes - Procedures
+    quote: |
+      exchange (except with respect to any deemed exchange on the Closing Date) equal to $5,000.
+  interest_only_macr_coupon_pct:
+    value: 0.75000
+    page: 10
+    section: Table 1 - Class of MACR Notes (M-2I, M-2AI, M-2BI)
+    quote: |
+      M-2I(5) . . . $114,100,000(6) 0.75000%(7) N/A 0%
+    note: Applies to the M-2 family Interest Only MACR Notes (M-2I, M-2AI, M-2BI). The B-1 family IO classes carry 1.00000% - see b1_interest_only_macr_coupon_pct.
+  b1_interest_only_macr_coupon_pct:
+    value: 1.00000
+    page: 10
+    section: Table 1 - Class of MACR Notes (B-1I, B-1AI)
+    quote: |
+      B-1I(5) . . . $139,500,000(6) 1.00000%(7) N/A 0%
+    note: NEW vs DNA1 (no B-1 family MACR Notes in DNA1).
+  combinations:
+    value:
+      - {combination: 1, surrender: {M-2A: {original_usd: "57050000", proportion_pct: 50}, M-2B: {original_usd: "57050000", proportion_pct: 50}}, receive: {M-2: {max_usd: "114100000", proportion_pct: 100, coupon: "SOFR Rate + 1.60%"}}}
+      - {combination: 2, surrender: {M-2: {original_usd: "114100000", proportion_pct: 100}}, receive: {M-2R: {max_usd: "114100000", proportion_pct: 100, coupon: "SOFR Rate + 0.85%"}, M-2I: {max_notional_usd: "114100000", proportion_pct: 100, coupon: "0.75%"}}}
+      - {combination: 3, surrender: {M-2: {original_usd: "114100000", proportion_pct: 100}}, receive: {M-2S: {max_usd: "114100000", proportion_pct: 100, coupon: "SOFR Rate + 1.00%"}, M-2I: {max_notional_usd: "91280000", proportion_pct: 80, coupon: "0.75%"}}}
+      - {combination: 4, surrender: {M-2: {original_usd: "114100000", proportion_pct: 100}}, receive: {M-2T: {max_usd: "114100000", proportion_pct: 100, coupon: "SOFR Rate + 1.15%"}, M-2I: {max_notional_usd: "68460000", proportion_pct: 60, coupon: "0.75%"}}}
+      - {combination: 5, surrender: {M-2: {original_usd: "114100000", proportion_pct: 100}}, receive: {M-2U: {max_usd: "114100000", proportion_pct: 100, coupon: "SOFR Rate + 1.30%"}, M-2I: {max_notional_usd: "45640000", proportion_pct: 40, coupon: "0.75%"}}}
+      - {combination: 6, surrender: {M-2A: {original_usd: "57050000", proportion_pct: 100}}, receive: {M-2AR: {max_usd: "57050000", proportion_pct: 100, coupon: "SOFR Rate + 0.85%"}, M-2AI: {max_notional_usd: "57050000", proportion_pct: 100, coupon: "0.75%"}}}
+      - {combination: 7, surrender: {M-2A: {original_usd: "57050000", proportion_pct: 100}}, receive: {M-2AS: {max_usd: "57050000", proportion_pct: 100, coupon: "SOFR Rate + 1.00%"}, M-2AI: {max_notional_usd: "45640000", proportion_pct: 80, coupon: "0.75%"}}}
+      - {combination: 8, surrender: {M-2A: {original_usd: "57050000", proportion_pct: 100}}, receive: {M-2AT: {max_usd: "57050000", proportion_pct: 100, coupon: "SOFR Rate + 1.15%"}, M-2AI: {max_notional_usd: "34230000", proportion_pct: 60, coupon: "0.75%"}}}
+      - {combination: 9, surrender: {M-2A: {original_usd: "57050000", proportion_pct: 100}}, receive: {M-2AU: {max_usd: "57050000", proportion_pct: 100, coupon: "SOFR Rate + 1.30%"}, M-2AI: {max_notional_usd: "22820000", proportion_pct: 40, coupon: "0.75%"}}}
+      - {combination: 10, surrender: {M-2B: {original_usd: "57050000", proportion_pct: 100}}, receive: {M-2BR: {max_usd: "57050000", proportion_pct: 100, coupon: "SOFR Rate + 0.85%"}, M-2BI: {max_notional_usd: "57050000", proportion_pct: 100, coupon: "0.75%"}}}
+      - {combination: 11, surrender: {M-2B: {original_usd: "57050000", proportion_pct: 100}}, receive: {M-2BS: {max_usd: "57050000", proportion_pct: 100, coupon: "SOFR Rate + 1.00%"}, M-2BI: {max_notional_usd: "45640000", proportion_pct: 80, coupon: "0.75%"}}}
+      - {combination: 12, surrender: {M-2B: {original_usd: "57050000", proportion_pct: 100}}, receive: {M-2BT: {max_usd: "57050000", proportion_pct: 100, coupon: "SOFR Rate + 1.15%"}, M-2BI: {max_notional_usd: "34230000", proportion_pct: 60, coupon: "0.75%"}}}
+      - {combination: 13, surrender: {M-2B: {original_usd: "57050000", proportion_pct: 100}}, receive: {M-2BU: {max_usd: "57050000", proportion_pct: 100, coupon: "SOFR Rate + 1.30%"}, M-2BI: {max_notional_usd: "22820000", proportion_pct: 40, coupon: "0.75%"}}}
+      - {combination: 14, surrender: {M-2B: {original_usd: "57050000", proportion_pct: 100}, M-2AI: {original_notional_usd: "57050000", proportion: "footnote (5)"}}, receive: {M-2RB: {max_usd: "57050000", proportion_pct: 100, coupon: "footnote (6)"}}}
+      - {combination: 15, surrender: {M-2B: {original_usd: "57050000", proportion_pct: 100}, M-2AI: {original_notional_usd: "45640000", proportion: "footnote (5)"}}, receive: {M-2SB: {max_usd: "57050000", proportion_pct: 100, coupon: "footnote (6)"}}}
+      - {combination: 16, surrender: {M-2B: {original_usd: "57050000", proportion_pct: 100}, M-2AI: {original_notional_usd: "34230000", proportion: "footnote (5)"}}, receive: {M-2TB: {max_usd: "57050000", proportion_pct: 100, coupon: "footnote (6)"}}}
+      - {combination: 17, surrender: {M-2B: {original_usd: "57050000", proportion_pct: 100}, M-2AI: {original_notional_usd: "22820000", proportion: "footnote (5)"}}, receive: {M-2UB: {max_usd: "57050000", proportion_pct: 100, coupon: "footnote (6)"}}}
+      - {combination: 18, surrender: {B-1A: {original_usd: "69750000", proportion_pct: 50}, B-1B: {original_usd: "69750000", proportion_pct: 50}}, receive: {B-1: {max_usd: "139500000", proportion_pct: 100, coupon: "SOFR Rate + 2.10%"}}}
+      - {combination: 19, surrender: {B-1: {original_usd: "139500000", proportion_pct: 100}}, receive: {B-1R: {max_usd: "139500000", proportion_pct: 100, coupon: "SOFR Rate + 1.10%"}, B-1I: {max_notional_usd: "139500000", proportion_pct: 100, coupon: "1.00%"}}}
+      - {combination: 20, surrender: {B-1: {original_usd: "139500000", proportion_pct: 100}}, receive: {B-1S: {max_usd: "139500000", proportion_pct: 100, coupon: "SOFR Rate + 1.30%"}, B-1I: {max_notional_usd: "111600000", proportion_pct: 80, coupon: "1.00%"}}}
+      - {combination: 21, surrender: {B-1: {original_usd: "139500000", proportion_pct: 100}}, receive: {B-1T: {max_usd: "139500000", proportion_pct: 100, coupon: "SOFR Rate + 1.50%"}, B-1I: {max_notional_usd: "83700000", proportion_pct: 60, coupon: "1.00%"}}}
+      - {combination: 22, surrender: {B-1: {original_usd: "139500000", proportion_pct: 100}}, receive: {B-1U: {max_usd: "139500000", proportion_pct: 100, coupon: "SOFR Rate + 1.70%"}, B-1I: {max_notional_usd: "55800000", proportion_pct: 40, coupon: "1.00%"}}}
+      - {combination: 23, surrender: {B-1A: {original_usd: "69750000", proportion_pct: 100}}, receive: {B-1AR: {max_usd: "69750000", proportion_pct: 100, coupon: "SOFR Rate + 1.10%"}, B-1AI: {max_notional_usd: "69750000", proportion_pct: 100, coupon: "1.00%"}}}
+    page: 12
+    section: Table 2 - Available Modifications and Combinations
+    quote: |
+      Combination 1: M-2A $57,050,000 50% / M-2B $57,050,000 50% -> M-2 $114,100,000 100% SOFR Rate + 1.60%. Combination 2: M-2 $114,100,000 100% -> M-2R $114,100,000 100% SOFR Rate + 0.85%; M-2I $114,100,000(3) 100% 0.75%. Combination 3: M-2 -> M-2S 100% SOFR Rate + 1.00%; M-2I $91,280,000(3) 80% 0.75%. Combination 4: M-2 -> M-2T 100% SOFR Rate + 1.15%; M-2I $68,460,000(3) 60% 0.75%. Combination 5: M-2 -> M-2U 100% SOFR Rate + 1.30%; M-2I $45,640,000(3) 40% 0.75%. Combinations 6-9: M-2A $57,050,000 100% -> M-2AR/M-2AS/M-2AT/M-2AU $57,050,000 100% at SOFR Rate + 0.85%/1.00%/1.15%/1.30% plus M-2AI $57,050,000/$45,640,000/$34,230,000/$22,820,000(3) at 100%/80%/60%/40%, 0.75%. Combinations 10-13: M-2B $57,050,000 100% -> M-2BR/M-2BS/M-2BT/M-2BU $57,050,000 100% at SOFR Rate + 0.85%/1.00%/1.15%/1.30% plus M-2BI $57,050,000/$45,640,000/$34,230,000/$22,820,000(3) at 100%/80%/60%/40%, 0.75%. Combinations 14-17: M-2B $57,050,000 100% and M-2AI $57,050,000/$45,640,000/$34,230,000/$22,820,000(3) (5) -> M-2RB/M-2SB/M-2TB/M-2UB $57,050,000(4) 100% (6). Combination 18: B-1A $69,750,000 50% / B-1B $69,750,000 50% -> B-1 $139,500,000 100% SOFR Rate + 2.10%. Combinations 19-22: B-1 $139,500,000 100% -> B-1R/B-1S/B-1T/B-1U $139,500,000 100% at SOFR Rate + 1.10%/1.30%/1.50%/1.70% plus B-1I $139,500,000/$111,600,000/$83,700,000/$55,800,000(3) at 100%/80%/60%/40%, 1.00%. Combination 23: B-1A $69,750,000 100% -> B-1AR $69,750,000 100% SOFR Rate + 1.10%; B-1AI $69,750,000(3) 100% 1.00%.
+    note: 23 Combinations (DNA1 had 17). M-2 family strip margins are 0.85/1.00/1.15/1.30 (DNA1 0.55/0.70/0.85/1.00). Combinations 18-23 are NEW.
+  m2rb_family_coupon:
+    value: pass-through of the exchanged M-2B and M-2AI interest, annualized on the outstanding balance
+    page: 11
+    section: Table 1 footnote (9)
+    quote: |
+      The Class Coupon for each of the Class M-2RB Notes, Class M-2SB Notes, Class M-2TB Notes and Class M-2UB Notes with respect to any Payment Date and the related Accrual Period will be a per annum rate equal to the product of (i) a fraction, the numerator of which is the aggregate Interest Payment Amount from the portions of the Class M-2B Notes and Class M-2AI Notes that were exchanged for such Class M-2RB Notes, Class M-2SB Notes, Class M-2TB Notes or Class M-2UB Notes, as applicable, and the denominator of which is (a) for so long as the Class Principal Balance of the Class M-2B Notes is greater than zero, the outstanding Class Principal Balance immediately prior to such Payment Date of such Class M-2RB Notes, Class M-2SB Notes, Class M-2TB Notes or Class M-2UB Notes, as applicable, or (b) for so long as the Class Principal Balance of the Class M-2B Notes is zero and the Notional Principal Amount of the Class M-2AI Notes is greater than zero, the outstanding Notional Principal Amount immediately prior to such Payment Date of the portions of the Class M-2AI Notes that were exchanged for such Class M-2RB Notes, Class M-2SB Notes, Class M-2TB Notes or Class M-2UB Notes, as applicable, and (ii) a fraction, the numerator of which is 360 and the denominator of which is the actual number of days in the related Accrual Period for such Class M-2RB Notes, Class M-2SB Notes, Class M-2TB Notes or Class M-2UB Notes, as applicable, for such Payment Date.
+  m2rb_family_initial_coupons_pct:
+    value: {M-2RB: 6.02223, M-2SB: 5.87223, M-2TB: 5.72223, M-2UB: 5.57223}
+    page: 10
+    section: Table 1 - Class of MACR Notes
+    quote: |
+      M-2RB(5) . . . $57,050,000(8) 6.02223% (9) 0% ... M-2SB(5) . . . $57,050,000(8) 5.87223% (9) 0% ... M-2TB(5) . . . $57,050,000(8) 5.72223% (9) 0% ... M-2UB(5) . . . $57,050,000(8) 5.57223% (9) 0%
+    note: 5.27223 (M-2B) + 0.75 = 6.02223; + 0.75 x 0.8 = 5.87223; + 0.75 x 0.6 = 5.72223; + 0.75 x 0.4 = 5.57223 (consistent with the M-2B initial coupon adopted above).
+  macr_principal_and_write_down_pass_through:
+    value: principal, write-downs and write-ups on exchanged Exchangeable Notes flow to the MACR Notes in the exchange proportions
+    page: 104
+    section: Description of the Notes - Principal; Reductions in Class Principal Balances of the Notes Due to Allocation of Tranche Write-down Amounts
+    quote: |
+      If on any Payment Date a Class of MACR Notes that is entitled to principal is outstanding, all principal amounts that are payable by the Trust on Exchangeable Notes that were exchanged for such MACR Notes (or any MACR Notes further exchanged for such MACR Notes pursuant to an applicable Combination) will be allocated to and payable on such MACR Notes in accordance with the exchange proportions applicable to the related Combination. ... On each Payment Date that a Class of MACR Notes is outstanding, all Tranche Write-down Amounts that are allocable to Exchangeable Notes that were exchanged for such MACR Notes will be allocated to reduce the Class Principal Balances or Notional Principal Amounts, as applicable, of such MACR Notes (or any MACR Notes further exchanged for such MACR Notes pursuant to an applicable Combination) in accordance with the exchange proportions applicable to the related Combination.
+
+# ---------------------------------------------------------------------------
+# Modeling Assumptions (a)-(s), PDF p138-139 (printed 116-117), verbatim in the quotes.
+# ---------------------------------------------------------------------------
+modeling_assumptions:
+  scope:
+    value: apply to the Weighted Average Life Tables, Declining Balances Tables, Credit Event Sensitivity Tables, Cumulative Note Write-down Amount Tables and Yield Tables
+    page: 138
+    section: Prepayment and Yield Considerations - Assumptions Relating to Weighted Average Life Tables, Declining Balances Tables, Credit Event Sensitivity Tables, Cumulative Note Write-down Amount Tables and Yield Tables
+    quote: |
+      The tables on the following pages have been prepared on the basis of the following Modeling Assumptions:
+  a_reference_obligations:
+    value: Appendix C assumed loan groups (38 groups, PDF p264)
+    page: 138
+    section: Modeling Assumption (a)
+    quote: |
+      (a) The Reference Obligations consist of the assumed mortgage loans having the characteristics shown in Appendix C;
+    note: Appendix C has 38 groups (DNA1 had 31). Its columns are shifted in the extract; see DNA2-Q5.
+  b_balances_and_coupons:
+    value: Table 1 balances and coupons, including B-2H (no B-1H)
+    page: 138
+    section: Modeling Assumption (b)
+    quote: |
+      (b) the original Class Principal Balances for the Original Notes are as set forth or described in Table 1, the maximum Class Principal Balances or Notional Principal Amounts, as applicable, for the MACR Notes are as set forth or described in Table 1 and the Class Coupons for each of the Classes of Notes and the Class B-2H Reference Tranche are as set forth or described in Table 1;
+    note: DIFFERENT vs DNA1 only in that B-1H is no longer mentioned (it does not exist).
+  c_level_pay_amortization:
+    value: scheduled payment computed from outstanding balance, rate and remaining term (full amortization)
+    page: 138
+    section: Modeling Assumption (c)
+    quote: |
+      (c) the scheduled monthly payment for each Reference Obligation is based on its outstanding principal balance, per annum interest rate and remaining term to maturity so that it will fully amortize in amounts sufficient for the repayment thereof over its remaining term to maturity;
+  d_credit_events:
+    value: non-Declining-Balances tables - Credit Events at the CER, no recovery lag, Preliminary Principal Loss Amount = 25% of Credit Event Amount; Declining Balances Tables - no Credit Events
+    page: 138
+    section: Modeling Assumption (d)
+    quote: |
+      (d) (i) other than with respect to the Declining Balances Tables, the Reference Obligations experience Credit Events at the indicated CER percentages, there is no lag between the related Credit Event Amounts and the application of any related Recovery Principal, the Preliminary Principal Loss Amount is equal to 25% of the Credit Event Amount; and (ii) with respect to the Declining Balances Tables, the Reference Obligations do not experience any Credit Events;
+  d_preliminary_principal_loss_pct_of_credit_event_amount:
+    value: 25
+    page: 138
+    section: Modeling Assumption (d)(i)
+    quote: |
+      the Preliminary Principal Loss Amount is equal to 25% of the Credit Event Amount;
+  e_delinquency_test:
+    value: Delinquency Test always satisfied
+    page: 138
+    section: Modeling Assumption (e)
+    quote: |
+      (e) the Delinquency Test is satisfied for each Payment Date;
+  f_scheduled_payments:
+    value: scheduled P&I received timely on the last day of each month beginning February 2026
+    page: 138
+    section: Modeling Assumption (f)
+    quote: |
+      (f) each monthly payment of scheduled principal and interest on the Reference Obligations is timely received on the last day of each month beginning in February 2026;
+    note: DIFFERENT vs DNA1 (January 2026).
+  g_full_prepayments:
+    value: full prepayments with 30 days interest on the last day of each month beginning February 2026
+    page: 138
+    section: Modeling Assumption (g)
+    quote: |
+      (g) principal prepayments in full on the Reference Obligations are received, together with 30 days' interest thereon, on the last day of each month beginning in February 2026;
+    note: DIFFERENT vs DNA1 (January 2026).
+  h_no_curtailments:
+    value: no partial prepayments
+    page: 138
+    section: Modeling Assumption (h)
+    quote: |
+      (h) there are no partial principal prepayments on the Reference Obligations;
+  i_cpr:
+    value: prepay at the indicated CPR
+    page: 138
+    section: Modeling Assumption (i)
+    quote: |
+      (i) the Reference Obligations prepay at the indicated CPR percentages;
+  j_no_removals:
+    value: no removals, reinstatements or substitutions
+    page: 138
+    section: Modeling Assumption (j)
+    quote: |
+      (j) no Reference Obligations are purchased or removed from, or reinstated to, the Reference Pool and no mortgage loans are substituted for the Reference Obligations included in the Reference Pool on the Closing Date;
+  k_modification_events:
+    value: Declining Balances and Credit Event Sensitivity Tables - no Modification Events; WAL, Cumulative Note Write-down and Yield Tables with RM > 0 - RM applied to all loans from the first day of the first month of the first Reporting Period through the Scheduled Maturity Date; April 2026 Modification Loss Amount = Feb 1, 2026 calc on Cut-off UPB + Mar 1, 2026 calc on Feb 28, 2026 UPB
+    page: 138
+    section: Modeling Assumption (k) (continues on p139)
+    quote: |
+      (k) (i) with respect to the Declining Balances Tables and the Credit Event Sensitivity Tables, the Reference Obligations do not experience Modification Events; and (ii) with respect to the Weighted Average Life Tables, the Cumulative Note Write-down Amount Tables and the Yield Tables that have RM percentages greater than zero: (x) all Modification Events are effective as of the first day of the first month corresponding to the Reporting Period for all principal collections, other than full prepayments, for the first Payment Date and continue through the Scheduled Maturity Date; (y) RM are applied to all Reference Obligations at the indicated RM percentages; and (z) Modification Loss Amounts for the Payment Date in April 2026 will be the sum of (I) the Modification Loss Amounts calculated as of February 1, 2026 based on the UPB of the Reference Obligations as of the Cut-off Date and (II) the Modification Loss Amounts calculated as of March 1, 2026 based on the UPB of the Reference Obligations as of February 28, 2026;
+    note: DIFFERENT vs DNA1 in dates only (March 2026 / Jan 1 / Feb 1 / Jan 31 there).
+  l_no_data_corrections:
+    value: no data corrections
+    page: 139
+    section: Modeling Assumption (l)
+    quote: |
+      (l) there are no data corrections in connection with the Reference Obligations;
+  m_early_redemption:
+    value: no early redemption unless a table specifies it; if so, on the earlier of the March 2031 Payment Date and the first Payment Date on which aggregate UPB <= 10% of Cut-off Date Balance
+    page: 139
+    section: Modeling Assumption (m)
+    quote: |
+      (m) there is no early redemption (except as specified in the tables, occurring, if applicable, on the earlier of: (i) the Payment Date occurring in March 2031 and (ii) the first Payment Date in which the aggregate UPB of the Reference Obligations is less than or equal to 10% of the Cut-off Date Balance of the Reference Pool, otherwise no early redemption occurs);
+    note: DIFFERENT vs DNA1 in calendar (February 2031) but SAME Payment Date number (60). The UPB basis question (DNA1 Q14/A11) carries over.
+  n_no_reversals_gains_settlements:
+    value: no Reversed Credit Event Reference Obligations, Modification Gain Amounts or Rep and Warranty/Servicing Breach Settlement Amounts
+    page: 139
+    section: Modeling Assumption (n)
+    quote: |
+      (n) there are no Reversed Credit Event Reference Obligations, Modification Gain Amounts or Origination Rep and Warranty/Servicing Breach Settlement Amounts;
+  o_projected_recovery_zero:
+    value: Projected Recovery Amount = 0
+    page: 139
+    section: Modeling Assumption (o)
+    quote: |
+      (o) the Projected Recovery Amount is equal to zero;
+  p_issue_date:
+    value: 2026-03-17
+    page: 139
+    section: Modeling Assumption (p)
+    quote: |
+      (p) the Original Notes are issued on March 17, 2026;
+    note: DIFFERENT vs DNA1 (2026-02-17).
+  q_note_payment_dates:
+    value: cash payments on the 25th of each month beginning April 2026
+    page: 139
+    section: Modeling Assumption (q)
+    quote: |
+      (q) cash payments on the Notes are received on the 25th day of each month beginning in April 2026 as described under "Description of The Notes";
+    note: DIFFERENT vs DNA1 (March 2026). Note the tables assume the 25th even though April 25, 2026 is a Saturday.
+  r_sofr_flat_pct:
+    value: 3.67223
+    page: 139
+    section: Modeling Assumption (r)
+    quote: |
+      (r) the SOFR Rate is assumed to remain constant at 3.67223% per annum; and
+    note: DIFFERENT vs DNA1 (3.65786%).
+  s_no_exchanges_no_retirement:
+    value: every Class outstanding from Closing to retirement, no exchanges, no Freddie Mac retirement of Notes
+    page: 139
+    section: Modeling Assumption (s)
+    quote: |
+      (s) each Class of Notes is outstanding from the Closing Date to retirement, no exchanges occur and Freddie Mac does not exercise its option to cause any Notes it owns to be retired by the Trust.
+  pricing_speed_cpr_pct:
+    value: 10
+    page: 11
+    section: Table 1 footnote (1)
+    quote: |
+      prepayments occur at the Pricing Speed of 10% CPR, calculated from the Closing Date
+  cer_monthly_convention:
+    value: constant monthly rate on then-outstanding balance; the annual-to-monthly conversion formula is not stated (CPR is stated to be converted to an equivalent monthly rate)
+    page: 140
+    section: Prepayment and Yield Considerations - Weighted Average Lives of the Notes
+    quote: |
+      The Weighted Average Life Tables, Credit Event Sensitivity Tables, Cumulative Note Write-down Amount Tables and Yield Tables below assume a constant rate of Reference Obligations becoming Credit Event Reference Obligations each month relative to the then-outstanding aggregate principal balance of the Reference Obligations.
+    note: Same silence as DNA1 (Q11/A2-A3 convention carries over unless overridden).
+  wal_definition:
+    value: average time from issuance until the balance is reduced to zero; IO classes treat notional reductions as principal reductions
+    page: 228
+    section: Glossary - WAL or Weighted Average Life
+    quote: |
+      "WAL" or "Weighted Average Life" with respect to any Class of Notes (other than the Classes of Interest Only MACR Notes), means the average amount of time that will elapse from the date of issuance of such Class of Notes until its balance is reduced to zero. With respect to any Class of Interest Only MACR Notes, we have calculated the Weighted Average Life assuming that a reduction in the Notional Principal Amount of such Class is a reduction in the Class Principal Balance.
+
+# ---------------------------------------------------------------------------
+# Reference Pool summary (Appendix A, PDF p229). The summary table is column-shifted in
+# the extract by one row (each value prints on the line below its label); the pairing
+# below follows the value types (count, $ totals, ranges, percentages, date).
+# ---------------------------------------------------------------------------
+reference_pool:
+  eligibility_criteria_product:
+    value: fully amortizing, fixed-rate, 1-4 unit, first lien, original term 241-360 months
+    page: 204
+    section: Glossary - Eligibility Criteria (a)
+    quote: |
+      (a) is a fully amortizing, fixed-rate, one- to four-unit, first lien mortgage loan, which has an original term of 241 to 360 months;
+  eligibility_criteria_ltv:
+    value: original LTV > 60% and <= 80%; original CLTV <= 105%
+    page: 204
+    section: Glossary - Eligibility Criteria (k), (l)
+    quote: |
+      (k) does not have an original LTV ratio that (i) is less than or equal to 60% or (ii) exceeds 80%; (l) has an original CLTV ratio that is less than or equal to 105%;
+  eligibility_criteria_selection_window:
+    value: securitized 2025-04-01 to 2025-06-30, originated on/after 2024-04-01, acquired on/after 2025-01-01
+    page: 204
+    section: Glossary - Eligibility Criteria (b)
+    quote: |
+      (b) was securitized between April 1, 2025 and June 30, 2025, was originated on or after April 1, 2024 and was acquired on or after January 1, 2025;
+    note: DIFFERENT vs DNA1 (securitized 2025-01-01 to 2025-03-31, originated on/after 2024-01-01).
+  eligibility_criteria_no_mi:
+    value: not covered by mortgage or pool insurance
+    page: 204
+    section: Glossary - Eligibility Criteria (j)
+    quote: |
+      (j) is not covered by mortgage or pool insurance;
+  loan_count:
+    value: 73437
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data as of the Cut-off Date (row shifted in extract)
+    quote: |
+      Original Principal Balance(1) . . . 73,437
+    note: The count prints on the line labelled "Original Principal Balance(1)"; it is the "Number of Reference Obligations" value (column shift). DNA1 had 64,434.
+  aggregate_original_principal_balance_usd:
+    value: "27524842000"
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data (row shifted in extract)
+    quote: |
+      Aggregate Principal Balance . . . $27,524,842,000
+    note: Prints on the "Aggregate Principal Balance" line but is the Aggregate Original Principal Balance (rounded to $1,000 per fn (1)); it is NOT the Cut-off Date Balance. The task brief's "Aggregate Principal Balance $27,524,842,000" is this shifted value.
+  aggregate_principal_balance_usd:
+    value: "26703800234"
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data (row shifted in extract)
+    quote: |
+      Mortgage Rate . . . $26,703,800,234 $374,809
+    note: Prints on the "Mortgage Rate" line; equals the Cut-off Date Balance $26,703,800,234.86 truncated to dollars (consistent). $374,809 is the average Original Principal Balance.
+  weighted_average_mortgage_rate_pct:
+    value: 6.720
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data (row shifted in extract)
+    quote: |
+      Original Term to Maturity (months) . . . 3.990% to 8.625% $363,629 / Loan Age (months) . . . 6.720%
+    note: Range 3.990% to 8.625%, WA 6.720% (DNA1 WA 6.793%). $363,629 is the average current Principal Balance.
+  weighted_average_remaining_term_months:
+    value: 352
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data (row shifted in extract)
+    quote: |
+      Original LTV Ratio . . . 244 to 354 352
+    note: Remaining Term range 244 to 354, WA 352 (DNA1 WA 349).
+  original_term_range_months:
+    value: 252 to 360 (WA 360)
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data (row shifted in extract)
+    quote: |
+      Original CLTV Ratio . . . 252 to 360 360
+  weighted_average_loan_age_months:
+    value: 8
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data (row shifted in extract)
+    quote: |
+      Original DTI Ratio(2) . . . 8 / Original Credit Score(3) . . . 6 to 16
+    note: Loan Age range 6 to 16 months, WA 8 (DNA1 WA 10).
+  original_ltv_range_pct:
+    value: 61 to 80 (WA 76)
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data (row shifted in extract)
+    quote: |
+      Latest Maturity Date . . . 61% to 80% 76%
+  latest_maturity_date:
+    value: July 2055
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data (row shifted in extract)
+    quote: |
+      July 2055
+    note: DNA1 April 2055.
+  pool_selection_statement:
+    value: Eligibility Criteria plus securitized Apr 1 - Jun 30 2025, originated on/after Apr 1 2024, acquired on/after Jan 1 2025
+    page: 229
+    section: Appendix A - The Reference Obligations
+    quote: |
+      We determined the population of the Reference Pool by selecting mortgage loans that meet the Eligibility Criteria and were securitized between April 1, 2025 and June 30, 2025, were originated on or after April 1, 2024 and were acquired on or after January 1, 2025.
+  current_principal_balance_range_usd:
+    value: "0 to 1858202 (average 363629)"
+    page: 229
+    section: Appendix A - Selected Reference Obligation Data (row shifted in extract)
+    quote: |
+      Remaining Term to Maturity (months) . . . $0 to $1,858,202
+    note: NEW vs DNA1 file (recorded because the printed minimum current Principal Balance is $0, i.e. at least one Reference Obligation had a zero UPB at the Cut-off Date; the loan-level validation should expect it rather than assert it away). Average $363,629.
+  appendix_c_group_count:
+    value: 38
+    page: 264
+    section: Appendix C - Assumed Characteristics of the Reference Obligations (as of the Cut-off Date)
+    quote: |
+      Group Number ... 1 ... 38
+    note: NEW vs DNA1 file (DNA1 had 31 groups). The Appendix C columns are shifted in the extract; see DNA2-Q5 before transcribing.
